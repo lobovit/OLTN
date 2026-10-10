@@ -1,0 +1,142 @@
+.login-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--s5);
+  background: var(--bg-arena);
+}
+
+.login-grid {
+  width: min(960px, 100%);
+  display: grid;
+  gap: var(--s6);
+  align-items: center;
+}
+
+/* ---------- hero: marca + wordmark ---------- */
+
+.login-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s4);
+}
+
+.login-mark {
+  color: var(--accent);
+  overflow: visible;
+}
+
+.mark-ring {
+  stroke: var(--accent);
+}
+
+.mark-orbit {
+  fill: var(--accent);
+  transform-box: view-box;
+  transform-origin: center;
+  animation: mark-orbit 1.4s var(--ease-out) 0.15s both;
+}
+
+@keyframes mark-orbit {
+  from {
+    transform: rotate(-300deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.login-wordmark {
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.login-tagline {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 1rem;
+  line-height: 1.45;
+  max-width: 32ch;
+}
+
+@media (min-width: 48em) {
+  .login-grid {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: var(--s7);
+  }
+}
+
+/* ---------- card de formulário ---------- */
+
+.login-card {
+  padding: var(--s6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2);
+  animation: rise-in 0.45s var(--ease) 0.1s both;
+}
+
+.login-lead {
+  margin: 0 0 var(--s3);
+  color: var(--text-2);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.login-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.login-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.instance-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+  text-align: center;
+  padding: var(--s3) 0;
+}
+
+.instance-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-md);
+  object-fit: cover;
+  border: var(--hairline) solid var(--divider);
+}
+
+.instance-title {
+  font-weight: 700;
+}
+
+.login-actions {
+  display: flex;
+  gap: var(--s3);
+  justify-content: center;
+  margin-top: var(--s3);
+}
+
+.existing-accounts .list-row {
+  width: 100%;
+  border-top: var(--hairline) solid var(--divider);
+}

@@ -1,0 +1,131 @@
+/* Gera src/components/ui/icons.ts a partir de @iconify-json/mingcute.
+   Uso: node scripts/generate-icons.mjs */
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const wanted = [
+  "home-3-line",
+  "home-3-fill",
+  "notification-line",
+  "notification-fill",
+  "search-2-line",
+  "search-2-fill",
+  "pencil-line",
+  "pencil-fill",
+  "user-3-line",
+  "user-3-fill",
+  "settings-3-line",
+  "settings-3-fill",
+  "bookmark-line",
+  "bookmark-fill",
+  "heart-line",
+  "heart-fill",
+  "list-check-line",
+  "list-check-fill",
+  "trending-up-line",
+  "trending-up-fill",
+  "filter-line",
+  "filter-fill",
+  "hashtag-line",
+  "hashtag-fill",
+  "share-forward-line",
+  "repeat-line",
+  "repeat-fill",
+  "close-line",
+  "close-fill",
+  "close-small-line",
+  "back-line",
+  "more-1-line",
+  "plus-line",
+  "plus-fill",
+  "check-line",
+  "dropdown-line",
+  "arrow-left-line",
+  "arrow-right-line",
+  "arrow-down-line",
+  "eye-line",
+  "eye-close-line",
+  "translate-line",
+  "keyboard-line",
+  "sun-line",
+  "moon-line",
+  "monitor-line",
+  "exit-line",
+  "attachment-line",
+  "checkbox-line",
+  "history-line",
+  "send-line",
+  "send-fill",
+  "external-link-line",
+  "globe-line",
+  "shield-line",
+  "message-1-line",
+  "signal-line",
+  "wifi-line",
+  "wifi-off-line",
+  "switch-line",
+  "information-line",
+  "question-line",
+  "calendar-line",
+  "at-line",
+  "link-line",
+  "mail-line",
+  "refresh-2-line",
+  "delete-line",
+  "clock-line",
+  "quill-pen-line",
+  "rocket-line",
+  "photo-album-line",
+  "video-line",
+  "play-line",
+  "pause-line",
+  "volume-line",
+  "sparkles-line",
+  "close-circle-fill",
+  "check-circle-fill",
+  "information-fill",
+  "unlink-line",
+  "group-line",
+  "pin-line",
+  "layout-grid-line",
+  "layout-leftbar-close-line",
+  "layout-leftbar-open-line",
+  "building-2-line",
+];
+
+const src = JSON.parse(
+  readFileSync(resolve(process.cwd(), "node_modules/@iconify-json/mingcute/icons.json"), "utf8"),
+);
+
+const missing = wanted.filter((name) => !src.icons[name]);
+if (missing.length) {
+  console.error("Ícones ausentes:", missing.join(", "));
+  process.exit(1);
+}
+
+const width = src.width ?? 24;
+const height = src.height ?? 24;
+
+const body = wanted
+  .map((name) => {
+    const icon = src.icons[name];
+    const w = icon.width ?? width;
+    const h = icon.height ?? height;
+    return `  ${JSON.stringify(name)}: { body: ${JSON.stringify(icon.body)}, width: ${w}, height: ${h} },`;
+  })
+  .join("\n");
+
+const out = `// Gerado por scripts/generate-icons.mjs — não editar à mão.
+export interface IconDef {
+  body: string;
+  width: number;
+  height: number;
+}
+
+export const ICONS: Record<string, IconDef> = {
+${body}
+};
+`;
+
+writeFileSync(resolve(process.cwd(), "src/components/ui/icons.ts"), out);
+console.log(`OK: ${wanted.length} ícones gerados.`);
