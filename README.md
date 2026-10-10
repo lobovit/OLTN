@@ -1,6 +1,7 @@
 # OLTN
 
-another mastodon webclient.
+Another Mastodon WebClient.
+
 
 ## Features
 
@@ -42,4 +43,4 @@ MingCute icons via Iconify (CC0).
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
