@@ -122,7 +122,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
           types: mode === "mentions" ? ["mention"] : undefined,
         });
         const statuses = page.map((n) => n.status).filter((s): s is Status => !!s);
-        putStatuses(statuses);
+        putStatuses(statuses, instance);
         lastIdRef.current = page.length ? page[page.length - 1].id : null;
         if (!maxId) {
           const pageIds = new Set(page.map((n) => n.id));

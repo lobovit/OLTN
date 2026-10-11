@@ -83,8 +83,9 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
     }
     const status = conversation.lastStatus;
     if (status) {
-      putStatuses([status]);
-      navigate(`/${encodeURIComponent(account.instance)}/s/${status.id}`);
+      const source = instance ?? account.instance;
+      putStatuses([status], source);
+      navigate(`/${encodeURIComponent(source)}/s/${status.id}`);
     }
   };
 

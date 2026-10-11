@@ -278,15 +278,15 @@ function connectStream(account: AccountMeta, streamingApi: string | null): void 
         store.stream = "off";
       },
       onUpdate: (status: Status) => {
-        putStatuses([status]);
-        pushHomeQueue(putStatus(status));
+        putStatuses([status], account.instance);
+        pushHomeQueue(putStatus(status, account.instance));
       },
       onNotification: (notification) => {
-        if (notification.status) putStatuses([notification.status]);
+        if (notification.status) putStatuses([notification.status], account.instance);
         pushNotification(notification);
       },
       onStatusUpdate: (status) => {
-        putStatus(status);
+        putStatus(status, account.instance);
       },
       onDelete: (id: string) => {
         removeStatusById(account.instance, id);

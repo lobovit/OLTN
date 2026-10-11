@@ -38,6 +38,10 @@ export interface AppState {
   homeQueue: string[];
   notifQueue: Notification[];
   statuses: Record<string, Status>;
+  /** Instância em que o `id` de cada status é válido (para montar links). */
+  statusSources: Record<string, string>;
+  /** Accts bloqueados nesta sessão (oculta posts imediatamente). */
+  blockedAccounts: string[];
   ui: {
     compose: ComposeIntent | null;
     mediaViewer: MediaViewerIntent | null;
@@ -73,6 +77,8 @@ export const store = proxy<AppState>({
   homeQueue: [],
   notifQueue: [],
   statuses: {},
+  statusSources: {},
+  blockedAccounts: [],
   ui: {
     compose: null,
     mediaViewer: null,
@@ -89,21 +95,25 @@ export function statusKey(status: Status): string {
   return status.uri || String(status.id);
 }
 
-export function putStatuses(list: Status[]): void {
+export function putStatuses(list: Status[], source?: string): void {
   for (const status of list) {
-    if (status.reblog) putStatus(status.reblog);
-    putStatus(status);
+    if (status.reblog) putStatus(status.reblog, source);
+    putStatus(status, source);
   }
   const keys = Object.keys(store.statuses);
   if (keys.length > 1200) {
-    for (const key of keys.slice(0, 200)) delete store.statuses[key];
+    for (const key of keys.slice(0, 200)) {
+      delete store.statuses[key];
+      delete store.statusSources[key];
+    }
   }
 }
 
-export function putStatus(status: Status): string {
+export function putStatus(status: Status, source?: string): string {
   const key = statusKey(status);
-  if (status.reblog) putStatus(status.reblog);
+  if (status.reblog) putStatus(status.reblog, source);
   store.statuses[key] = status;
+  if (source) store.statusSources[key] = source;
   return key;
 }
 
@@ -114,8 +124,19 @@ export function patchStatus(key: string, patch: Partial<Status>): void {
 
 export function removeStatusById(instance: string, id: string): void {
   for (const [key, status] of Object.entries(store.statuses)) {
-    if (status.id === id && key.includes(instance)) delete store.statuses[key];
+    if (status.id === id && key.includes(instance)) {
+      delete store.statuses[key];
+      delete store.statusSources[key];
+    }
   }
+}
+
+/** Instância que originou um status em cache, buscando pelo `id`. */
+export function statusSourceById(id: string): string | undefined {
+  for (const [key, status] of Object.entries(store.statuses)) {
+    if (status.id === id) return store.statusSources[key];
+  }
+  return undefined;
 }
 
 /* ---------- ações de ui ---------- */

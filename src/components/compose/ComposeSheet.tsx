@@ -335,7 +335,7 @@ function ComposeInner(): JSX.Element {
                   inReplyToId: replyToId,
                   quotedStatusId: first ? quoteId : undefined,
                 });
-        store.ui.lastPostedKey = putStatus(status);
+        store.ui.lastPostedKey = putStatus(status, instance);
         replyToId = status.id;
         posted += 1;
       }

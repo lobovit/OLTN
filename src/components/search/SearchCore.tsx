@@ -55,7 +55,7 @@ export function SearchCore({ initialQuery = "", onNavigate }: SearchCoreProps): 
         setAccounts(result.accounts);
         setHashtags(result.hashtags);
         setStatuses(result.statuses);
-        putStatuses(result.statuses);
+        putStatuses(result.statuses, account.instance);
       } catch (err) {
         if (!cancelled) {
           console.warn("[oltn] search failed", err);

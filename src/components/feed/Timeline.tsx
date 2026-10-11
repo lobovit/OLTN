@@ -48,7 +48,7 @@ export function Timeline({
         { limit },
         { instance: targetInstance, accessToken: token },
       );
-      putStatuses(list);
+      putStatuses(list, targetInstance);
       setIds(list.map(statusKey));
       lastIdRef.current = list.length ? list[list.length - 1].id : null;
       setHasMore(list.length >= limit);
@@ -73,7 +73,7 @@ export function Timeline({
         { limit, maxId: lastIdRef.current },
         { instance: targetInstance, accessToken: token },
       );
-      putStatuses(list);
+      putStatuses(list, targetInstance);
       const keys = list.map(statusKey);
       setIds((prev) => [...prev, ...keys.filter((k) => !prev.includes(k))]);
       lastIdRef.current = list.length ? list[list.length - 1].id : lastIdRef.current;

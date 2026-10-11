@@ -2,14 +2,21 @@ import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import { getRest } from "../api/client";
-import type { Status } from "../api/types";
+import type { Context, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { back } from "../lib/router";
 import { StatusCard } from "../components/status/StatusCard";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
 import { TimelineSkeleton } from "../components/feed/Timeline";
-import { currentAccount, putStatus, putStatuses, statusKey, store } from "../state/store";
+import {
+  currentAccount,
+  putStatus,
+  putStatuses,
+  statusKey,
+  statusSourceById,
+  store,
+} from "../state/store";
 import { useStatus } from "../state/hooks";
 
 interface Props {
@@ -27,7 +34,7 @@ function replyDepth(status: Status, byId: Map<string, Status>): number {
 }
 
 export function StatusPage({ params }: Props): JSX.Element {
-  const instance = params.instance;
+  const instance = params.instance ?? currentAccount()?.instance;
   const id = params.id;
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const [ancestors, setAncestors] = useState<Status[]>([]);
@@ -109,29 +116,43 @@ export function StatusPage({ params }: Props): JSX.Element {
   }, [focusKey]);
 
   useEffect(() => {
-    if (!instance) return;
-    const inst: string = instance;
+    const inst = instance;
+    if (!inst) return;
     let cancelled = false;
-    async function load(): Promise<void> {
+    void (async () => {
       setError(null);
       const account = currentAccount();
-      const token = account && account.instance === inst ? account.accessToken : undefined;
-      const client = getRest(inst, token);
-      try {
+      const attempt = async (
+        source: string,
+      ): Promise<{ status: Status; context: Context; source: string }> => {
+        const token = account && account.instance === source ? account.accessToken : undefined;
+        const client = getRest(source, token);
         const [status, context] = await Promise.all([
           client.v1.statuses.$select(id).fetch(),
           client.v1.statuses.$select(id).context.fetch(),
         ]);
+        return { status, context, source };
+      };
+      try {
+        let result: { status: Status; context: Context; source: string };
+        try {
+          result = await attempt(inst);
+        } catch (err) {
+          // A rota pode apontar para a instância do autor; o `id` só é válido
+          // na instância que originou o post (fonte registrada no cache).
+          const source = statusSourceById(id);
+          if (!source || source === inst) throw err;
+          result = await attempt(source);
+        }
         if (cancelled) return;
-        putStatuses([...context.ancestors, ...context.descendants]);
-        setFocusKey(putStatus(status));
-        setAncestors(context.ancestors);
-        setDescendants(context.descendants);
+        putStatuses([...result.context.ancestors, ...result.context.descendants], result.source);
+        setFocusKey(putStatus(result.status, result.source));
+        setAncestors(result.context.ancestors);
+        setDescendants(result.context.descendants);
       } catch (err) {
         if (!cancelled) setError(err);
       }
-    }
-    void load();
+    })();
     return () => {
       cancelled = true;
     };
