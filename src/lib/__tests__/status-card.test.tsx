@@ -72,6 +72,27 @@ describe("StatusCard: actions on remote posts", () => {
   });
 });
 
+describe("StatusCard: boost cards", () => {
+  it("renders the inner status from the cache, not the stale wrapper copy", () => {
+    const inner = remoteStatus();
+    const wrapper = {
+      ...remoteStatus(),
+      id: "999",
+      uri: "https://remote.example/users/ana/statuses/999",
+      reblog: inner,
+    } as unknown as Status;
+    const wrapperKey = putStatus(wrapper as Status, "my.instance");
+    // A later fetch updates the inner entry (e.g. counts/boost state).
+    putStatus({ ...inner, reblogsCount: 7, reblogged: true } as unknown as Status, "my.instance");
+
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={wrapperKey} />, host);
+    const boost = host.querySelector<HTMLButtonElement>(".status-action.boost");
+    expect(boost?.getAttribute("aria-pressed")).toBe("true");
+    expect(host.querySelector(".status-action.boost .count")?.textContent).toBe("7");
+  });
+});
+
 describe("StatusCard: translation", () => {
   afterEach(() => {
     vi.unstubAllGlobals();

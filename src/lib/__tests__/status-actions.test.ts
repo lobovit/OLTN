@@ -7,7 +7,7 @@ import {
   votePoll,
   type StatusActionsContext,
 } from "../../state/status-actions";
-import { putStatus, store } from "../../state/store";
+import { putStatus, statusKey, store } from "../../state/store";
 
 function makeStatus(id: string, over: Partial<Status> = {}): Status {
   return {
@@ -85,7 +85,9 @@ function fakeClient(options: FakeClientOptions = {}) {
         list: async () => ({
           accounts: options.remote ? [{ id: "a-local" }] : [],
           hashtags: [],
-          statuses: options.remote ? [makeStatus("L9")] : [],
+          statuses: options.remote
+            ? [makeStatus("L9", { uri: "https://remote.example/users/u/statuses/77" })]
+            : [],
         }),
       },
     },
@@ -105,6 +107,7 @@ beforeEach(() => {
   store.statusSources = {};
   store.blockedAccounts = [];
   store.ui.toasts = [];
+  store.ui.boostsRevision = 0;
   store.instance = null;
 });
 
@@ -150,6 +153,36 @@ describe("toggleStatusAction", () => {
     expect(store.statuses[key]?.favourited).toBe(true);
   });
 
+  it("removes a boost optimistically and decrements the count", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(makeStatus("1", { reblogged: true, reblogsCount: 3 }), "mock.instance");
+    await toggleStatusAction(ctx(client), key, "boost");
+    expect(calls).toEqual(["unboost:1"]);
+    expect(store.statuses[key]?.reblogged).toBe(false);
+    expect(store.statuses[key]?.reblogsCount).toBe(2);
+  });
+
+  it("saves the server response after a boost", async () => {
+    const inner = makeStatus("1", { reblogged: true, reblogsCount: 1 });
+    const wrapper = makeStatus("W1", {
+      uri: "https://mock.instance/users/u/statuses/W1",
+      reblog: inner,
+    });
+    const client = {
+      v1: {
+        statuses: { $select: () => ({ reblog: async () => wrapper }) },
+      },
+      v2: {
+        search: { list: async () => ({ accounts: [], hashtags: [], statuses: [] }) },
+      },
+    } as unknown as RestClient;
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    await toggleStatusAction(ctx(client), key, "boost");
+    // The wrapper and its inner (same key) come from the server response.
+    expect(store.statuses[statusKey(wrapper)]?.reblog).toBeTruthy();
+    expect(store.statuses[key]?.reblogged).toBe(true);
+  });
+
   it("resolves the local id before acting on a status from another instance", async () => {
     const { client, calls } = fakeClient({ remote: true });
     const key = putStatus(
@@ -158,6 +191,10 @@ describe("toggleStatusAction", () => {
     );
     await toggleStatusAction(ctx(client), key, "boost");
     expect(calls).toEqual(["boost:L9"]);
+    // Resolving replaced the cache entry with the server copy (same uri);
+    // the optimistic patch must survive it.
+    expect(store.statuses[key]?.reblogged).toBe(true);
+    expect(store.statuses[key]?.reblogsCount).toBe(1);
   });
 });
 

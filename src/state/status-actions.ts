@@ -57,13 +57,13 @@ async function resolveLocal(
 function optimisticPatch(status: Status, kind: ToggleAction): Partial<Status> {
   if (kind === "boost") {
     return {
-      reblogsCount: status.reblogsCount + (status.reblogged ? 0 : 1),
+      reblogsCount: Math.max(0, status.reblogsCount + (status.reblogged ? -1 : 1)),
       reblogged: !status.reblogged,
     };
   }
   if (kind === "fav") {
     return {
-      favouritesCount: status.favouritesCount + (status.favourited ? 0 : 1),
+      favouritesCount: Math.max(0, status.favouritesCount + (status.favourited ? -1 : 1)),
       favourited: !status.favourited,
     };
   }
@@ -89,21 +89,27 @@ export async function toggleStatusAction(
   const status = store.statuses[key];
   if (!status) return false;
   if (!begin(key, kind)) return false;
-  patchStatus(key, optimisticPatch(status, kind));
+  const optimistic = optimisticPatch(status, kind);
+  patchStatus(key, optimistic);
+  const patched = store.statuses[key];
   try {
     const { local } = await resolveLocal(ctx, key, status);
     if (!local) throw new Error("status_resolve_failed");
+    // Resolving a remote status replaces the cached entry with the server
+    // copy; re-apply the optimistic patch so the in-flight state stays.
+    if (store.statuses[key] !== patched) patchStatus(key, optimistic);
     const selected = ctx.client.v1.statuses.$select(local.id);
+    // Save the server response (like Phanpy's saveStatus) so the cache is
+    // authoritative; boosting returns the wrapper, unboosting the original.
     if (kind === "boost") {
-      if (status.reblogged) await selected.unreblog();
-      else await selected.reblog();
+      const updated = status.reblogged ? await selected.unreblog() : await selected.reblog();
+      if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
     } else if (kind === "fav") {
-      if (status.favourited) await selected.unfavourite();
-      else await selected.favourite();
-    } else if (status.bookmarked) {
-      await selected.unbookmark();
+      const updated = status.favourited ? await selected.unfavourite() : await selected.favourite();
+      if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
     } else {
-      await selected.bookmark();
+      const updated = status.bookmarked ? await selected.unbookmark() : await selected.bookmark();
+      if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
     }
     return true;
   } catch (err) {

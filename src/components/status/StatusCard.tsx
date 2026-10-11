@@ -102,7 +102,13 @@ export function StatusCard({
 
   if (!outer) return null;
 
-  const target: Status = (outer.reblog ?? outer) as Status;
+  // Boost cards display the inner status through its own cache entry (like
+  // Phanpy's recursive <Status>), so stream/refetch/action updates reflect.
+  const innerKey = outer.reblog ? statusKeyOf(outer.reblog) : null;
+  const cachedInner = innerKey
+    ? (appState.statuses[innerKey] as unknown as Status | undefined)
+    : undefined;
+  const target: Status = (cachedInner ?? outer.reblog ?? outer) as Status;
   const booster = outer.reblog ? outer : null;
   const host = hostOf(target);
   const account = currentAccount();
