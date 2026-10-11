@@ -691,6 +691,13 @@
   color: var(--accent);
 }
 
+/* Botão "CW" do compose (texto em vez de ícone) */
+.toolbar-cw {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 /* ---------------- autocomplete de menção ---------------- */
 
 .mention-menu {
@@ -734,6 +741,195 @@
   color: var(--text-3);
   font-size: 0.84rem;
   white-space: nowrap;
+}
+
+/* ---------------- seletor de emojis ---------------- */
+
+.emoji-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.emoji-picker-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.emoji-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.emoji-tones {
+  display: flex;
+  gap: 2px;
+}
+
+.emoji-tone {
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.emoji-tone:hover,
+.emoji-tone.active {
+  background: var(--hover);
+}
+
+.emoji-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.emoji-group-title {
+  margin: var(--s2) 0 4px;
+  color: var(--text-3);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 2px;
+}
+
+.emoji-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.emoji-btn:hover {
+  background: var(--hover);
+}
+
+.emoji-custom img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.emoji-loading {
+  display: grid;
+  place-items: center;
+  padding: var(--s4);
+}
+
+.emoji-empty {
+  margin: var(--s2) 0;
+  text-align: center;
+}
+
+/* ---------------- tradução do rascunho ---------------- */
+
+.compose-translation {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--text-3);
+  font-size: 0.84rem;
+}
+
+.translate-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  padding: var(--s1);
+  overflow-y: auto;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.translate-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 6px var(--s3);
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.translate-option:hover {
+  background: var(--hover);
+}
+
+/* ---------------- agendamento do rascunho ---------------- */
+
+.compose-schedule {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--s2);
+}
+
+.compose-schedule.invalid {
+  color: var(--danger);
+}
+
+.schedule-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.schedule-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  color: var(--text-3);
+  font-size: 0.84rem;
+}
+
+.schedule-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.82rem;
+}
+
+.schedule-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+.schedule-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-top: var(--s1);
 }
 
 /* ---------------- seletor de visibilidade ---------------- */

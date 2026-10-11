@@ -1,13 +1,20 @@
 import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import { getRest } from "../../api/client";
-import type { ComposeVisibility, MediaAttachment, StatusVisibility } from "../../api/types";
+import { getCustomEmojis, getRest } from "../../api/client";
+import type {
+  ComposeVisibility,
+  CustomEmoji,
+  MediaAttachment,
+  StatusVisibility,
+} from "../../api/types";
 import type { Account } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
-import { htmlToPlainText } from "../../lib/format";
+import { fullDate, htmlToPlainText, languageName, toLocalInputValue } from "../../lib/format";
 import { userMessageForError } from "../../lib/errors";
+import { loadEmojiGroups, searchEmojis, type EmojiGroup, type EmojiItem } from "../../lib/emoji";
 import { splitThreadText } from "../../lib/thread";
+import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
 import { readJSON, writeJSON } from "../../lib/storage";
 import { Sheet } from "../ui/Sheet";
 import { Icon } from "../ui/Icon";
@@ -17,6 +24,7 @@ import { currentAccount, putStatus, setCompose, store, toast } from "../../state
 
 const CHAR_LIMIT = 500;
 const DRAFT_KEY = "compose-draft";
+const EMOJI_TONES = ["🏻", "🏼", "🏽", "🏾", "🏿"];
 
 interface Draft {
   text: string;
@@ -58,9 +66,20 @@ function ComposeInner(): JSX.Element {
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionItems, setMentionItems] = useState<Account[]>([]);
   const [mentionIndex, setMentionIndex] = useState(0);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [emojiQuery, setEmojiQuery] = useState("");
+  const [emojiTone, setEmojiTone] = useState(0);
+  const [emojiData, setEmojiData] = useState<EmojiGroup[] | null>(null);
+  const [customEmojis, setCustomEmojis] = useState<CustomEmoji[]>([]);
+  const [transOpen, setTransOpen] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translation, setTranslation] = useState<{ target: string; original: string } | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
   const mentionSeq = useRef(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const cwRef = useRef<HTMLInputElement>(null);
   const visPickerRef = useRef<HTMLDivElement>(null);
 
   /* limite de caracteres da instância + suporte a post local (Pleroma/Akkoma) */
@@ -94,6 +113,71 @@ function ComposeInner(): JSX.Element {
     window.addEventListener("pointerdown", onDown);
     return () => window.removeEventListener("pointerdown", onDown);
   }, [visOpen]);
+
+  /* carrega emojis Unicode (chunk separado) na primeira abertura */
+  useEffect(() => {
+    if (!emojiOpen || emojiData) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const groups = await loadEmojiGroups(store.settings.language);
+        if (!cancelled) setEmojiData(groups);
+      } catch (err) {
+        console.warn("[oltn] emoji data failed", err);
+        if (!cancelled) setEmojiData([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [emojiOpen, emojiData]);
+
+  /* carrega emojis personalizados da instância na primeira abertura */
+  useEffect(() => {
+    if (!emojiOpen || !account) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const list = await getCustomEmojis(instance, account.accessToken);
+        if (!cancelled) setCustomEmojis(list.filter((e) => e.visibleInPicker));
+      } catch (err) {
+        console.warn("[oltn] custom emojis failed", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [emojiOpen, instance, account]);
+
+  /* fecha popovers (emoji/tradução/agendamento) ao clicar fora ou com Escape */
+  useEffect(() => {
+    if (!emojiOpen && !transOpen && !scheduleOpen) return;
+    const onDown = (e: PointerEvent): void => {
+      const el = e.target as HTMLElement;
+      if (emojiOpen && !el.closest(".emoji-picker") && !el.closest("[data-emoji-toggle]")) {
+        setEmojiOpen(false);
+      }
+      if (transOpen && !el.closest(".translate-menu") && !el.closest("[data-translate-toggle]")) {
+        setTransOpen(false);
+      }
+      if (scheduleOpen && !el.closest(".schedule-panel") && !el.closest("[data-schedule-toggle]")) {
+        setScheduleOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") {
+        setEmojiOpen(false);
+        setTransOpen(false);
+        setScheduleOpen(false);
+      }
+    };
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [emojiOpen, transOpen, scheduleOpen]);
 
   /* busca de contas para autocomplete de menção (@parcial) */
   useEffect(() => {
@@ -152,6 +236,50 @@ function ComposeInner(): JSX.Element {
       ta.focus();
       ta.setSelectionRange(pos, pos);
     });
+  };
+
+  const insertAtCursor = (snippet: string): void => {
+    const ta = textRef.current;
+    const start = ta?.selectionStart ?? text.length;
+    const end = ta?.selectionEnd ?? start;
+    setText(text.slice(0, start) + snippet + text.slice(end));
+    if (ta) {
+      requestAnimationFrame(() => {
+        ta.focus();
+        const pos = start + snippet.length;
+        ta.setSelectionRange(pos, pos);
+      });
+    }
+  };
+
+  const emojiPreview = (item: EmojiItem): string =>
+    (emojiTone > 0 && item.s?.[emojiTone - 1]) || item.c;
+
+  const pickEmoji = (item: EmojiItem): void => insertAtCursor(emojiPreview(item));
+
+  const pickCustomEmoji = (custom: CustomEmoji): void => insertAtCursor(`:${custom.shortcode}: `);
+
+  const translateDraft = async (target: string): Promise<void> => {
+    const source = text.trim();
+    if (!source || translating) return;
+    setTransOpen(false);
+    setTranslating(true);
+    try {
+      const result = await translateText(source, target);
+      setTranslation({ target, original: text });
+      setText(result.text);
+    } catch (err) {
+      console.warn("[oltn] translate failed", err);
+      toast(t.errorTranslate, "error");
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const undoTranslation = (): void => {
+    if (!translation) return;
+    setText(translation.original);
+    setTranslation(null);
   };
 
   const visOptions: {
@@ -252,12 +380,23 @@ function ComposeInner(): JSX.Element {
   const canPoll = !media.length && !uploading;
   const threadParts =
     !isEdit && text.trim().length > charLimit ? splitThreadText(text.trim(), charLimit).length : 1;
+  const scheduleDate = scheduledAt ? new Date(scheduledAt) : null;
+  const scheduleValid = !scheduleDate || scheduleDate.getTime() >= Date.now() + 5 * 60_000;
+  const scheduleBlocked = isEdit || threadParts > 1;
   const canSubmit =
     !busy &&
     !uploading &&
     (text.trim().length > 0 || media.length > 0) &&
     (isEdit || remaining >= 0) &&
-    (!pollOn || pollOptions.every((o) => o.trim()));
+    (!pollOn || pollOptions.every((o) => o.trim())) &&
+    (!scheduleDate || (scheduleValid && !scheduleBlocked));
+
+  const emojiNeedle = emojiQuery.trim().toLowerCase();
+  const customMatches = emojiNeedle
+    ? customEmojis.filter((e) => e.shortcode.toLowerCase().includes(emojiNeedle))
+    : customEmojis.slice(0, 120);
+  const unicodeMatches =
+    emojiData && emojiQuery.trim() ? searchEmojis(emojiData, emojiQuery) : null;
 
   const upload = async (files: FileList | File[]): Promise<void> => {
     if (!account) return;
@@ -297,6 +436,26 @@ function ComposeInner(): JSX.Element {
             multiple: pollMultiple,
           }
         : undefined;
+      if (scheduleDate && scheduleValid && !scheduleBlocked) {
+        const common = {
+          status: rawText,
+          spoilerText: showCw ? spoiler : null,
+          visibility: visibility as StatusVisibility,
+          sensitive,
+          inReplyToId: replyTo?.id,
+          quotedStatusId: quoteId,
+          scheduledAt: scheduleDate.toISOString(),
+        };
+        if (mediaIds.length) {
+          await client.v1.statuses.create({ ...common, mediaIds });
+        } else {
+          await client.v1.statuses.create({ ...common, poll: pollParams });
+        }
+        if (intent.mode === "new") writeJSON(DRAFT_KEY, null);
+        toast(t.scheduledPost, "ok");
+        setCompose(null);
+        return;
+      }
       let replyToId = replyTo?.id;
       for (const part of parts) {
         const first = posted === 0;
@@ -394,6 +553,7 @@ function ComposeInner(): JSX.Element {
           <button
             type="button"
             class="icon-btn"
+            title={t.attachMedia}
             aria-label={t.attachMedia}
             disabled={media.length >= 4 || pollOn}
             onClick={() => fileRef.current?.click()}
@@ -403,6 +563,7 @@ function ComposeInner(): JSX.Element {
           <button
             type="button"
             class={`icon-btn ${pollOn ? "active" : ""}`}
+            title={t.addPoll}
             aria-label={t.addPoll}
             disabled={!canPoll}
             onClick={() => {
@@ -414,11 +575,62 @@ function ComposeInner(): JSX.Element {
           </button>
           <button
             type="button"
-            class={`icon-btn ${showCw ? "active" : ""}`}
+            class={`icon-btn toolbar-cw ${showCw ? "active" : ""}`}
+            title={t.contentWarning}
             aria-label={t.contentWarning}
-            onClick={() => setShowCw((v) => !v)}
+            aria-pressed={showCw}
+            onClick={() => {
+              const next = !showCw;
+              setShowCw(next);
+              if (next) requestAnimationFrame(() => cwRef.current?.focus());
+            }}
           >
-            <Icon name="eye-close-line" size={20} />
+            CW
+          </button>
+          <button
+            type="button"
+            class={`icon-btn ${emojiOpen ? "active" : ""}`}
+            data-emoji-toggle
+            title={t.emojiPicker}
+            aria-label={t.emojiPicker}
+            aria-expanded={emojiOpen}
+            onClick={() => {
+              setEmojiOpen((v) => !v);
+              setTransOpen(false);
+            }}
+          >
+            <Icon name="emoji-line" size={20} />
+          </button>
+          <button
+            type="button"
+            class={`icon-btn ${transOpen ? "active" : ""}`}
+            data-translate-toggle
+            title={t.translateTo}
+            aria-label={t.translateTo}
+            aria-expanded={transOpen}
+            disabled={!text.trim() || translating}
+            onClick={() => {
+              setTransOpen((v) => !v);
+              setEmojiOpen(false);
+            }}
+          >
+            {translating ? <span class="spinner" /> : <Icon name="translate-line" size={20} />}
+          </button>
+          <button
+            type="button"
+            class={`icon-btn ${scheduleOpen || scheduleDate ? "active" : ""}`}
+            data-schedule-toggle
+            title={scheduleBlocked ? t.scheduleNoThread : t.schedule}
+            aria-label={t.schedule}
+            aria-expanded={scheduleOpen}
+            disabled={scheduleBlocked}
+            onClick={() => {
+              setScheduleOpen((v) => !v);
+              setEmojiOpen(false);
+              setTransOpen(false);
+            }}
+          >
+            <Icon name="calendar-line" size={20} />
           </button>
           <div class="spacer" />
           <button
@@ -428,7 +640,17 @@ function ComposeInner(): JSX.Element {
             onClick={() => void submit()}
           >
             {busy && <span class="spinner" />}
-            {isEdit ? (busy ? t.saving : t.save) : busy ? t.posting : t.post}
+            {isEdit
+              ? busy
+                ? t.saving
+                : t.save
+              : busy
+                ? scheduleDate
+                  ? t.scheduling
+                  : t.posting
+                : scheduleDate
+                  ? t.schedule
+                  : t.post}
           </button>
         </>
       }
@@ -483,6 +705,7 @@ function ComposeInner(): JSX.Element {
             const target = e.target as HTMLTextAreaElement;
             setText(target.value);
             syncMentionQuery(target);
+            if (translation) setTranslation(null);
           }}
           onClick={(e) => syncMentionQuery(e.currentTarget as HTMLTextAreaElement)}
           onKeyUp={(e) => {
@@ -546,6 +769,181 @@ function ComposeInner(): JSX.Element {
                 <span class="mention-acct">@{candidate.acct}</span>
               </button>
             ))}
+          </div>
+        )}
+        {translation && (
+          <div class="compose-translation">
+            <Icon name="translate-line" size={14} />
+            <span>
+              {t.translated} · {languageName(translation.target)}
+            </span>
+            <button type="button" class="cw-toggle" onClick={undoTranslation}>
+              {t.undo}
+            </button>
+          </div>
+        )}
+        {transOpen && (
+          <div class="translate-menu" role="listbox" aria-label={t.translateTo}>
+            {TRANSLATE_TARGETS.map((code) => (
+              <button
+                key={code}
+                type="button"
+                role="option"
+                class="translate-option"
+                onClick={() => void translateDraft(code)}
+              >
+                <span>{languageName(code)}</span>
+                <span class="faint">{code}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {scheduleOpen && (
+          <div class="schedule-panel">
+            <label class="schedule-field">
+              <span>{t.scheduleAt}</span>
+              <input
+                type="datetime-local"
+                class="field"
+                min={toLocalInputValue(new Date(Date.now() + 5 * 60_000))}
+                value={scheduledAt}
+                onInput={(e) => setScheduledAt((e.target as HTMLInputElement).value)}
+              />
+            </label>
+            {scheduleDate && !scheduleValid && <p class="schedule-error">{t.scheduleTooSoon}</p>}
+            <div class="schedule-actions">
+              <button
+                type="button"
+                class="btn ghost sm"
+                disabled={!scheduledAt}
+                onClick={() => setScheduledAt("")}
+              >
+                {t.scheduleClear}
+              </button>
+              <button
+                type="button"
+                class="btn primary sm"
+                disabled={!scheduleDate || !scheduleValid}
+                onClick={() => setScheduleOpen(false)}
+              >
+                {t.confirm}
+              </button>
+            </div>
+          </div>
+        )}
+        {scheduleDate && !scheduleOpen && (
+          <div class={`compose-schedule pill ${scheduleValid ? "" : "invalid"}`}>
+            <Icon name="calendar-line" size={14} />
+            <span>
+              {t.scheduledFor} {fullDate(scheduleDate)}
+            </span>
+            {!scheduleValid && <span class="schedule-error">{t.scheduleTooSoon}</span>}
+            <button type="button" class="cw-toggle" onClick={() => setScheduledAt("")}>
+              {t.scheduleClear}
+            </button>
+          </div>
+        )}
+        {emojiOpen && (
+          <div class="emoji-picker" aria-label={t.emojiPicker}>
+            <div class="emoji-picker-head">
+              <input
+                class="field emoji-search"
+                type="search"
+                placeholder={t.emojiSearch}
+                value={emojiQuery}
+                onInput={(e) => setEmojiQuery((e.target as HTMLInputElement).value)}
+              />
+              <div class="emoji-tones" role="radiogroup" aria-label={t.skinTone}>
+                <button
+                  type="button"
+                  class={`emoji-tone ${emojiTone === 0 ? "active" : ""}`}
+                  aria-pressed={emojiTone === 0}
+                  title={t.skinTone}
+                  onClick={() => setEmojiTone(0)}
+                >
+                  ✋
+                </button>
+                {EMOJI_TONES.map((tone, index) => (
+                  <button
+                    key={tone}
+                    type="button"
+                    class={`emoji-tone ${emojiTone === index + 1 ? "active" : ""}`}
+                    aria-pressed={emojiTone === index + 1}
+                    onClick={() => setEmojiTone(emojiTone === index + 1 ? 0 : index + 1)}
+                  >
+                    {`✋${tone}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div class="emoji-scroll">
+              {customMatches.length > 0 && (
+                <section class="emoji-group">
+                  <h4 class="emoji-group-title">{t.emojiCustom}</h4>
+                  <div class="emoji-grid">
+                    {customMatches.map((custom) => (
+                      <button
+                        key={custom.shortcode}
+                        type="button"
+                        class="emoji-btn emoji-custom"
+                        title={`:${custom.shortcode}:`}
+                        aria-label={`:${custom.shortcode}:`}
+                        onClick={() => pickCustomEmoji(custom)}
+                      >
+                        <img src={custom.staticUrl || custom.url} alt="" loading="lazy" />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+              {unicodeMatches ? (
+                <section class="emoji-group">
+                  <div class="emoji-grid">
+                    {unicodeMatches.map((item) => (
+                      <button
+                        key={item.c}
+                        type="button"
+                        class="emoji-btn"
+                        title={item.l}
+                        aria-label={item.l}
+                        onClick={() => pickEmoji(item)}
+                      >
+                        {emojiPreview(item)}
+                      </button>
+                    ))}
+                  </div>
+                  {!unicodeMatches.length && !customMatches.length && (
+                    <p class="muted emoji-empty">{t.emojiEmpty}</p>
+                  )}
+                </section>
+              ) : emojiData?.length ? (
+                emojiData.map((group) => (
+                  <section class="emoji-group" key={group.id}>
+                    <h4 class="emoji-group-title">{group.label}</h4>
+                    <div class="emoji-grid">
+                      {group.emojis.map((item) => (
+                        <button
+                          key={item.c}
+                          type="button"
+                          class="emoji-btn"
+                          title={item.l}
+                          aria-label={item.l}
+                          onClick={() => pickEmoji(item)}
+                        >
+                          {emojiPreview(item)}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                ))
+              ) : emojiData ? (
+                <p class="muted emoji-empty">{t.emojiEmpty}</p>
+              ) : (
+                <div class="emoji-loading">
+                  <span class="spinner" />
+                </div>
+              )}
+            </div>
           </div>
         )}
         {media.length > 0 && (

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { extractMention, htmlToPlainText, normalizeInstance, timeAgo } from "../format";
+import {
+  extractMention,
+  htmlToPlainText,
+  normalizeInstance,
+  plainTextToHtml,
+  timeAgo,
+  toLocalInputValue,
+} from "../format";
 
 describe("normalizeInstance", () => {
   it("aceita hostname simples", () => {
@@ -30,6 +37,24 @@ describe("timeAgo", () => {
     const now = Date.now();
     expect(timeAgo(new Date(now - 60_000).toISOString())).toContain("min");
     expect(timeAgo(new Date(now - 3_600_000).toISOString())).toContain("h");
+  });
+});
+
+describe("toLocalInputValue", () => {
+  it("formata para datetime-local com zero à esquerda", () => {
+    expect(toLocalInputValue(new Date(2026, 0, 5, 9, 7))).toBe("2026-01-05T09:07");
+  });
+});
+
+describe("plainTextToHtml", () => {
+  it("converte parágrafos e quebras de linha", () => {
+    expect(plainTextToHtml("um\n\n dois\nlinha")).toBe("<p>um</p><p> dois<br>linha</p>");
+  });
+
+  it("escapa HTML", () => {
+    expect(plainTextToHtml('<b>"x"</b> & y')).toBe(
+      "<p>&lt;b&gt;&quot;x&quot;&lt;/b&gt; &amp; y</p>",
+    );
   });
 });
 
