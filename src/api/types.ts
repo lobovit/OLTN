@@ -65,6 +65,7 @@ export type ShortcutType =
   | "hashtag"
   | "bookmarks"
   | "favourites"
+  | "boosts"
   | "trending";
 
 export interface Shortcut {

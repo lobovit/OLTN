@@ -13,6 +13,7 @@ export type TimelineKind =
     }
   | { type: "bookmarks" }
   | { type: "favourites" }
+  | { type: "boosts"; accountId: string }
   | { type: "trending" };
 
 export interface PageArgs {
@@ -57,6 +58,27 @@ export async function fetchStatusPage(
       return client.v1.bookmarks.list(params);
     case "favourites":
       return client.v1.favourites.list(params);
+    case "boosts": {
+      // A API não tem endpoint só de boosts: pagina os posts do perfil e filtra.
+      const limit = args.limit ?? 20;
+      const boosts: Status[] = [];
+      let maxId = args.maxId;
+      for (let page = 0; page < 4 && boosts.length < limit; page++) {
+        const list = await client.v1.accounts.$select(kind.accountId).statuses.list({
+          limit: 40,
+          maxId,
+          excludeReplies: true,
+          excludeReblogs: false,
+        });
+        if (!list.length) break;
+        maxId = list[list.length - 1].id;
+        for (const status of list) {
+          if (status.reblog && boosts.length < limit) boosts.push(status);
+        }
+        if (list.length < 40) break;
+      }
+      return boosts;
+    }
     case "trending":
       return client.v1.trends.statuses.list({ limit: args.limit ?? 20 });
     default:

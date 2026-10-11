@@ -54,6 +54,7 @@ export function SettingsPage(): JSX.Element {
     ["hashtag", t.hashtag],
     ["bookmarks", t.bookmarks],
     ["favourites", t.favourites],
+    ["boosts", t.boosts],
     ["trending", t.trending],
   ];
 

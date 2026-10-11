@@ -4,6 +4,7 @@ import { useSnapshot } from "valtio";
 import type { Shortcut, ShortcutType } from "../api/types";
 import { NotificationsFeed } from "../components/feed/NotificationsFeed";
 import { Timeline } from "../components/feed/Timeline";
+import { TrendingFeed } from "../components/feed/TrendingFeed";
 import { ConversationsFeed } from "../components/feed/ConversationsFeed";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
@@ -106,6 +107,14 @@ const NAV_ITEMS: {
     iconActive: "trending-up-fill",
     labelKey: "trending",
     column: "trending",
+  },
+  {
+    id: "/boosts",
+    href: "/boosts",
+    icon: "repeat-line",
+    iconActive: "repeat-line",
+    labelKey: "boosts",
+    column: "boosts",
   },
   {
     id: "/l",
@@ -689,7 +698,11 @@ export function MultiColumns(): JSX.Element {
               </button>
             </header>
             <div class="deck-body">
-              <ColumnContent shortcut={shortcut} instance={account?.instance} />
+              <ColumnContent
+                shortcut={shortcut}
+                instance={account?.instance}
+                accountId={account?.id}
+              />
             </div>
             <div
               class="col-resize"
@@ -734,9 +747,11 @@ export function MultiColumns(): JSX.Element {
 function ColumnContent({
   shortcut,
   instance,
+  accountId,
 }: {
   shortcut: Shortcut;
   instance?: string;
+  accountId?: string;
 }): JSX.Element {
   switch (shortcut.type) {
     case "home":
@@ -755,8 +770,14 @@ function ColumnContent({
       return <Timeline kind={{ type: "bookmarks" }} instance={instance} />;
     case "favourites":
       return <Timeline kind={{ type: "favourites" }} instance={instance} />;
+    case "boosts":
+      return accountId ? (
+        <Timeline kind={{ type: "boosts", accountId }} instance={instance} />
+      ) : (
+        <div />
+      );
     case "trending":
-      return <Timeline kind={{ type: "trending" }} instance={instance} />;
+      return <TrendingFeed instance={instance} />;
     case "list":
       return <Timeline kind={{ type: "list", listId: shortcut.value ?? "" }} instance={instance} />;
     case "hashtag":

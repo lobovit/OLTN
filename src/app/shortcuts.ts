@@ -19,6 +19,8 @@ export function shortcutRoute(shortcut: Shortcut): string {
       return "/b";
     case "favourites":
       return "/f";
+    case "boosts":
+      return "/boosts";
     case "trending":
       return "/trending";
     case "list":
