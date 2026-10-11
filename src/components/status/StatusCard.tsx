@@ -212,9 +212,12 @@ export function StatusCard({
         if (id) {
           try {
             const client = getRest(instance, account.accessToken);
-            result = (await client.v1.statuses
+            const instanceTranslation = (await client.v1.statuses
               .$select(id)
               .translate({ lang })) as unknown as Translation;
+            // The instance may reply 200 without content (e.g. target language
+            // unsupported by its backend); fall back to Google in that case.
+            if (instanceTranslation?.content) result = instanceTranslation;
           } catch (err) {
             console.warn("[oltn] instance translate failed; using fallback", err);
             const status = httpStatusOf(err);

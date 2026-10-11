@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "preact";
 import type { Status } from "../../api/types";
 import { StatusCard } from "../../components/status/StatusCard";
@@ -51,8 +51,8 @@ beforeEach(() => {
   store.currentAccountId = "me";
 });
 
-describe("StatusCard: ações em posts remotos", () => {
-  it("habilita curtir/responder mesmo quando o autor é de outra instância", () => {
+describe("StatusCard: actions on remote posts", () => {
+  it("enables fav/reply even when the author is from another instance", () => {
     const key = putStatus(remoteStatus(), "my.instance");
     const host = document.createElement("div");
     render(<StatusCard statusKey={key} />, host);
@@ -64,10 +64,46 @@ describe("StatusCard: ações em posts remotos", () => {
     expect(boost?.disabled).toBe(false);
   });
 
-  it("habilita ações também para posts carregados de outra instância", () => {
+  it("also enables actions for posts loaded from another instance", () => {
     const key = putStatus(remoteStatus(), "other.instance");
     const host = document.createElement("div");
     render(<StatusCard statusKey={key} />, host);
     expect(host.querySelector<HTMLButtonElement>(".status-action.fav")?.disabled).toBe(false);
+  });
+});
+
+describe("StatusCard: translation", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("falls back to Google when the instance replies without content", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("translate.googleapis.com")) {
+        return new Response(JSON.stringify([[["olá mundo", "hello world", null]], null, "en"]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response("{}", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const key = putStatus(remoteStatus(), "my.instance");
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={key} />, host);
+    host.querySelector<HTMLButtonElement>(".translation .cw-toggle")?.click();
+    await vi.waitFor(() => {
+      expect(host.querySelector(".translate-option")).toBeTruthy();
+    });
+    host.querySelector<HTMLButtonElement>(".translate-option")?.click();
+    await vi.waitFor(() => {
+      expect(host.querySelector(".content")?.textContent).toContain("olá mundo");
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
