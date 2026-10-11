@@ -1,0 +1,197 @@
+/* Status actions: mutation pipeline for statuses (boost, fav, bookmark,
+   block, report, vote) behind an injected client — optimistic patch, local
+   id resolution, call, rollback and toast in a single module. */
+
+import type { Poll, RestClient, Status } from "../api/types";
+import { t } from "../i18n/pt-BR";
+import { userMessageForError } from "../lib/errors";
+import { localAccountId, localStatus } from "../lib/resolve";
+import { patchStatus, putStatus, store, toast } from "./store";
+
+export interface StatusActionsContext {
+  /** REST client for the account instance (HTTP in production, fake in tests). */
+  client: RestClient;
+  /** Account instance — where the local id is valid. */
+  instance: string;
+}
+
+export type ToggleAction = "boost" | "fav" | "bookmark";
+
+/** One in-flight action per status+action; repeated clicks are ignored. */
+const inFlight = new Set<string>();
+
+function begin(key: string, action: string): boolean {
+  const guard = `${key}:${action}`;
+  if (inFlight.has(guard)) return false;
+  inFlight.add(guard);
+  return true;
+}
+
+function end(key: string, action: string): void {
+  inFlight.delete(`${key}:${action}`);
+}
+
+/** Instance that originated the status (the id is only valid there). */
+function sourceInstanceFor(key: string, status: Status): string {
+  const stored = store.statusSources[key];
+  if (stored) return stored;
+  try {
+    return new URL(status.uri).host;
+  } catch {
+    return store.instance?.uri ?? "";
+  }
+}
+
+/** Local status on the account instance (resolves when it came from another). */
+async function resolveLocal(
+  ctx: StatusActionsContext,
+  key: string,
+  status: Status,
+): Promise<{ local: Status | null; source: string }> {
+  const source = sourceInstanceFor(key, status);
+  const local = await localStatus(ctx.client, ctx.instance, status, source);
+  if (local && local !== status) putStatus(local, ctx.instance);
+  return { local, source };
+}
+
+function optimisticPatch(status: Status, kind: ToggleAction): Partial<Status> {
+  if (kind === "boost") {
+    return {
+      reblogsCount: status.reblogsCount + (status.reblogged ? 0 : 1),
+      reblogged: !status.reblogged,
+    };
+  }
+  if (kind === "fav") {
+    return {
+      favouritesCount: status.favouritesCount + (status.favourited ? 0 : 1),
+      favourited: !status.favourited,
+    };
+  }
+  return { bookmarked: !status.bookmarked };
+}
+
+function revertPatch(status: Status): Partial<Status> {
+  return {
+    reblogsCount: status.reblogsCount,
+    reblogged: status.reblogged,
+    favouritesCount: status.favouritesCount,
+    favourited: status.favourited,
+    bookmarked: status.bookmarked,
+  };
+}
+
+/** Fav / boost / bookmark with optimistic update and rollback. */
+export async function toggleStatusAction(
+  ctx: StatusActionsContext,
+  key: string,
+  kind: ToggleAction,
+): Promise<boolean> {
+  const status = store.statuses[key];
+  if (!status) return false;
+  if (!begin(key, kind)) return false;
+  patchStatus(key, optimisticPatch(status, kind));
+  try {
+    const { local } = await resolveLocal(ctx, key, status);
+    if (!local) throw new Error("status_resolve_failed");
+    const selected = ctx.client.v1.statuses.$select(local.id);
+    if (kind === "boost") {
+      if (status.reblogged) await selected.unreblog();
+      else await selected.reblog();
+    } else if (kind === "fav") {
+      if (status.favourited) await selected.unfavourite();
+      else await selected.favourite();
+    } else if (status.bookmarked) {
+      await selected.unbookmark();
+    } else {
+      await selected.bookmark();
+    }
+    return true;
+  } catch (err) {
+    console.warn("[oltn] action failed", err);
+    patchStatus(key, revertPatch(status));
+    toast(userMessageForError(err, t.errorGeneric), "error");
+    return false;
+  } finally {
+    end(key, kind);
+  }
+}
+
+/** Blocks the status author and records the hiding invariant. */
+export async function blockStatusAuthor(ctx: StatusActionsContext, key: string): Promise<boolean> {
+  const status = store.statuses[key];
+  if (!status) return false;
+  if (!begin(key, "block")) return false;
+  try {
+    const source = sourceInstanceFor(key, status);
+    const accountId = await localAccountId(ctx.client, ctx.instance, status.account, source);
+    if (!accountId) throw new Error("block_resolve_failed");
+    await ctx.client.v1.accounts.$select(accountId).block();
+    const acct = status.account.acct;
+    if (!store.blockedAccounts.includes(acct)) {
+      store.blockedAccounts = [...store.blockedAccounts, acct];
+    }
+    toast(t.blocked, "ok");
+    return true;
+  } catch (err) {
+    console.warn("[oltn] block failed", err);
+    toast(userMessageForError(err, t.errorGeneric), "error");
+    return false;
+  } finally {
+    end(key, "block");
+  }
+}
+
+/** Reports the status (with optional comment). */
+export async function reportStatus(
+  ctx: StatusActionsContext,
+  key: string,
+  comment: string,
+): Promise<boolean> {
+  const status = store.statuses[key];
+  if (!status) return false;
+  if (!begin(key, "report")) return false;
+  try {
+    const source = sourceInstanceFor(key, status);
+    const [local, accountId] = await Promise.all([
+      localStatus(ctx.client, ctx.instance, status, source),
+      localAccountId(ctx.client, ctx.instance, status.account, source),
+    ]);
+    if (!local || !accountId) throw new Error("report_resolve_failed");
+    await ctx.client.v1.reports.create({
+      accountId,
+      statusIds: [local.id],
+      comment: comment.trim() || undefined,
+    });
+    toast(t.reportSent, "ok");
+    return true;
+  } catch (err) {
+    console.warn("[oltn] report failed", err);
+    toast(userMessageForError(err, t.errorGeneric), "error");
+    return false;
+  } finally {
+    end(key, "report");
+  }
+}
+
+/** Votes on the status poll (once, unless multiple choice). */
+export async function votePoll(
+  ctx: StatusActionsContext,
+  key: string,
+  choice: number,
+): Promise<boolean> {
+  const poll = store.statuses[key]?.poll;
+  if (!poll) return false;
+  if (!poll.multiple && poll.voted) return false;
+  if (!begin(key, "vote")) return false;
+  try {
+    const updated = await ctx.client.v1.polls.$select(poll.id).votes.create({ choices: [choice] });
+    patchStatus(key, { poll: updated as unknown as Poll });
+    return true;
+  } catch (err) {
+    console.warn("[oltn] vote failed", err);
+    toast(userMessageForError(err, t.errorGeneric), "error");
+    return false;
+  } finally {
+    end(key, "vote");
+  }
+}

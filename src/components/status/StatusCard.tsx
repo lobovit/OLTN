@@ -12,19 +12,19 @@ import {
   shortNumber,
   timeAgo,
 } from "../../lib/format";
-import { httpStatusOf, userMessageForError } from "../../lib/errors";
+import { httpStatusOf } from "../../lib/errors";
 import { navigate } from "../../lib/router";
-import { localAccountId, localStatus } from "../../lib/resolve";
+import { localStatus } from "../../lib/resolve";
 import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
 import {
   currentAccount,
-  patchStatus,
   putStatus,
   setCompose,
   statusKey as statusKeyOf,
   store,
   toast,
 } from "../../state/store";
+import { blockStatusAuthor, toggleStatusAction } from "../../state/status-actions";
 import { useStatus } from "../../state/hooks";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
@@ -35,7 +35,7 @@ import { PollView } from "./Poll";
 import { ReportSheet } from "./ReportSheet";
 import "./status.css";
 
-/** Instâncias que recusaram a tradução nativa (sem serviço configurado). */
+/** Instances that refused native translation (no service configured). */
 const instanceTranslateUnsupported = new Set<string>();
 
 interface StatusCardProps {
@@ -109,15 +109,20 @@ export function StatusCard({
   const canAct = appState.auth === "authenticated" && !!account;
   const isSelf = !!appState.me && appState.me.id === target.account.id;
   const targetKey = statusKeyOf(target);
-  // O `id` só é válido na instância que originou o status — para posts
-  // remotos/impulsionados isso não é o host do autor.
+  // The `id` is only valid on the instance that originated the status — for
+  // remote/boosted posts this is not the author's host.
   const sourceInstance = store.statusSources[targetKey] ?? host;
   const openHref = `/${encodeURIComponent(sourceInstance)}/s/${target.id}`;
 
-  /** Id do status na instância da conta (resolve posts de outras instâncias). */
+  /** Status id on the account instance (resolves posts from other instances). */
   const resolveLocalId = async (): Promise<string | null> => {
     if (!account) return null;
-    const local = await localStatus(account.instance, account.accessToken, target, sourceInstance);
+    const local = await localStatus(
+      getRest(account.instance, account.accessToken),
+      account.instance,
+      target,
+      sourceInstance,
+    );
     if (!local) return null;
     if (local !== target) putStatus(local, account.instance);
     return local.id;
@@ -138,26 +143,10 @@ export function StatusCard({
     if (!account) return;
     setMenuPos(null);
     if (!window.confirm(`${t.blockConfirm} @${target.account.acct}`)) return;
-    const id = await localAccountId(
-      account.instance,
-      account.accessToken,
-      target.account,
-      sourceInstance,
+    await blockStatusAuthor(
+      { client: getRest(account.instance, account.accessToken), instance: account.instance },
+      targetKey,
     );
-    if (!id) {
-      toast(t.errorGeneric, "error");
-      return;
-    }
-    try {
-      await getRest(account.instance, account.accessToken).v1.accounts.$select(id).block();
-      if (!store.blockedAccounts.includes(target.account.acct)) {
-        store.blockedAccounts = [...store.blockedAccounts, target.account.acct];
-      }
-      toast(t.blocked, "ok");
-    } catch (err) {
-      console.warn("[oltn] block failed", err);
-      toast(userMessageForError(err, t.errorGeneric), "error");
-    }
   };
 
   const filtered = (target.filtered ?? []).filter((f) => f.filter);
@@ -168,9 +157,9 @@ export function StatusCard({
 
   const openStatus = (e: MouseEvent): void => {
     const el = e.target as HTMLElement;
-    // Links, botões, mídia e enquetes têm comportamento próprio
+    // Links, buttons, media and polls have their own behavior
     if (el.closest("a, button, .media-grid, .poll")) return;
-    // Não navega se o usuário está selecionando texto
+    // Do not navigate while the user is selecting text
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed && selection.toString().trim()) return;
     navigate(openHref);
@@ -181,50 +170,14 @@ export function StatusCard({
     navigate(accountRoute(target.account.acct, host));
   };
 
-  const act = async (kind: "boost" | "fav" | "bookmark", e: MouseEvent): Promise<void> => {
+  const act = (kind: "boost" | "fav" | "bookmark", e: MouseEvent): void => {
     e.stopPropagation();
     if (!canAct || !account) return;
-    const key = targetKey;
-    const optimistic: Partial<Status> =
-      kind === "boost"
-        ? {
-            reblogsCount: target.reblogsCount + (target.reblogged ? 0 : 1),
-            reblogged: !target.reblogged,
-          }
-        : kind === "fav"
-          ? {
-              favouritesCount: target.favouritesCount + (target.favourited ? 0 : 1),
-              favourited: !target.favourited,
-            }
-          : { bookmarked: !target.bookmarked };
-    patchStatus(key, optimistic);
-    try {
-      const id = await resolveLocalId();
-      if (!id) throw new Error("status_resolve_failed");
-      const client = getRest(account.instance, account.accessToken);
-      const sel = client.v1.statuses.$select(id);
-      if (kind === "boost") {
-        if (target.reblogged) await sel.unreblog();
-        else await sel.reblog();
-      } else if (kind === "fav") {
-        if (target.favourited) await sel.unfavourite();
-        else await sel.favourite();
-      } else if (target.bookmarked) {
-        await sel.unbookmark();
-      } else {
-        await sel.bookmark();
-      }
-    } catch (err) {
-      console.warn("[oltn] action failed", err);
-      patchStatus(key, {
-        reblogsCount: target.reblogsCount,
-        reblogged: target.reblogged,
-        favouritesCount: target.favouritesCount,
-        favourited: target.favourited,
-        bookmarked: target.bookmarked,
-      });
-      toast(userMessageForError(err, t.errorGeneric), "error");
-    }
+    void toggleStatusAction(
+      { client: getRest(account.instance, account.accessToken), instance: account.instance },
+      targetKey,
+      kind,
+    );
   };
 
   const reply = async (e: MouseEvent): Promise<void> => {
@@ -438,7 +391,6 @@ export function StatusCard({
               <PollView
                 poll={target.poll}
                 statusKey={targetKey}
-                instance={sourceInstance}
                 canVote={canAct && sourceInstance === account?.instance}
               />
             )}
@@ -609,11 +561,7 @@ export function StatusCard({
         )}
       </article>
       {reportOpen && (
-        <ReportSheet
-          status={target}
-          sourceInstance={sourceInstance}
-          onClose={() => setReportOpen(false)}
-        />
+        <ReportSheet statusKey={targetKey} status={target} onClose={() => setReportOpen(false)} />
       )}
     </>
   );

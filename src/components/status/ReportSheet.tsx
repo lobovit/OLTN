@@ -3,20 +3,19 @@ import { useState } from "preact/hooks";
 import { getRest } from "../../api/client";
 import type { Status } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
-import { userMessageForError } from "../../lib/errors";
-import { localAccountId, localStatus } from "../../lib/resolve";
-import { currentAccount, toast } from "../../state/store";
+import { reportStatus } from "../../state/status-actions";
+import { currentAccount } from "../../state/store";
 import { Avatar } from "../ui/Avatar";
 import { Sheet } from "../ui/Sheet";
 import { Content } from "./Content";
 
 interface ReportSheetProps {
+  statusKey: string;
   status: Status;
-  sourceInstance: string;
   onClose: () => void;
 }
 
-export function ReportSheet({ status, sourceInstance, onClose }: ReportSheetProps): JSX.Element {
+export function ReportSheet({ statusKey, status, onClose }: ReportSheetProps): JSX.Element {
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -25,21 +24,12 @@ export function ReportSheet({ status, sourceInstance, onClose }: ReportSheetProp
     if (!account || busy) return;
     setBusy(true);
     try {
-      const [local, accountId] = await Promise.all([
-        localStatus(account.instance, account.accessToken, status, sourceInstance),
-        localAccountId(account.instance, account.accessToken, status.account, sourceInstance),
-      ]);
-      if (!local || !accountId) throw new Error("report_resolve_failed");
-      await getRest(account.instance, account.accessToken).v1.reports.create({
-        accountId,
-        statusIds: [local.id],
-        comment: comment.trim() || undefined,
-      });
-      toast(t.reportSent, "ok");
-      onClose();
-    } catch (err) {
-      console.warn("[oltn] report failed", err);
-      toast(userMessageForError(err, t.errorGeneric), "error");
+      const ok = await reportStatus(
+        { client: getRest(account.instance, account.accessToken), instance: account.instance },
+        statusKey,
+        comment,
+      );
+      if (ok) onClose();
     } finally {
       setBusy(false);
     }

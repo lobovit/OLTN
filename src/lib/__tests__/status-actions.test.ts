@@ -1,0 +1,239 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import type { Poll, RestClient, Status } from "../../api/types";
+import {
+  blockStatusAuthor,
+  reportStatus,
+  toggleStatusAction,
+  votePoll,
+  type StatusActionsContext,
+} from "../../state/status-actions";
+import { putStatus, store } from "../../state/store";
+
+function makeStatus(id: string, over: Partial<Status> = {}): Status {
+  return {
+    id,
+    uri: `https://mock.instance/users/u/statuses/${id}`,
+    url: `https://mock.instance/@u/${id}`,
+    created_at: new Date().toISOString(),
+    content: "<p>x</p>",
+    account: {
+      id: "a2",
+      acct: "u@remote.example",
+      username: "u",
+      displayName: "U",
+      avatar: "",
+      avatarStatic: "",
+      emojis: [],
+    },
+    reblogsCount: 0,
+    favouritesCount: 0,
+    repliesCount: 0,
+    favourited: false,
+    reblogged: false,
+    bookmarked: false,
+    mediaAttachments: [],
+    mentions: [],
+    tags: [],
+    emojis: [],
+    ...over,
+  } as unknown as Status;
+}
+
+interface FakeClientOptions {
+  failOn?: string;
+  remote?: boolean;
+  favourite?: () => Promise<unknown>;
+}
+
+function fakeClient(options: FakeClientOptions = {}) {
+  const calls: string[] = [];
+  const maybeFail = async (label: string, result: unknown = {}): Promise<unknown> => {
+    calls.push(label);
+    if (options.failOn && label.startsWith(options.failOn)) throw new Error(`falha em ${label}`);
+    return result;
+  };
+  const client = {
+    v1: {
+      statuses: {
+        $select: (id: string) => ({
+          favourite: () => options.favourite?.() ?? maybeFail(`fav:${id}`),
+          unfavourite: () => maybeFail(`unfav:${id}`),
+          reblog: () => maybeFail(`boost:${id}`),
+          unreblog: () => maybeFail(`unboost:${id}`),
+          bookmark: () => maybeFail(`bookmark:${id}`),
+          unbookmark: () => maybeFail(`unbookmark:${id}`),
+        }),
+      },
+      accounts: { $select: (id: string) => ({ block: () => maybeFail(`block:${id}`) }) },
+      reports: { create: () => maybeFail("report", { id: "r1" }) },
+      polls: {
+        $select: (id: string) => ({
+          votes: {
+            create: () =>
+              maybeFail(`vote:${id}`, {
+                id,
+                voted: true,
+                expired: false,
+                options: [],
+              } as unknown as Poll),
+          },
+        }),
+      },
+    },
+    v2: {
+      search: {
+        list: async () => ({
+          accounts: options.remote ? [{ id: "a-local" }] : [],
+          hashtags: [],
+          statuses: options.remote ? [makeStatus("L9")] : [],
+        }),
+      },
+    },
+  };
+  return { client: client as unknown as RestClient, calls };
+}
+
+const ctx = (client: RestClient): StatusActionsContext => ({
+  client,
+  instance: "mock.instance",
+});
+
+const lastToast = () => store.ui.toasts[store.ui.toasts.length - 1];
+
+beforeEach(() => {
+  store.statuses = {};
+  store.statusSources = {};
+  store.blockedAccounts = [];
+  store.ui.toasts = [];
+  store.instance = null;
+});
+
+describe("toggleStatusAction", () => {
+  it("curte de forma otimista e confirma na API", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    await toggleStatusAction(ctx(client), key, "fav");
+    expect(store.statuses[key]?.favourited).toBe(true);
+    expect(store.statuses[key]?.favouritesCount).toBe(1);
+    expect(calls).toEqual(["fav:1"]);
+    expect(store.ui.toasts).toHaveLength(0);
+  });
+
+  it("reverts the optimistic state when the API fails", async () => {
+    const { client } = fakeClient({ failOn: "fav:" });
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    const ok = await toggleStatusAction(ctx(client), key, "fav");
+    expect(ok).toBe(false);
+    expect(store.statuses[key]?.favourited).toBe(false);
+    expect(store.statuses[key]?.favouritesCount).toBe(0);
+    expect(lastToast()?.kind).toBe("error");
+  });
+
+  it("ignores a double click while the action is in flight", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const favourite = async (): Promise<unknown> => {
+      await gate;
+      return makeStatus("1", { favourited: true });
+    };
+    const { client } = fakeClient({ favourite });
+    const key = putStatus(makeStatus("1"), "mock.instance");
+
+    const first = toggleStatusAction(ctx(client), key, "fav");
+    const second = await toggleStatusAction(ctx(client), key, "fav");
+    expect(second).toBe(false);
+
+    release();
+    expect(await first).toBe(true);
+    expect(store.statuses[key]?.favourited).toBe(true);
+  });
+
+  it("resolves the local id before acting on a status from another instance", async () => {
+    const { client, calls } = fakeClient({ remote: true });
+    const key = putStatus(
+      makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
+      "other.instance",
+    );
+    await toggleStatusAction(ctx(client), key, "boost");
+    expect(calls).toEqual(["boost:L9"]);
+  });
+});
+
+describe("blockStatusAuthor", () => {
+  it("blocks and records the hiding invariant", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    const ok = await blockStatusAuthor(ctx(client), key);
+    expect(ok).toBe(true);
+    expect(calls).toEqual(["block:a2"]);
+    expect(store.blockedAccounts).toContain("u@remote.example");
+    expect(lastToast()?.kind).toBe("ok");
+  });
+
+  it("records nothing when blocking fails", async () => {
+    const { client } = fakeClient({ failOn: "block:" });
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    const ok = await blockStatusAuthor(ctx(client), key);
+    expect(ok).toBe(false);
+    expect(store.blockedAccounts).toHaveLength(0);
+    expect(lastToast()?.kind).toBe("error");
+  });
+});
+
+describe("reportStatus", () => {
+  it("denuncia o status resolvido localmente", async () => {
+    const { client, calls } = fakeClient({ remote: true });
+    const key = putStatus(
+      makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
+      "other.instance",
+    );
+    const ok = await reportStatus(ctx(client), key, "  spam  ");
+    expect(ok).toBe(true);
+    expect(calls).toEqual(["report"]);
+    expect(lastToast()?.kind).toBe("ok");
+  });
+
+  it("fails without available resolvers", async () => {
+    const { client } = fakeClient();
+    const key = putStatus(
+      makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
+      "other.instance",
+    );
+    const ok = await reportStatus(ctx(client), key, "");
+    expect(ok).toBe(false);
+    expect(lastToast()?.kind).toBe("error");
+  });
+});
+
+describe("votePoll", () => {
+  const polled = (over: Partial<Poll> = {}): Status =>
+    makeStatus("1", {
+      poll: {
+        id: "p1",
+        multiple: false,
+        voted: false,
+        expired: false,
+        options: [],
+        ...over,
+      } as unknown as Poll,
+    });
+
+  it("votes and updates the poll with the server response", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(polled(), "mock.instance");
+    const ok = await votePoll(ctx(client), key, 0);
+    expect(ok).toBe(true);
+    expect(calls).toEqual(["vote:p1"]);
+    expect(store.statuses[key]?.poll?.voted).toBe(true);
+  });
+
+  it("does not vote again on a single-choice poll", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(polled({ voted: true }), "mock.instance");
+    const ok = await votePoll(ctx(client), key, 0);
+    expect(ok).toBe(false);
+    expect(calls).toHaveLength(0);
+  });
+});

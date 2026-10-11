@@ -1,12 +1,11 @@
-/* Resolve entidades locais (na instância da conta) de posts/contas vistas
-   a partir de outra instância — os ids só valem onde foram originados. */
+/* Resolves local entities (on the account instance) for posts/accounts seen
+   from another instance — ids are only valid where they originated. */
 
-import { getRest } from "../api/client";
-import type { Account, Status } from "../api/types";
+import type { Account, RestClient, Status } from "../api/types";
 
 export async function localStatus(
+  client: RestClient,
   instance: string,
-  accessToken: string | undefined,
   status: Status,
   sourceInstance: string,
 ): Promise<Status | null> {
@@ -14,7 +13,7 @@ export async function localStatus(
   const query = status.uri || status.url;
   if (!query) return null;
   try {
-    const result = await getRest(instance, accessToken).v2.search.list({
+    const result = await client.v2.search.list({
       q: query,
       resolve: true,
       type: "statuses",
@@ -28,14 +27,14 @@ export async function localStatus(
 }
 
 export async function localAccountId(
+  client: RestClient,
   instance: string,
-  accessToken: string | undefined,
   account: Pick<Account, "id" | "acct">,
   sourceInstance: string,
 ): Promise<string | null> {
   if (sourceInstance === instance) return account.id;
   try {
-    const result = await getRest(instance, accessToken).v2.search.list({
+    const result = await client.v2.search.list({
       q: account.acct,
       resolve: true,
       type: "accounts",

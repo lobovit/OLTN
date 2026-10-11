@@ -4,36 +4,31 @@ import { getRest } from "../../api/client";
 import type { Poll } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { fullDate, fullNumber, shortDate } from "../../lib/format";
-import { currentAccount, patchStatus, toast } from "../../state/store";
+import { votePoll } from "../../state/status-actions";
+import { currentAccount } from "../../state/store";
 
 interface PollViewProps {
   poll: Poll;
   statusKey: string;
-  instance: string;
   canVote: boolean;
 }
 
-export function PollView({ poll, statusKey, instance, canVote }: PollViewProps): JSX.Element {
+export function PollView({ poll, statusKey, canVote }: PollViewProps): JSX.Element {
   const [busy, setBusy] = useState(false);
   const expired = poll.expired;
   const showResults = poll.voted || expired;
   const total = poll.votersCount ?? poll.votesCount;
 
   const vote = async (index: number): Promise<void> => {
-    if (!canVote || busy || expired) return;
-    if (!poll.multiple && poll.voted) return;
     const account = currentAccount();
-    if (!account || account.instance !== instance) return;
+    if (!canVote || busy || expired || !account) return;
     setBusy(true);
     try {
-      const client = getRest(account.instance, account.accessToken);
-      const updated = await client.v1.polls.$select(poll.id).votes.create({
-        choices: [index],
-      });
-      patchStatus(statusKey, { poll: updated as Poll });
-    } catch (err) {
-      console.warn("[oltn] vote failed", err);
-      toast(t.errorGeneric, "error");
+      await votePoll(
+        { client: getRest(account.instance, account.accessToken), instance: account.instance },
+        statusKey,
+        index,
+      );
     } finally {
       setBusy(false);
     }
