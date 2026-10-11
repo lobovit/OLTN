@@ -52,7 +52,7 @@ export interface AppState {
 export const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   accent: "green",
-  language: "pt-BR",
+  language: "en",
   textSize: 16,
   railExpanded: false,
   autoStream: true,

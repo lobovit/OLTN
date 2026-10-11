@@ -1,4 +1,5 @@
 import type { ComponentChildren, JSX } from "preact";
+import { t } from "../../i18n/pt-BR";
 import { back } from "../../lib/router";
 import { Icon } from "./Icon";
 
@@ -26,7 +27,7 @@ export function PageShell({
             type="button"
             class="icon-btn back-btn"
             onClick={() => back()}
-            aria-label="Voltar"
+            aria-label={t.back}
           >
             <Icon name="back-line" size={20} />
           </button>

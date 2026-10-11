@@ -454,19 +454,21 @@ function ComposeInner(): JSX.Element {
         {replyTo && (
           <div class="compose-context pill">
             <Icon name="message-1-line" size={14} />
-            respondendo @{replyTo.acct}
+            {t.respondingTo} @{replyTo.acct}
           </div>
         )}
         {quoteId && (
           <div class="compose-context pill">
             <Icon name="share-forward-line" size={14} />
-            citando
+            {t.quoting}
           </div>
         )}
         {showCw && (
           <input
+            ref={cwRef}
             class="field"
             placeholder={t.contentWarning}
+            aria-label={t.contentWarning}
             value={spoiler}
             onInput={(e) => setSpoiler((e.target as HTMLInputElement).value)}
           />

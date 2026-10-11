@@ -2,7 +2,7 @@ const rtfCache = new Map<string, Intl.RelativeTimeFormat>();
 const numberCache = new Map<string, Intl.NumberFormat>();
 const compactCache = new Map<string, Intl.NumberFormat>();
 
-let currentLocale = "pt-BR";
+let currentLocale = "en";
 
 /** Define o idioma usado na formatação (chamado em applyAppearance). */
 export function setFormatLocale(locale: string): void {
@@ -64,6 +64,27 @@ export function fullDate(iso: string | number | Date): string {
     dateStyle: "long",
     timeStyle: "short",
   });
+}
+
+export function shortDate(iso: string | number | Date): string {
+  return new Date(iso).toLocaleDateString(currentLocale);
+}
+
+/** Valor de `<input type="datetime-local">` no fuso local. */
+export function toLocalInputValue(date: Date): string {
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
+/** Nome do idioma no idioma atual da interface (ex.: "Portuguese (Brazil)"). */
+export function languageName(code: string): string {
+  try {
+    return new Intl.DisplayNames([currentLocale], { type: "language" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 export function shortNumber(n: number): string {
@@ -136,4 +157,20 @@ export function htmlToPlainText(html: string): string {
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]+\n/g, "\n")
     .trim();
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Converte texto puro (ex.: tradução) em HTML simples, escapado. */
+export function plainTextToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+    .join("");
 }

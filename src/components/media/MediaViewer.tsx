@@ -63,7 +63,7 @@ function MediaViewerInner(): JSX.Element | null {
         type="button"
         class="media-viewer-nav prev"
         onClick={() => step(-1)}
-        aria-label="Anterior"
+        aria-label={t.prev}
       >
         <Icon name="back-line" size={22} />
       </button>
@@ -87,7 +87,7 @@ function MediaViewerInner(): JSX.Element | null {
         type="button"
         class="media-viewer-nav next"
         onClick={() => step(1)}
-        aria-label="Próximo"
+        aria-label={t.next}
       >
         <Icon name="arrow-right-line" size={22} />
       </button>

@@ -17,8 +17,8 @@ import {
 import { store, toast } from "../state/store";
 
 const LANGUAGE_OPTIONS = [
-  ["pt-BR", "Português"],
   ["en", "English"],
+  ["pt-BR", "Português"],
 ] as const;
 
 export function SettingsPage(): JSX.Element {
@@ -218,14 +218,14 @@ export function SettingsPage(): JSX.Element {
             {(scType === "list" || scType === "hashtag") && (
               <input
                 class="field"
-                placeholder={scType === "list" ? "id da lista" : "tag"}
+                placeholder={scType === "list" ? t.listIdPlaceholder : "tag"}
                 value={scValue}
                 onInput={(e) => setScValue((e.target as HTMLInputElement).value)}
               />
             )}
             <input
               class="field"
-              placeholder="nome (opcional)"
+              placeholder={t.shortcutLabelPlaceholder}
               value={scLabel}
               onInput={(e) => setScLabel((e.target as HTMLInputElement).value)}
             />

@@ -2,6 +2,7 @@ import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { decodeBlurHash } from "fast-blurhash";
 import type { MediaAttachment } from "../../api/types";
+import { t } from "../../i18n/pt-BR";
 import { setMediaViewer, store } from "../../state/store";
 import { Icon } from "../ui/Icon";
 import "./status.css";
@@ -55,7 +56,7 @@ function MediaItem({
   const ratio = attachmentRatio(attachment);
   const blurred = sensitive && !revealed;
   const style = ratio ? { aspectRatio: String(ratio) } : undefined;
-  const description = attachment.description || "mídia";
+  const description = attachment.description || t.media;
   const full = attachment.url ?? attachment.previewUrl;
 
   return (
@@ -111,7 +112,7 @@ function MediaItem({
             }}
           >
             <Icon name="eye-line" size={15} />
-            Mostrar mídia
+            {t.showMedia}
           </button>
         </div>
       )}

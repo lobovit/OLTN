@@ -23,7 +23,7 @@ interface PublicProps {
 export function PublicPage({ params }: PublicProps): JSX.Element {
   const local = params.scope === "l";
   return (
-    <PageShell title={local ? "Local" : "Federação"} showBack>
+    <PageShell title={local ? t.local : t.federated} showBack>
       <Timeline kind={{ type: "public", local }} instance={params.instance} emptyTitle={t.empty} />
     </PageShell>
   );

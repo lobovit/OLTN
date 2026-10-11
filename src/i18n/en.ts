@@ -1,6 +1,5 @@
-import type { TKey } from "./pt-BR";
-
-export const en: Record<TKey, string> = {
+/* Dicionário mestre: as chaves (TKey) derivam daqui; inglês é o padrão. */
+export const en = {
   appName: "OLTN",
   tagline: "local web client for Mastodon",
 
@@ -94,6 +93,13 @@ export const en: Record<TKey, string> = {
   deleteConfirm: "Delete this post?",
   more: "More",
   moreOptions: "More options",
+  report: "Report",
+  reportPost: "Report post",
+  reportComment: "Add a comment (optional)",
+  reportSent: "Report sent.",
+  blockUser: "Block user",
+  blockConfirm: "Block this user?",
+  blocked: "User blocked.",
   copyUrl: "Copy URL",
   openOriginal: "Open on server",
   viewThread: "View thread",
@@ -141,10 +147,15 @@ export const en: Record<TKey, string> = {
   emptyHint: "Follow people to see their posts here.",
   emptyBookmarks: "No saved posts.",
   emptyFavourites: "No likes yet.",
+  emptyBoosts: "No boosts yet.",
   emptySearch: "Search for people, hashtags or posts.",
   emptyTrending: "Nothing trending right now.",
   emptyFilters: "No filters configured.",
+  filterKeywordPlaceholder: "word or phrase…",
+  filterHides: "hides in",
+  filterWarns: "warns in",
   emptyLists: "No lists created.",
+  newListPlaceholder: "New list…",
   emptyProfile: "This person hasn't posted yet.",
 
   // Notifications
@@ -181,13 +192,39 @@ export const en: Record<TKey, string> = {
   charLeft: "characters left",
   threadAutoHint: "Posts over the limit become a thread automatically.",
   threadCount: "posts",
+  schedule: "Schedule",
+  scheduling: "Scheduling…",
+  scheduleAt: "Date and time",
+  scheduleTooSoon: "Pick a time at least 5 minutes from now.",
+  scheduleClear: "Clear",
+  scheduledFor: "Scheduled for",
+  scheduledPost: "Post scheduled.",
+  scheduledPosts: "Scheduled posts",
+  emptyScheduled: "No scheduled posts.",
+  scheduleNoThread: "Scheduled posts can't be auto-threads.",
+  cancelScheduled: "Cancel scheduled post",
+  scheduledCancelled: "Scheduled post cancelled.",
+  reschedule: "Reschedule",
+  rescheduled: "Scheduled post updated.",
   pollOption: "Option",
   pollAddOption: "Add option",
   pollRemove: "Remove option",
   pollExpires: "Expires in",
   pollMultiple: "Multiple choice",
+  voteOne: "vote",
+  voteMany: "votes",
+  pollClosed: "closed",
+  soon: "soon",
   attachAlt: "Describe the media (alt)",
   mentionSuggest: "Mention suggestions",
+  emojiPicker: "Emojis",
+  emojiSearch: "Search emoji",
+  emojiCustom: "Instance emojis",
+  emojiEmpty: "No emoji found.",
+  skinTone: "Skin tone",
+  translateTo: "Translate to",
+  errorTranslate: "Couldn't translate right now.",
+  undo: "Undo",
   visPublic: "Public",
   visPublicHint: "Everyone, on any instance.",
   visLocal: "Local",
@@ -250,6 +287,8 @@ export const en: Record<TKey, string> = {
   shortcutsHint:
     "Pinned here become columns in multi-column mode (or tabs). In multi, the navigation icons also open columns.",
   addShortcut: "Pin timeline",
+  listIdPlaceholder: "list id",
+  shortcutLabelPlaceholder: "name (optional)",
   removeShortcut: "Unpin",
   listId: "list id",
   tagPlaceholder: "tag",
@@ -301,4 +340,6 @@ export const en: Record<TKey, string> = {
   openPost: "Open post",
   thisHelp: "This help",
   closePanels: "Close panels",
-};
+} as const;
+
+export type TKey = keyof typeof en;

@@ -1,7 +1,7 @@
 import { store } from "../state/store";
-import { en } from "./en";
+import { en, type TKey } from "./en";
 
-const pt = {
+const pt: Record<TKey, string> = {
   appName: "OLTN",
   tagline: "cliente web local para Mastodon",
 
@@ -95,6 +95,13 @@ const pt = {
   deleteConfirm: "Excluir este post?",
   more: "Mais",
   moreOptions: "Mais opções",
+  report: "Denunciar",
+  reportPost: "Denunciar post",
+  reportComment: "Adicione um comentário (opcional)",
+  reportSent: "Denúncia enviada.",
+  blockUser: "Bloquear usuário",
+  blockConfirm: "Bloquear este usuário?",
+  blocked: "Usuário bloqueado.",
   copyUrl: "Copiar URL",
   openOriginal: "Abrir no servidor",
   viewThread: "Ver thread",
@@ -142,10 +149,15 @@ const pt = {
   emptyHint: "Siga pessoas para ver os posts delas aqui.",
   emptyBookmarks: "Nenhum post salvo.",
   emptyFavourites: "Nenhuma curtida ainda.",
+  emptyBoosts: "Nenhum boost ainda.",
   emptySearch: "Busque por pessoas, hashtags ou posts.",
   emptyTrending: "Nada em alta agora.",
   emptyFilters: "Nenhum filtro configurado.",
+  filterKeywordPlaceholder: "palavra ou frase…",
+  filterHides: "oculta em",
+  filterWarns: "avisa em",
   emptyLists: "Nenhuma lista criada.",
+  newListPlaceholder: "Nova lista…",
   emptyProfile: "Esta pessoa ainda não postou.",
 
   // Notificações
@@ -182,13 +194,39 @@ const pt = {
   charLeft: "caracteres restantes",
   threadAutoHint: "Posts acima do limite viram uma thread automaticamente.",
   threadCount: "publicações",
+  schedule: "Agendar",
+  scheduling: "Agendando…",
+  scheduleAt: "Data e hora",
+  scheduleTooSoon: "Escolha um horário com pelo menos 5 minutos de antecedência.",
+  scheduleClear: "Limpar",
+  scheduledFor: "Agendado para",
+  scheduledPost: "Post agendado.",
+  scheduledPosts: "Posts agendados",
+  emptyScheduled: "Nenhum post agendado.",
+  scheduleNoThread: "Agendamento não é compatível com threads automáticas.",
+  cancelScheduled: "Cancelar post agendado",
+  scheduledCancelled: "Post agendado cancelado.",
+  reschedule: "Reagendar",
+  rescheduled: "Agendamento atualizado.",
   pollOption: "Opção",
   pollAddOption: "Adicionar opção",
   pollRemove: "Remover opção",
   pollExpires: "Expira em",
   pollMultiple: "Múltipla escolha",
+  voteOne: "voto",
+  voteMany: "votos",
+  pollClosed: "encerrada",
+  soon: "em breve",
   attachAlt: "Descreva a mídia (alt)",
   mentionSuggest: "Sugestões de menção",
+  emojiPicker: "Emojis",
+  emojiSearch: "Buscar emoji",
+  emojiCustom: "Emojis da instância",
+  emojiEmpty: "Nenhum emoji encontrado.",
+  skinTone: "Tom de pele",
+  translateTo: "Traduzir para",
+  errorTranslate: "Não foi possível traduzir agora.",
+  undo: "Desfazer",
   visPublic: "Público",
   visPublicHint: "Todos veem, em qualquer instância.",
   visLocal: "Local",
@@ -251,6 +289,8 @@ const pt = {
   shortcutsHint:
     "Fixadas aqui viram colunas no multi-coluna (ou abas). Lá no multi, os ícones da navegação também abrem colunas.",
   addShortcut: "Fixar timeline",
+  listIdPlaceholder: "id da lista",
+  shortcutLabelPlaceholder: "nome (opcional)",
   removeShortcut: "Desafixar",
   listId: "id da lista",
   tagPlaceholder: "tag",
@@ -304,15 +344,15 @@ const pt = {
   closePanels: "Fechar painéis",
 } as const;
 
-export type TKey = keyof typeof pt;
+export type { TKey };
 
 const dictionaries: Record<string, Record<string, string>> = { "pt-BR": pt, en };
 
-/** Dicionário vivo — segue o idioma escolhido em Ajustes. */
-export const t = new Proxy({} as typeof pt, {
+/** Dicionário vivo — segue o idioma escolhido em Ajustes (padrão: inglês). */
+export const t = new Proxy({} as typeof en, {
   get(_target, key): string | undefined {
     if (typeof key !== "string") return undefined;
-    const dict = dictionaries[store.settings.language] ?? dictionaries["pt-BR"];
-    return dict?.[key] ?? dictionaries["pt-BR"]?.[key];
+    const dict = dictionaries[store.settings.language] ?? dictionaries["en"];
+    return dict?.[key] ?? dictionaries["en"]?.[key];
   },
 });

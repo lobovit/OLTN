@@ -58,7 +58,7 @@ export function ListsPage(): JSX.Element {
       <form class="list-create" onSubmit={(e) => void create(e)}>
         <input
           class="field"
-          placeholder="Nova lista…"
+          placeholder={t.newListPlaceholder}
           value={title}
           onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
         />

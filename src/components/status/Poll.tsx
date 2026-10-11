@@ -3,7 +3,7 @@ import { useState } from "preact/hooks";
 import { getRest } from "../../api/client";
 import type { Poll } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
-import { fullDate, fullNumber } from "../../lib/format";
+import { fullDate, fullNumber, shortDate } from "../../lib/format";
 import { currentAccount, patchStatus, toast } from "../../state/store";
 
 interface PollViewProps {
@@ -64,14 +64,14 @@ export function PollView({ poll, statusKey, instance, canVote }: PollViewProps):
       })}
       <div class="poll-meta">
         <span>
-          {fullNumber(total)} voto{total === 1 ? "" : "s"}
+          {fullNumber(total)} {total === 1 ? t.voteOne : t.voteMany}
         </span>
         <span title={poll.expiresAt ? fullDate(poll.expiresAt) : undefined}>
           {expired
-            ? "encerrada"
-            : `expira ${poll.expiresAt ? new Date(poll.expiresAt).toLocaleDateString("pt-BR") : "em breve"}`}
+            ? t.pollClosed
+            : `${t.pollExpires} ${poll.expiresAt ? shortDate(poll.expiresAt) : t.soon}`}
         </span>
-        {poll.multiple && <span>múltipla escolha</span>}
+        {poll.multiple && <span>{t.pollMultiple}</span>}
       </div>
     </div>
   );

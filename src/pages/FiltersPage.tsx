@@ -99,7 +99,7 @@ export function FiltersPage(): JSX.Element {
         />
         <input
           class="field"
-          placeholder="palavra ou frase…"
+          placeholder={t.filterKeywordPlaceholder}
           value={phrase}
           onInput={(e) => setPhrase((e.target as HTMLInputElement).value)}
         />
@@ -138,7 +138,7 @@ export function FiltersPage(): JSX.Element {
                 <div class="row-title">{filter.title}</div>
                 <div class="row-sub">
                   {filter.keywords.map((k) => k.keyword).join(", ")} —{" "}
-                  {filter.filterAction === "hide" ? "oculta" : "avisa"} em{" "}
+                  {filter.filterAction === "hide" ? t.filterHides : t.filterWarns}{" "}
                   {filter.context.map(contextLabel).join(", ")}
                 </div>
               </div>

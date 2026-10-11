@@ -8,6 +8,7 @@ import { SearchSheet } from "./components/search/SearchSheet";
 import { ShortcutsHelp } from "./components/help/ShortcutsHelp";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { Toasts } from "./components/ui/Toasts";
+import { t } from "./i18n/pt-BR";
 import { RouterProvider } from "./lib/router";
 import { boot } from "./state/boot";
 import { store } from "./state/store";
@@ -24,7 +25,7 @@ export function App(): JSX.Element {
     return (
       <div class="center-state boot-screen">
         <div class="spinner" />
-        <p>carregando…</p>
+        <p>{t.loading}</p>
       </div>
     );
   }
