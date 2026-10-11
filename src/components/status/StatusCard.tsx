@@ -235,7 +235,7 @@ export function StatusCard({
 
   const cwHidden = !!target.spoilerText && !cwOpen;
   const displayContent = translated ? translated.content : target.content;
-  const blockedAccount = store.blockedAccounts.includes(target.account.acct);
+  const blockedAccount = appState.blockedAccounts.includes(target.account.acct);
 
   if (hidden || blockedAccount) return null;
 
