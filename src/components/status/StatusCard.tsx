@@ -291,7 +291,9 @@ export function StatusCard({
               </div>
               <div class="handle">
                 @{target.account.acct}
-                {host !== (store.instance?.uri ?? "") ? `@${host}` : ""}
+                {!target.account.acct.includes("@") && host !== (store.instance?.uri ?? "")
+                  ? `@${host}`
+                  : ""}
               </div>
             </div>
             <time
