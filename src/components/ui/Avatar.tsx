@@ -28,7 +28,14 @@ export function Avatar({
       type={onClick ? "button" : undefined}
     >
       {src && !failed ? (
-        <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} />
+        <img
+          src={src}
+          alt=""
+          width={size}
+          height={size}
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
       ) : (
         <span class="fallback" style={{ fontSize: `${size * 0.36}px` }}>
           {initials(name)}

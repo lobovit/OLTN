@@ -930,7 +930,13 @@ function ComposeInner(): JSX.Element {
                         aria-label={`:${custom.shortcode}:`}
                         onClick={() => pickCustomEmoji(custom)}
                       >
-                        <img src={custom.staticUrl || custom.url} alt="" loading="lazy" />
+                        <img
+                          src={custom.staticUrl || custom.url}
+                          alt=""
+                          width={22}
+                          height={22}
+                          loading="lazy"
+                        />
                       </button>
                     ))}
                   </div>

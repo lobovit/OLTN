@@ -70,8 +70,11 @@ function MediaItem({
         <img
           src={attachment.previewUrl}
           alt={description}
+          width={attachment.meta?.original?.width ?? undefined}
+          height={attachment.meta?.original?.height ?? undefined}
           loading="lazy"
           decoding="async"
+          style={style}
           class={loaded ? "loaded" : ""}
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(true)}

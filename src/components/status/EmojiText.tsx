@@ -26,7 +26,17 @@ export function EmojiText({ text, emojis }: EmojiTextProps): JSX.Element {
     const url = map.get(match[1]);
     if (!url) continue;
     if (match.index > last) parts.push(text.slice(last, match.index));
-    parts.push(<img key={`e${key++}`} class="emoji" src={url} alt={match[0]} title={match[0]} />);
+    parts.push(
+      <img
+        key={`e${key++}`}
+        class="emoji"
+        src={url}
+        alt={match[0]}
+        title={match[0]}
+        width={20}
+        height={20}
+      />,
+    );
     last = match.index + match[0].length;
   }
   if (!parts.length) return <>{text}</>;

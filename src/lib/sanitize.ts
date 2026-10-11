@@ -62,12 +62,16 @@ const ALLOWED_ATTR = [
 ];
 
 DOMPurify.addHook("afterSanitizeAttributes", (node) => {
-  if (node instanceof HTMLAnchorElement) {
+  const tag = node.nodeName?.toUpperCase();
+  if (tag === "A") {
     node.setAttribute("target", "_blank");
     node.setAttribute("rel", "noopener noreferrer nofollow");
   }
-  if (node instanceof HTMLImageElement) {
-    node.setAttribute("loading", "lazy");
+  if (tag === "IMG") {
+    // `loading="lazy"` só quando há dimensões explícitas — evita CLS.
+    if (node.hasAttribute("width") && node.hasAttribute("height")) {
+      node.setAttribute("loading", "lazy");
+    }
     node.setAttribute("decoding", "async");
   }
 });
@@ -99,6 +103,11 @@ function classifyServerEmojiImgs(root: HTMLElement, urls: ReadonlySet<string>): 
     const alt = img.getAttribute("alt") ?? "";
     if (urls.has(img.src) || SHORTCODE_ALT.test(alt)) {
       img.classList.add("emoji");
+      // Emojis são quadrados e escalados por CSS; dimensões explícitas
+      // permitem lazy sem layout shift (CLS).
+      if (!img.hasAttribute("width")) img.setAttribute("width", "20");
+      if (!img.hasAttribute("height")) img.setAttribute("height", "20");
+      img.setAttribute("loading", "lazy");
     }
   }
 }
@@ -146,6 +155,8 @@ export function emojifyInPlace(
       img.src = url;
       img.alt = `:${match[1]}:`;
       img.title = `:${match[1]}:`;
+      img.width = 20;
+      img.height = 20;
       fragment.append(img);
       lastIndex = match.index + match[0].length;
     }

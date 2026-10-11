@@ -27,6 +27,18 @@ describe("sanitizeContent", () => {
 });
 
 describe("emojifyInPlace", () => {
+  it("dá dimensões explícitas e lazy aos emojis marcados", () => {
+    const el = document.createElement("div");
+    el.innerHTML = sanitizeContent(
+      '<p>oi <img class="custom-thing" alt=":freebsd_logo:" src="https://ex.com/emoji/freebsd.png"></p>',
+    );
+    emojifyInPlace(el, []);
+    const img = el.querySelector("img") as HTMLImageElement;
+    expect(img.getAttribute("width")).toBe("20");
+    expect(img.getAttribute("height")).toBe("20");
+    expect(img.getAttribute("loading")).toBe("lazy");
+  });
+
   it("marca imgs de emoji do servidor mesmo com classe desconhecida", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent(

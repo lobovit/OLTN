@@ -451,7 +451,15 @@ export function StatusCard({
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
               >
-                {target.card.image && <img src={target.card.image} alt="" loading="lazy" />}
+                {target.card.image && (
+                  <img
+                    src={target.card.image}
+                    alt=""
+                    width={target.card.width ?? undefined}
+                    height={target.card.height ?? undefined}
+                    loading="lazy"
+                  />
+                )}
                 <span class="title">{target.card.title}</span>
                 {target.card.description && (
                   <span class="desc clamp-2">{target.card.description}</span>
