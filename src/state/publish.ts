@@ -1,0 +1,151 @@
+/* Publish plan executor: converts code blocks into images, publishes part by
+   part through the injected client and returns what is left on failure. */
+
+import type { RestClient, Status } from "../api/types";
+import { t } from "../i18n/pt-BR";
+import { codeBlockToImageFile, type CodeBlock } from "../lib/code-image";
+import {
+  buildPublishExecution,
+  type PublishExecution,
+  type PublishPlan,
+} from "../lib/publish-plan";
+import { putStatus, store, toast } from "./store";
+
+export interface PublishContext {
+  /** REST client for the account instance (HTTP in production, fake in tests). */
+  client: RestClient;
+  /** Instance where the published status is valid. */
+  instance: string;
+}
+
+export interface PublishOutcome {
+  ok: boolean;
+  kind: PublishExecution["kind"];
+  posted: Status[];
+  /** Unpublished parts, to return to the editor. */
+  remaining: string[];
+  error?: unknown;
+}
+
+async function convertCodeBlocks(
+  ctx: PublishContext,
+  plan: PublishPlan,
+): Promise<{ converted: CodeBlock[]; mediaIds: string[] }> {
+  const converted: CodeBlock[] = [];
+  const mediaIds: string[] = [];
+  for (const block of plan.blocks) {
+    try {
+      const file = await codeBlockToImageFile(block);
+      if (!file) throw new Error("code_render_failed");
+      const attachment = await ctx.client.v1.media.create({
+        file,
+        description: block.code,
+      });
+      converted.push(block);
+      mediaIds.push(attachment.id);
+    } catch (err) {
+      console.warn("[oltn] code image failed", err);
+      toast(t.codeImageFailed, "error");
+    }
+  }
+  return { converted, mediaIds };
+}
+
+/** Runs the plan; never throws — failures become `ok: false` + `remaining`. */
+export async function executePublish(
+  ctx: PublishContext,
+  plan: PublishPlan,
+): Promise<PublishOutcome> {
+  const { converted, mediaIds: generatedIds } = await convertCodeBlocks(ctx, plan);
+  const execution = buildPublishExecution(plan, converted, generatedIds);
+  const posted: Status[] = [];
+
+  try {
+    if (execution.kind === "update" && execution.statusId) {
+      const part = execution.parts[0];
+      const status = part.mediaIds.length
+        ? await ctx.client.v1.statuses.$select(execution.statusId).update({
+            status: part.status,
+            spoilerText: part.spoilerText,
+            visibility: execution.visibility,
+            sensitive: execution.sensitive,
+            mediaIds: part.mediaIds,
+            mediaAttributes: part.mediaAttributes,
+          })
+        : await ctx.client.v1.statuses.$select(execution.statusId).update({
+            status: part.status,
+            spoilerText: part.spoilerText,
+            visibility: execution.visibility,
+            sensitive: execution.sensitive,
+            poll: part.poll,
+          });
+      store.ui.lastPostedKey = putStatus(status, ctx.instance);
+      posted.push(status);
+      return { ok: true, kind: "update", posted, remaining: [] };
+    }
+
+    if (execution.kind === "schedule") {
+      const part = execution.parts[0];
+      const common = {
+        spoilerText: part.spoilerText,
+        visibility: execution.visibility,
+        sensitive: execution.sensitive,
+        inReplyToId: part.inReplyToId,
+        quotedStatusId: part.quotedStatusId,
+        scheduledAt: execution.scheduledAt,
+      };
+      if (part.mediaIds.length) {
+        await ctx.client.v1.statuses.create({
+          ...common,
+          status: part.status || undefined,
+          mediaIds: part.mediaIds,
+        });
+      } else {
+        await ctx.client.v1.statuses.create({
+          ...common,
+          status: part.status,
+          poll: part.poll,
+        });
+      }
+      return { ok: true, kind: "schedule", posted, remaining: [] };
+    }
+
+    // create: chains thread parts as replies.
+    let replyToId = execution.parts[0]?.inReplyToId;
+    for (const [index, part] of execution.parts.entries()) {
+      const first = index === 0;
+      const status = part.mediaIds.length
+        ? await ctx.client.v1.statuses.create({
+            status: part.status || undefined,
+            spoilerText: part.spoilerText,
+            visibility: execution.visibility,
+            mediaIds: part.mediaIds,
+            inReplyToId: replyToId,
+            quotedStatusId: first ? part.quotedStatusId : undefined,
+          })
+        : await ctx.client.v1.statuses.create({
+            status: part.status,
+            spoilerText: part.spoilerText,
+            visibility: execution.visibility,
+            poll: first ? part.poll : undefined,
+            inReplyToId: replyToId,
+            quotedStatusId: first ? part.quotedStatusId : undefined,
+          });
+      store.ui.lastPostedKey = putStatus(status, ctx.instance);
+      posted.push(status);
+      replyToId = status.id;
+    }
+    return { ok: true, kind: "create", posted, remaining: [] };
+  } catch (error) {
+    console.warn("[oltn] publish failed", error, `${posted.length}/${execution.parts.length}`);
+    return {
+      ok: false,
+      kind: execution.kind,
+      posted,
+      remaining: posted.length
+        ? execution.parts.slice(posted.length).map((part) => part.status)
+        : [],
+      error,
+    };
+  }
+}

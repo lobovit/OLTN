@@ -3,17 +3,18 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import { getCustomEmojis, getRest } from "../../api/client";
 import type {
+  ComposeIntent,
   ComposeVisibility,
   CustomEmoji,
   MediaAttachment,
-  StatusVisibility,
 } from "../../api/types";
 import type { Account } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
-import { codeBlockToImageFile, extractCodeBlocks } from "../../lib/code-image";
+import { extractCodeBlocks } from "../../lib/code-image";
 import { fullDate, htmlToPlainText, languageName, toLocalInputValue } from "../../lib/format";
 import { userMessageForError } from "../../lib/errors";
 import { loadEmojiGroups, searchEmojis, type EmojiGroup, type EmojiItem } from "../../lib/emoji";
+import { planPublish, type ComposeDraft } from "../../lib/publish-plan";
 import { splitThreadText } from "../../lib/thread";
 import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
 import { readJSON, writeJSON } from "../../lib/storage";
@@ -21,7 +22,8 @@ import { Sheet } from "../ui/Sheet";
 import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 import { EmojiText } from "../status/EmojiText";
-import { currentAccount, putStatus, setCompose, store, toast } from "../../state/store";
+import { currentAccount, setCompose, store, toast } from "../../state/store";
+import { executePublish } from "../../state/publish";
 
 const CHAR_LIMIT = 500;
 const DRAFT_KEY = "compose-draft";
@@ -36,11 +38,10 @@ interface Draft {
 export function ComposeSheet(): JSX.Element | null {
   const intent = useSnapshot(store).ui.compose;
   if (!intent) return null;
-  return <ComposeInner key={`${intent.mode}:${intent.statusId ?? ""}`} />;
+  return <ComposeInner key={`${intent.mode}:${intent.statusId ?? ""}`} intent={intent} />;
 }
 
-function ComposeInner(): JSX.Element {
-  const intent = store.ui.compose!;
+function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const isEdit = intent.mode === "edit";
   const account = currentAccount();
   const instance = account?.instance ?? "";
@@ -83,7 +84,7 @@ function ComposeInner(): JSX.Element {
   const cwRef = useRef<HTMLInputElement>(null);
   const visPickerRef = useRef<HTMLDivElement>(null);
 
-  /* limite de caracteres da instância + suporte a post local (Pleroma/Akkoma) */
+  /* instance character limit + local post support (Pleroma/Akkoma) */
   useEffect(() => {
     if (!instance) return;
     let cancelled = false;
@@ -97,7 +98,7 @@ function ComposeInner(): JSX.Element {
           setLocalSupported(/pleroma|akkoma/i.test(info.version));
         }
       } catch {
-        /* mantém o padrão */
+        /* keep the default */
       }
     })();
     return () => {
@@ -105,7 +106,7 @@ function ComposeInner(): JSX.Element {
     };
   }, [instance, account]);
 
-  /* fecha o menu de visibilidade ao clicar fora */
+  /* closes the visibility menu when clicking outside */
   useEffect(() => {
     if (!visOpen) return;
     const onDown = (e: PointerEvent): void => {
@@ -115,7 +116,7 @@ function ComposeInner(): JSX.Element {
     return () => window.removeEventListener("pointerdown", onDown);
   }, [visOpen]);
 
-  /* carrega emojis Unicode (chunk separado) na primeira abertura */
+  /* loads Unicode emojis (separate chunk) on first open */
   useEffect(() => {
     if (!emojiOpen || emojiData) return;
     let cancelled = false;
@@ -133,7 +134,7 @@ function ComposeInner(): JSX.Element {
     };
   }, [emojiOpen, emojiData]);
 
-  /* carrega emojis personalizados da instância na primeira abertura */
+  /* loads the instance custom emojis on first open */
   useEffect(() => {
     if (!emojiOpen || !account) return;
     let cancelled = false;
@@ -150,7 +151,7 @@ function ComposeInner(): JSX.Element {
     };
   }, [emojiOpen, instance, account]);
 
-  /* fecha popovers (emoji/tradução/agendamento) ao clicar fora ou com Escape */
+  /* closes popovers (emoji/translation/schedule) when clicking outside or pressing Escape */
   useEffect(() => {
     if (!emojiOpen && !transOpen && !scheduleOpen) return;
     const onDown = (e: PointerEvent): void => {
@@ -180,7 +181,7 @@ function ComposeInner(): JSX.Element {
     };
   }, [emojiOpen, transOpen, scheduleOpen]);
 
-  /* busca de contas para autocomplete de menção (@parcial) */
+  /* account search for mention autocomplete (@partial) */
   useEffect(() => {
     if (mentionQuery == null || mentionQuery.length < 1 || !account) {
       setMentionItems([]);
@@ -306,7 +307,7 @@ function ComposeInner(): JSX.Element {
   ];
   const currentVis = visOptions.find((o) => o.value === visibility) ?? visOptions[0];
 
-  /* rascunho (modo new) */
+  /* draft (new mode) */
   useEffect(() => {
     if (intent.mode !== "new") return;
     const draft = readJSON<Draft | null>(DRAFT_KEY, null);
@@ -328,7 +329,7 @@ function ComposeInner(): JSX.Element {
     return () => clearTimeout(timer);
   }, [text, spoiler, visibility, intent.mode]);
 
-  /* contexto reply/quote/edit */
+  /* reply/quote/edit context */
   useEffect(() => {
     const statusId = intent.statusId;
     if (!statusId || !instance) return;
@@ -423,124 +424,48 @@ function ComposeInner(): JSX.Element {
   const submit = async (): Promise<void> => {
     if (!account || !canSubmit) return;
     setBusy(true);
-    const client = getRest(instance, account.accessToken);
-    const rawText = text.trim();
-    let parts: string[] = [rawText];
-    let posted = 0;
     try {
-      const statusId = intent.statusId;
-      let postedText = rawText;
-      const generatedMedia: MediaAttachment[] = [];
-      // Blocos de código viram imagem (respeitando o limite de 4 anexos).
-      if (!isEdit && !pollOn) {
-        const blocks = extractCodeBlocks(rawText);
-        const slots = Math.max(0, 4 - media.length);
-        for (const block of blocks.slice(0, slots)) {
-          try {
-            const file = await codeBlockToImageFile(block);
-            if (!file) throw new Error("code_render_failed");
-            const attachment = await client.v1.media.create({
-              file,
-              description: block.code,
-            });
-            generatedMedia.push(attachment);
-            postedText = postedText.replace(block.raw, "");
-          } catch (err) {
-            console.warn("[oltn] code image failed", err);
-            toast(t.codeImageFailed, "error");
-          }
-        }
-        if (generatedMedia.length) postedText = postedText.replace(/\n{3,}/g, "\n\n").trim();
-      }
-      parts =
-        !isEdit && postedText.length > charLimit
-          ? splitThreadText(postedText, charLimit)
-          : [postedText];
-      const mediaIds = [...media.map((m) => m.id), ...generatedMedia.map((m) => m.id)];
-      const pollParams = pollOn
-        ? {
-            options: pollOptions.filter((o) => o.trim()),
-            expiresIn: pollExpires,
-            multiple: pollMultiple,
-          }
-        : undefined;
-      if (scheduleDate && scheduleValid && !scheduleBlocked) {
-        const common = {
-          spoilerText: showCw ? spoiler : null,
-          visibility: visibility as StatusVisibility,
-          sensitive,
-          inReplyToId: replyTo?.id,
-          quotedStatusId: quoteId,
-          scheduledAt: scheduleDate.toISOString(),
-        };
-        if (mediaIds.length) {
-          await client.v1.statuses.create({
-            ...common,
-            status: postedText || undefined,
-            mediaIds,
-          });
-        } else {
-          await client.v1.statuses.create({ ...common, status: postedText, poll: pollParams });
-        }
-        if (intent.mode === "new") writeJSON(DRAFT_KEY, null);
-        toast(t.scheduledPost, "ok");
-        setCompose(null);
+      const draft: ComposeDraft = {
+        text,
+        spoiler,
+        showCw,
+        visibility,
+        sensitive,
+        poll: pollOn
+          ? {
+              options: pollOptions.filter((o) => o.trim()),
+              expiresIn: pollExpires,
+              multiple: pollMultiple,
+            }
+          : undefined,
+        media,
+        replyToId: replyTo?.id,
+        quoteId: quoteId ?? undefined,
+        scheduledAt:
+          scheduleDate && scheduleValid && !scheduleBlocked
+            ? scheduleDate.toISOString()
+            : undefined,
+      };
+      const plan = planPublish(
+        draft,
+        { charLimit, maxMedia: 4 },
+        {
+          mode: intent.mode,
+          statusId: intent.statusId,
+        },
+      );
+      const outcome = await executePublish(
+        { client: getRest(instance, account.accessToken), instance },
+        plan,
+      );
+      if (!outcome.ok) {
+        if (outcome.remaining.length) setText(outcome.remaining.join("\n\n"));
+        toast(userMessageForError(outcome.error, isEdit ? t.errorSave : t.errorPost), "error");
         return;
       }
-      let replyToId = replyTo?.id;
-      for (const part of parts) {
-        const first = posted === 0;
-        const base = {
-          spoilerText: first && showCw ? spoiler : null,
-          visibility: visibility as StatusVisibility,
-        };
-        const status =
-          isEdit && statusId
-            ? mediaIds.length
-              ? await client.v1.statuses.$select(statusId).update({
-                  ...base,
-                  status: part,
-                  sensitive,
-                  mediaIds,
-                  mediaAttributes: media.map((m) => ({
-                    id: m.id,
-                    description: m.description ?? null,
-                  })),
-                })
-              : await client.v1.statuses.$select(statusId).update({
-                  ...base,
-                  status: part,
-                  sensitive,
-                  poll: pollParams,
-                })
-            : mediaIds.length && first
-              ? await client.v1.statuses.create({
-                  ...base,
-                  ...(part ? { status: part } : {}),
-                  mediaIds,
-                  inReplyToId: replyToId,
-                  quotedStatusId: quoteId,
-                })
-              : await client.v1.statuses.create({
-                  ...base,
-                  status: part,
-                  poll: first ? pollParams : undefined,
-                  inReplyToId: replyToId,
-                  quotedStatusId: first ? quoteId : undefined,
-                });
-        store.ui.lastPostedKey = putStatus(status, instance);
-        replyToId = status.id;
-        posted += 1;
-      }
       if (intent.mode === "new") writeJSON(DRAFT_KEY, null);
-      toast(isEdit ? t.saved : t.post, "ok");
+      toast(outcome.kind === "schedule" ? t.scheduledPost : isEdit ? t.saved : t.post, "ok");
       setCompose(null);
-    } catch (err) {
-      console.warn("[oltn] publish failed", err, `${posted}/${parts.length}`);
-      if (posted > 0 && posted < parts.length) {
-        setText(parts.slice(posted).join("\n\n"));
-      }
-      toast(userMessageForError(err, isEdit ? t.errorSave : t.errorPost), "error");
     } finally {
       setBusy(false);
     }
