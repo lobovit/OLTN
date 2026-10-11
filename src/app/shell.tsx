@@ -132,6 +132,13 @@ const NAV_ITEMS: {
     column: "bookmarks",
   },
   {
+    id: "/scheduled",
+    href: "/scheduled",
+    icon: "calendar-line",
+    iconActive: "calendar-line",
+    labelKey: "scheduledPosts",
+  },
+  {
     id: "/layouts",
     href: "/layouts",
     icon: "layout-grid-line",

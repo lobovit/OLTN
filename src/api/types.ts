@@ -2,6 +2,7 @@ import type { mastodon } from "masto";
 
 export type Status = mastodon.v1.Status;
 export type StatusEdit = mastodon.v1.StatusEdit;
+export type ScheduledStatus = mastodon.v1.ScheduledStatus;
 export type Account = mastodon.v1.Account;
 export type CredentialAccount = mastodon.v1.CredentialAccount;
 export type Notification = mastodon.v1.Notification;
