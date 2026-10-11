@@ -13,6 +13,7 @@ export const en = {
   loading: "Loading…",
   error: "Something went wrong.",
   retry: "Try again",
+  refresh: "Refresh",
   empty: "Nothing here.",
   search: "Search",
   compose: "Write",

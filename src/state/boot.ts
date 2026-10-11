@@ -281,6 +281,10 @@ function connectStream(account: AccountMeta, streamingApi: string | null): void 
       onUpdate: (status: Status) => {
         putStatuses([status], account.instance);
         pushHomeQueue(putStatus(status, account.instance));
+        // Own boosts can arrive from another client; refresh boosts feeds.
+        if (status.reblog && status.account.id === store.me?.id) {
+          store.ui.boostsRevision += 1;
+        }
       },
       onNotification: (notification) => {
         if (notification.status) putStatuses([notification.status], account.instance);
@@ -290,6 +294,11 @@ function connectStream(account: AccountMeta, streamingApi: string | null): void 
         putStatus(status, account.instance);
       },
       onDelete: (id: string) => {
+        // Unboosting elsewhere deletes my boost wrapper; refresh boosts feeds.
+        const removed = Object.values(store.statuses).find((status) => status.id === id);
+        if (removed?.reblog && removed.account.id === store.me?.id) {
+          store.ui.boostsRevision += 1;
+        }
         removeStatusById(account.instance, id);
       },
     },

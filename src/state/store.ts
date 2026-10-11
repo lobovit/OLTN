@@ -73,6 +73,10 @@ export interface AppState {
     helpOpen: boolean;
     /** Key of the last published/edited status (to insert into the open thread). */
     lastPostedKey: string | null;
+    /** Bumped on every successful boost toggle; refreshes mounted boosts feeds. */
+    boostsRevision: number;
+    /** Bumped by the column refresh button; reloads every mounted feed. */
+    feedsRevision: number;
   };
 }
 
@@ -127,6 +131,8 @@ export const store = proxy<AppState>({
     timerOpen: false,
     helpOpen: false,
     lastPostedKey: null,
+    boostsRevision: 0,
+    feedsRevision: 0,
   },
 });
 

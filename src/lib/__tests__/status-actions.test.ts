@@ -162,6 +162,16 @@ describe("toggleStatusAction", () => {
     expect(store.statuses[key]?.reblogsCount).toBe(2);
   });
 
+  it("bumps the boosts revision only after a successful boost", async () => {
+    const failing = fakeClient({ failOn: "boost:" });
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    await toggleStatusAction(ctx(failing.client), key, "boost");
+    expect(store.ui.boostsRevision).toBe(0);
+
+    await toggleStatusAction(ctx(fakeClient().client), key, "boost");
+    expect(store.ui.boostsRevision).toBe(1);
+  });
+
   it("saves the server response after a boost", async () => {
     const inner = makeStatus("1", { reblogged: true, reblogsCount: 1 });
     const wrapper = makeStatus("W1", {

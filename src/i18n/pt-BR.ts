@@ -15,6 +15,7 @@ const pt: Record<TKey, string> = {
   loading: "Carregando…",
   error: "Algo deu errado.",
   retry: "Tentar de novo",
+  refresh: "Atualizar",
   empty: "Nada por aqui.",
   search: "Buscar",
   compose: "Escrever",

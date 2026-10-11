@@ -111,6 +111,8 @@ export async function toggleStatusAction(
       const updated = status.bookmarked ? await selected.unbookmark() : await selected.bookmark();
       if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
     }
+    // Boosts feeds (column/page) reload through this revision change.
+    if (kind === "boost") store.ui.boostsRevision += 1;
     return true;
   } catch (err) {
     console.warn("[oltn] action failed", err);

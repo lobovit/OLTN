@@ -743,6 +743,17 @@ export function MultiColumns(): JSX.Element {
               <div class="spacer" />
               <button
                 type="button"
+                class="icon-btn col-refresh"
+                title={t.refresh}
+                aria-label={`${t.refresh}: ${shortcutLabel(shortcut)}`}
+                onClick={() => {
+                  store.ui.feedsRevision += 1;
+                }}
+              >
+                <Icon name="refresh-2-line" size={15} />
+              </button>
+              <button
+                type="button"
                 class="icon-btn col-close"
                 title={t.closeColumn}
                 aria-label={`${t.closeColumn}: ${shortcutLabel(shortcut)}`}

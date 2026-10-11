@@ -32,6 +32,11 @@ export function Timeline({
   const account = currentAccount();
   const targetInstance = instance ?? account?.instance ?? "";
   const token = account?.instance === targetInstance ? account.accessToken : undefined;
+  // Boost feeds also reload when a boost toggle succeeds; the column refresh
+  // button bumps feedsRevision, reloading every mounted feed.
+  const revision = `|${snap.ui.feedsRevision}${
+    kind.type === "boosts" ? `|${snap.ui.boostsRevision}` : ""
+  }`;
   const queue = listenQueue
     ? snap.homeQueue
         .map((key) => snap.statuses[key])
@@ -40,7 +45,7 @@ export function Timeline({
     : [];
 
   const feed = usePagedFeed<Status>({
-    key: `${kindKey}|${targetInstance}`,
+    key: `${kindKey}|${targetInstance}${revision}`,
     enabled: !!targetInstance,
     adapter: {
       fetchPage: async (cursor) => {
