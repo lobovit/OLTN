@@ -752,11 +752,7 @@ export function MultiColumns(): JSX.Element {
               </button>
             </header>
             <div class="deck-body">
-              <ColumnContent
-                shortcut={shortcut}
-                instance={account?.instance}
-                accountId={account?.id}
-              />
+              <ColumnContent shortcut={shortcut} instance={account?.instance} />
             </div>
             <div
               class="col-resize"
@@ -801,11 +797,9 @@ export function MultiColumns(): JSX.Element {
 function ColumnContent({
   shortcut,
   instance,
-  accountId,
 }: {
   shortcut: Shortcut;
   instance?: string;
-  accountId?: string;
 }): JSX.Element {
   switch (shortcut.type) {
     case "home":
@@ -825,11 +819,7 @@ function ColumnContent({
     case "favourites":
       return <Timeline kind={{ type: "favourites" }} instance={instance} />;
     case "boosts":
-      return accountId ? (
-        <Timeline kind={{ type: "boosts", accountId }} instance={instance} />
-      ) : (
-        <div />
-      );
+      return <Timeline kind={{ type: "boosts" }} instance={instance} emptyTitle={t.emptyBoosts} />;
     case "trending":
       return <TrendingFeed instance={instance} />;
     case "list":

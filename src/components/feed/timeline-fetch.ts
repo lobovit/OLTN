@@ -14,7 +14,7 @@ export type TimelineKind =
     }
   | { type: "bookmarks" }
   | { type: "favourites" }
-  | { type: "boosts"; accountId: string }
+  | { type: "boosts" }
   | { type: "trending" };
 
 export interface FetchCtx {
@@ -64,16 +64,16 @@ export async function fetchStatusPage(
     case "favourites":
       return paged(await client.v1.favourites.list(params));
     case "boosts": {
-      // The API has no boosts-only endpoint: pages the profile posts and filters.
+      // Mastodon excludes reblogs from public timelines (PublicFeed applies
+      // without_reblogs_scope), so the only boosts feed the API allows is the
+      // Home timeline filtered to boosts (same approach as Phanpy's catchup).
       const boosts: Status[] = [];
       let cursor = maxId;
       let hasMore = false;
       for (let page = 0; page < 4 && boosts.length < limit; page++) {
-        const list = await client.v1.accounts.$select(kind.accountId).statuses.list({
+        const list = await client.v1.timelines.home.list({
           limit: 40,
           maxId: cursor ?? undefined,
-          excludeReplies: true,
-          excludeReblogs: false,
         });
         hasMore = false;
         if (!list.length) break;

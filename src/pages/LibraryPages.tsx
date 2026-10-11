@@ -37,7 +37,7 @@ export function BoostsPage(): JSX.Element {
     <PageShell title={t.boosts} showBack>
       {account ? (
         <Timeline
-          kind={{ type: "boosts", accountId: account.id }}
+          kind={{ type: "boosts" }}
           instance={account.instance}
           emptyTitle={t.emptyBoosts}
         />
