@@ -1,10 +1,12 @@
 import type { JSX } from "preact";
+import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
 import { Sheet } from "../ui/Sheet";
 import { store } from "../../state/store";
 
 export function ShortcutsHelp(): JSX.Element | null {
-  if (!store.ui.shortcutsHelp) return null;
+  const ui = useSnapshot(store).ui;
+  if (!ui.shortcutsHelp) return null;
   const groups: { title: string; items: [string, string][] }[] = [
     {
       title: t.navHelp,

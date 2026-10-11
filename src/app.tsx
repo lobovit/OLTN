@@ -6,6 +6,7 @@ import { ComposeSheet } from "./components/compose/ComposeSheet";
 import { MediaViewer } from "./components/media/MediaViewer";
 import { SearchSheet } from "./components/search/SearchSheet";
 import { ShortcutsHelp } from "./components/help/ShortcutsHelp";
+import { HelpSheet } from "./components/help/HelpSheet";
 import { PomodoroSheet } from "./components/timer/PomodoroSheet";
 import { TimerWatcher } from "./components/timer/TimerWatcher";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
@@ -40,6 +41,7 @@ export function App(): JSX.Element {
         <ComposeSheet />
         <MediaViewer />
         <ShortcutsHelp />
+        <HelpSheet />
         <SearchSheet />
         <TimerWatcher />
         <PomodoroSheet />
