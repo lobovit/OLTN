@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { translateText } from "../translate";
+import { TRANSLATE_TARGETS, translateText } from "../translate";
 
 interface StubResponse {
   ok: boolean;
@@ -18,7 +18,12 @@ afterEach(() => {
 });
 
 describe("translateText", () => {
-  it("junta os segmentos traduzidos e detecta o idioma de origem", async () => {
+  it("offers pt-BR instead of pt, which Mastodon would ignore", () => {
+    expect(TRANSLATE_TARGETS).toContain("pt-BR");
+    expect(TRANSLATE_TARGETS).not.toContain("pt");
+  });
+
+  it("joins translated segments and detects the source language", async () => {
     const fetchMock = stubFetch({
       ok: true,
       json: async () => [
@@ -40,17 +45,17 @@ describe("translateText", () => {
     expect(String(init.body)).toContain("tl=pt-BR");
   });
 
-  it("falha quando a resposta não é ok", async () => {
+  it("fails when the response is not ok", async () => {
     stubFetch({ ok: false, status: 429, json: async () => ({}) });
     await expect(translateText("oi", "en")).rejects.toThrow("translate_http_429");
   });
 
-  it("falha quando a resposta não tem segmentos", async () => {
+  it("fails when the response has no segments", async () => {
     stubFetch({ ok: true, json: async () => ({ foo: 1 }) });
     await expect(translateText("oi", "en")).rejects.toThrow("translate_parse");
   });
 
-  it("falha quando a tradução vem vazia", async () => {
+  it("fails when the translation is empty", async () => {
     stubFetch({ ok: true, json: async () => [[["", "oi", null]], null, "pt"] });
     await expect(translateText("oi", "en")).rejects.toThrow("translate_empty");
   });
