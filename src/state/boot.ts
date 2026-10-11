@@ -23,6 +23,7 @@ import {
   accountNS,
   currentAccount,
   pushHomeQueue,
+  pushNotification,
   putStatus,
   putStatuses,
   removeStatusById,
@@ -209,6 +210,7 @@ export async function switchAccount(id: string): Promise<void> {
   disconnectStream = null;
   store.stream = "off";
   store.homeQueue = [];
+  store.notifQueue = [];
   store.notifBadge = 0;
   store.me = null;
   store.instance = null;
@@ -279,8 +281,12 @@ function connectStream(account: AccountMeta, streamingApi: string | null): void 
         putStatuses([status]);
         pushHomeQueue(putStatus(status));
       },
-      onNotification: () => {
-        store.notifBadge += 1;
+      onNotification: (notification) => {
+        if (notification.status) putStatuses([notification.status]);
+        pushNotification(notification);
+      },
+      onStatusUpdate: (status) => {
+        putStatus(status);
       },
       onDelete: (id: string) => {
         removeStatusById(account.instance, id);

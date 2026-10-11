@@ -40,5 +40,7 @@ export default defineConfig({
   },
   test: {
     environment: "happy-dom",
+    // valtio importa `react` — inline para o alias acima valer nos testes.
+    server: { deps: { inline: ["valtio"] } },
   },
 });

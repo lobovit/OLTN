@@ -5,6 +5,7 @@ import type {
   CredentialAccount,
   InstanceInfo,
   MediaViewerIntent,
+  Notification,
   SavedLayout,
   Settings,
   Shortcut,
@@ -35,6 +36,7 @@ export interface AppState {
   stream: StreamState;
   notifBadge: number;
   homeQueue: string[];
+  notifQueue: Notification[];
   statuses: Record<string, Status>;
   ui: {
     compose: ComposeIntent | null;
@@ -69,6 +71,7 @@ export const store = proxy<AppState>({
   stream: "off",
   notifBadge: 0,
   homeQueue: [],
+  notifQueue: [],
   statuses: {},
   ui: {
     compose: null,
@@ -145,4 +148,11 @@ export function accountNS(account: AccountMeta): string {
 export function pushHomeQueue(key: string): void {
   if (store.homeQueue.includes(key)) return;
   store.homeQueue = [key, ...store.homeQueue].slice(0, 60);
+}
+
+/** Queues a notification received via streaming (badge included). */
+export function pushNotification(notification: Notification): void {
+  if (store.notifQueue.some((n) => n.id === notification.id)) return;
+  store.notifQueue = [notification, ...store.notifQueue].slice(0, 40);
+  store.notifBadge += 1;
 }

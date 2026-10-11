@@ -1,5 +1,6 @@
 import type { JSX } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
 import { navigate } from "../../lib/router";
 import { getRest } from "../../api/client";
@@ -97,6 +98,19 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const lastIdRef = useRef<string | null>(null);
+  const queue = useSnapshot(store).notifQueue;
+  const seenRef = useRef<Set<string>>(new Set());
+
+  // Inserts notifications received via streaming at the top of the list.
+  useEffect(() => {
+    if (loading) return;
+    const fresh = store.notifQueue.filter(
+      (n) => (mode === "all" || n.type === "mention") && !seenRef.current.has(n.id),
+    );
+    if (!fresh.length) return;
+    for (const n of fresh) seenRef.current.add(n.id);
+    setItems((prev) => [...fresh.filter((n) => !prev.some((p) => p.id === n.id)), ...prev]);
+  }, [queue, loading, mode]);
 
   const load = useCallback(
     async (maxId?: string) => {
@@ -111,6 +125,8 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
         putStatuses(statuses);
         lastIdRef.current = page.length ? page[page.length - 1].id : null;
         if (!maxId) {
+          const pageIds = new Set(page.map((n) => n.id));
+          store.notifQueue = store.notifQueue.filter((n) => !pageIds.has(n.id));
           setItems(page);
           setHasMore(page.length >= 20);
         } else {
