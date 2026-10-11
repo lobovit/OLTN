@@ -1,11 +1,11 @@
 import type { JSX } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
 import { navigate } from "../../lib/router";
 import { getRest } from "../../api/client";
 import type { Notification, Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
+import { usePagedFeed } from "../../state/hooks";
 import { StatusCard } from "../status/StatusCard";
 import { EmojiText } from "../status/EmojiText";
 import { Avatar } from "../ui/Avatar";
@@ -60,7 +60,7 @@ interface Group {
   items: Notification[];
 }
 
-function groupNotifications(list: Notification[]): Group[] {
+function groupNotifications(list: readonly Notification[]): Group[] {
   const groups: Group[] = [];
   for (const n of list) {
     const last = groups[groups.length - 1];
@@ -92,74 +92,51 @@ interface NotificationsFeedProps {
 }
 
 export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedProps): JSX.Element {
-  const [items, setItems] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const lastIdRef = useRef<string | null>(null);
-  const queue = useSnapshot(store).notifQueue;
-  const seenRef = useRef<Set<string>>(new Set());
+  const snap = useSnapshot(store);
+  const account = currentAccount();
+  const queue = snap.notifQueue
+    .filter((n) => mode === "all" || n.type === "mention")
+    .map((n) => n as unknown as Notification);
 
-  // Inserts notifications received via streaming at the top of the list.
-  useEffect(() => {
-    if (loading) return;
-    const fresh = store.notifQueue.filter(
-      (n) => (mode === "all" || n.type === "mention") && !seenRef.current.has(n.id),
-    );
-    if (!fresh.length) return;
-    for (const n of fresh) seenRef.current.add(n.id);
-    setItems((prev) => [...fresh.filter((n) => !prev.some((p) => p.id === n.id)), ...prev]);
-  }, [queue, loading, mode]);
-
-  const load = useCallback(
-    async (maxId?: string) => {
-      const client = getRest(instance, currentAccount()?.accessToken);
-      try {
-        const page = await client.v1.notifications.list({
+  const feed = usePagedFeed<Notification>({
+    key: `${instance}|${mode}`,
+    enabled: !!account,
+    adapter: {
+      fetchPage: async (cursor) => {
+        const token = account && account.instance === instance ? account.accessToken : undefined;
+        const page = await getRest(instance, token).v1.notifications.list({
           limit: 20,
-          maxId,
+          maxId: cursor ?? undefined,
           types: mode === "mentions" ? ["mention"] : undefined,
         });
-        const statuses = page.map((n) => n.status).filter((s): s is Status => !!s);
-        putStatuses(statuses, instance);
-        lastIdRef.current = page.length ? page[page.length - 1].id : null;
-        if (!maxId) {
-          const pageIds = new Set(page.map((n) => n.id));
-          store.notifQueue = store.notifQueue.filter((n) => !pageIds.has(n.id));
-          setItems(page);
-          setHasMore(page.length >= 20);
-        } else {
-          setItems((prev) => [...prev, ...page]);
-          if (page.length < 20) setHasMore(false);
-        }
-        setError(null);
-      } catch (err) {
-        if (!maxId) setError(err);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
+        putStatuses(
+          page.map((n) => n.status).filter((s): s is Status => !!s),
+          instance,
+        );
+        return { items: page, hasMore: page.length >= 20 };
+      },
+      keyOf: (notification) => notification.id,
+      cursorOf: (notification) => notification.id,
     },
-    [instance, mode],
-  );
+    queue,
+    queueMode: "auto",
+    onReady: (items) => {
+      if (mode === "all") store.notifBadge = 0;
+      const ids = new Set(items.map((n) => n.id));
+      store.notifQueue = store.notifQueue.filter((n) => !ids.has(n.id));
+    },
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    void load();
-    if (mode === "all") store.notifBadge = 0;
-  }, [load, mode]);
+  const groups = groupNotifications(feed.items);
 
-  const groups = groupNotifications(items);
+  if (feed.loading && !feed.items.length) return <TimelineSkeleton />;
 
-  if (loading && !items.length) return <TimelineSkeleton />;
-
-  if (error && !items.length) {
+  if (feed.error && !feed.items.length) {
     return (
       <div class="center-state">
         <Icon name="wifi-off-line" size={28} />
         <h3>{t.errorLoad}</h3>
-        <button type="button" class="btn ghost" onClick={() => void load()}>
+        <button type="button" class="btn ghost" onClick={feed.reload}>
           <Icon name="refresh-2-line" size={16} />
           {t.retry}
         </button>
@@ -167,7 +144,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
     );
   }
 
-  if (!items.length) {
+  if (!feed.items.length) {
     return (
       <div class="center-state">
         <Icon name="notification-line" size={28} />
@@ -217,21 +194,32 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
           </div>
         );
       })}
-      {hasMore && (
-        <div class="load-more">
-          <button
-            type="button"
-            class="btn ghost"
-            disabled={loadingMore}
-            onClick={() => {
-              setLoadingMore(true);
-              void load(lastIdRef.current ?? undefined);
-            }}
-          >
-            {loadingMore ? <span class="spinner" /> : <Icon name="dropdown-line" size={16} />}
-            {loadingMore ? t.loadingMore : t.loadMore}
+      {feed.moreError ? (
+        <div class="load-more load-more-error">
+          <span class="muted">{t.errorLoad}</span>
+          <button type="button" class="btn ghost" onClick={feed.loadMore}>
+            <Icon name="refresh-2-line" size={16} />
+            {t.retry}
           </button>
         </div>
+      ) : (
+        feed.hasMore && (
+          <div class="load-more">
+            <button
+              type="button"
+              class="btn ghost"
+              disabled={feed.loadingMore}
+              onClick={feed.loadMore}
+            >
+              {feed.loadingMore ? (
+                <span class="spinner" />
+              ) : (
+                <Icon name="dropdown-line" size={16} />
+              )}
+              {feed.loadingMore ? t.loadingMore : t.loadMore}
+            </button>
+          </div>
+        )
       )}
     </div>
   );

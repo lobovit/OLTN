@@ -8,6 +8,13 @@
   padding: var(--s5) var(--s4) var(--s6);
 }
 
+.load-more-error {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  font-size: 0.88rem;
+}
+
 .timeline-skeleton {
   padding: var(--s4);
   display: flex;
@@ -50,7 +57,7 @@
   width: 90%;
 }
 
-/* ---------- cabeçalhos de página ---------- */
+/* ---------- page headers ---------- */
 
 .page-head {
   display: flex;

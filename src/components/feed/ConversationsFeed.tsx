@@ -1,5 +1,4 @@
 import type { JSX } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { getRest } from "../../api/client";
 import type { Conversation } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
@@ -7,6 +6,7 @@ import { userMessageForError } from "../../lib/errors";
 import { htmlToPlainText, timeAgo } from "../../lib/format";
 import { navigate } from "../../lib/router";
 import { currentAccount, putStatuses } from "../../state/store";
+import { usePagedFeed } from "../../state/hooks";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
 import { EmojiText } from "../status/EmojiText";
@@ -20,76 +20,42 @@ function participantNames(conversation: Conversation): string {
 }
 
 export function ConversationsFeed({ instance }: { instance?: string }): JSX.Element {
-  const [items, setItems] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const maxIdRef = useRef<string | undefined>(undefined);
+  const account = currentAccount();
+  const target = instance ?? account?.instance ?? "";
 
-  const loadInitial = useCallback(async (): Promise<void> => {
-    const account = currentAccount();
-    if (!account) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const page = await getRest(
-        instance ?? account.instance,
-        account.accessToken,
-      ).v1.conversations.list({ limit: PAGE });
-      setItems([...page]);
-      maxIdRef.current = page.length ? page[page.length - 1].id : undefined;
-      setHasMore(page.length === PAGE);
-    } catch (err) {
-      console.warn("[oltn] conversations load failed", err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [instance]);
-
-  useEffect(() => {
-    void loadInitial();
-  }, [loadInitial]);
-
-  const loadMore = useCallback(async (): Promise<void> => {
-    const account = currentAccount();
-    if (!account || !maxIdRef.current || loadingMore) return;
-    setLoadingMore(true);
-    try {
-      const page = await getRest(
-        instance ?? account.instance,
-        account.accessToken,
-      ).v1.conversations.list({ limit: PAGE, maxId: maxIdRef.current });
-      setItems((prev) => [...prev, ...page.filter((c) => !prev.some((p) => p.id === c.id))]);
-      if (page.length) maxIdRef.current = page[page.length - 1].id;
-      if (page.length < PAGE) setHasMore(false);
-    } catch (err) {
-      console.warn("[oltn] conversations page failed", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [instance, loadingMore]);
+  const feed = usePagedFeed<Conversation>({
+    key: target,
+    enabled: !!account && !!target,
+    adapter: {
+      fetchPage: async (cursor) => {
+        const page = await getRest(target, account?.accessToken).v1.conversations.list({
+          limit: PAGE,
+          maxId: cursor ?? undefined,
+        });
+        return { items: page, hasMore: page.length >= PAGE };
+      },
+      keyOf: (conversation) => conversation.id,
+      cursorOf: (conversation) => conversation.id,
+    },
+  });
 
   const open = (conversation: Conversation): void => {
-    const account = currentAccount();
     if (!account) return;
     if (conversation.unread) {
       void getRest(account.instance, account.accessToken)
         .v1.conversations.$select(conversation.id)
         .read()
         .catch((err) => console.warn("[oltn] mark read failed", err));
-      setItems((prev) => prev.map((c) => (c.id === conversation.id ? { ...c, unread: false } : c)));
+      feed.patch(conversation.id, { unread: false } as Partial<Conversation>);
     }
     const status = conversation.lastStatus;
     if (status) {
-      const source = instance ?? account.instance;
-      putStatuses([status], source);
-      navigate(`/${encodeURIComponent(source)}/s/${status.id}`);
+      putStatuses([status], target);
+      navigate(`/${encodeURIComponent(target)}/s/${status.id}`);
     }
   };
 
-  if (loading && !items.length) {
+  if (feed.loading && !feed.items.length) {
     return (
       <div class="center-state">
         <span class="spinner" />
@@ -97,12 +63,12 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
     );
   }
 
-  if (error && !items.length) {
+  if (feed.error && !feed.items.length) {
     return (
       <div class="center-state">
         <Icon name="wifi-off-line" size={28} />
-        <h3>{userMessageForError(error, t.errorLoad)}</h3>
-        <button type="button" class="btn ghost" onClick={() => void loadInitial()}>
+        <h3>{userMessageForError(feed.error, t.errorLoad)}</h3>
+        <button type="button" class="btn ghost" onClick={feed.reload}>
           <Icon name="refresh-2-line" size={16} />
           {t.retry}
         </button>
@@ -110,7 +76,7 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
     );
   }
 
-  if (!items.length) {
+  if (!feed.items.length) {
     return (
       <div class="center-state">
         <Icon name="mail-line" size={28} />
@@ -121,7 +87,7 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
 
   return (
     <div class="conversation-list">
-      {items.map((conversation) => {
+      {feed.items.map((conversation) => {
         const last = conversation.lastStatus;
         const preview = last ? htmlToPlainText(last.content) : "";
         return (
@@ -138,12 +104,12 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
             />
             <div class="row-main">
               <div class="row-title">
-                {conversation.accounts.slice(0, 2).map((account, index) => (
-                  <span key={account.id}>
+                {conversation.accounts.slice(0, 2).map((participant, index) => (
+                  <span key={participant.id}>
                     {index > 0 && ", "}
                     <EmojiText
-                      text={account.displayName || account.username}
-                      emojis={account.emojis}
+                      text={participant.displayName || participant.username}
+                      emojis={participant.emojis}
                     />
                   </span>
                 ))}
@@ -160,15 +126,25 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
           </button>
         );
       })}
-      {hasMore && (
-        <button
-          type="button"
-          class="btn ghost block load-more"
-          disabled={loadingMore}
-          onClick={() => void loadMore()}
-        >
-          {loadingMore ? t.loadingMore : t.loadMore}
-        </button>
+      {feed.moreError ? (
+        <div class="load-more load-more-error">
+          <span class="muted">{t.errorLoad}</span>
+          <button type="button" class="btn ghost" onClick={feed.loadMore}>
+            <Icon name="refresh-2-line" size={16} />
+            {t.retry}
+          </button>
+        </div>
+      ) : (
+        feed.hasMore && (
+          <button
+            type="button"
+            class="btn ghost block load-more"
+            disabled={feed.loadingMore}
+            onClick={feed.loadMore}
+          >
+            {feed.loadingMore ? t.loadingMore : t.loadMore}
+          </button>
+        )
       )}
     </div>
   );
