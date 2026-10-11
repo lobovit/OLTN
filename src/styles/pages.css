@@ -895,6 +895,13 @@
   color: var(--danger);
 }
 
+.compose-code-hint {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--s2);
+}
+
 .schedule-panel {
   display: flex;
   flex-direction: column;

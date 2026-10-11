@@ -10,6 +10,7 @@ import type {
 } from "../../api/types";
 import type { Account } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
+import { codeBlockToImageFile, extractCodeBlocks } from "../../lib/code-image";
 import { fullDate, htmlToPlainText, languageName, toLocalInputValue } from "../../lib/format";
 import { userMessageForError } from "../../lib/errors";
 import { loadEmojiGroups, searchEmojis, type EmojiGroup, type EmojiItem } from "../../lib/emoji";
@@ -397,6 +398,7 @@ function ComposeInner(): JSX.Element {
     : customEmojis.slice(0, 120);
   const unicodeMatches =
     emojiData && emojiQuery.trim() ? searchEmojis(emojiData, emojiQuery) : null;
+  const codeBlocks = isEdit || pollOn ? [] : extractCodeBlocks(text);
 
   const upload = async (files: FileList | File[]): Promise<void> => {
     if (!account) return;
@@ -423,12 +425,38 @@ function ComposeInner(): JSX.Element {
     setBusy(true);
     const client = getRest(instance, account.accessToken);
     const rawText = text.trim();
-    const parts =
-      !isEdit && rawText.length > charLimit ? splitThreadText(rawText, charLimit) : [rawText];
+    let parts: string[] = [rawText];
     let posted = 0;
     try {
       const statusId = intent.statusId;
-      const mediaIds = media.map((m) => m.id);
+      let postedText = rawText;
+      const generatedMedia: MediaAttachment[] = [];
+      // Blocos de código viram imagem (respeitando o limite de 4 anexos).
+      if (!isEdit && !pollOn) {
+        const blocks = extractCodeBlocks(rawText);
+        const slots = Math.max(0, 4 - media.length);
+        for (const block of blocks.slice(0, slots)) {
+          try {
+            const file = await codeBlockToImageFile(block);
+            if (!file) throw new Error("code_render_failed");
+            const attachment = await client.v1.media.create({
+              file,
+              description: block.code,
+            });
+            generatedMedia.push(attachment);
+            postedText = postedText.replace(block.raw, "");
+          } catch (err) {
+            console.warn("[oltn] code image failed", err);
+            toast(t.codeImageFailed, "error");
+          }
+        }
+        if (generatedMedia.length) postedText = postedText.replace(/\n{3,}/g, "\n\n").trim();
+      }
+      parts =
+        !isEdit && postedText.length > charLimit
+          ? splitThreadText(postedText, charLimit)
+          : [postedText];
+      const mediaIds = [...media.map((m) => m.id), ...generatedMedia.map((m) => m.id)];
       const pollParams = pollOn
         ? {
             options: pollOptions.filter((o) => o.trim()),
@@ -438,7 +466,6 @@ function ComposeInner(): JSX.Element {
         : undefined;
       if (scheduleDate && scheduleValid && !scheduleBlocked) {
         const common = {
-          status: rawText,
           spoilerText: showCw ? spoiler : null,
           visibility: visibility as StatusVisibility,
           sensitive,
@@ -447,9 +474,13 @@ function ComposeInner(): JSX.Element {
           scheduledAt: scheduleDate.toISOString(),
         };
         if (mediaIds.length) {
-          await client.v1.statuses.create({ ...common, mediaIds });
+          await client.v1.statuses.create({
+            ...common,
+            status: postedText || undefined,
+            mediaIds,
+          });
         } else {
-          await client.v1.statuses.create({ ...common, poll: pollParams });
+          await client.v1.statuses.create({ ...common, status: postedText, poll: pollParams });
         }
         if (intent.mode === "new") writeJSON(DRAFT_KEY, null);
         toast(t.scheduledPost, "ok");
@@ -459,16 +490,16 @@ function ComposeInner(): JSX.Element {
       let replyToId = replyTo?.id;
       for (const part of parts) {
         const first = posted === 0;
-        const common = {
+        const base = {
           spoilerText: first && showCw ? spoiler : null,
           visibility: visibility as StatusVisibility,
-          status: part,
         };
         const status =
           isEdit && statusId
             ? mediaIds.length
               ? await client.v1.statuses.$select(statusId).update({
-                  ...common,
+                  ...base,
+                  status: part,
                   sensitive,
                   mediaIds,
                   mediaAttributes: media.map((m) => ({
@@ -477,19 +508,22 @@ function ComposeInner(): JSX.Element {
                   })),
                 })
               : await client.v1.statuses.$select(statusId).update({
-                  ...common,
+                  ...base,
+                  status: part,
                   sensitive,
                   poll: pollParams,
                 })
             : mediaIds.length && first
               ? await client.v1.statuses.create({
-                  ...common,
+                  ...base,
+                  ...(part ? { status: part } : {}),
                   mediaIds,
                   inReplyToId: replyToId,
                   quotedStatusId: quoteId,
                 })
               : await client.v1.statuses.create({
-                  ...common,
+                  ...base,
+                  status: part,
                   poll: first ? pollParams : undefined,
                   inReplyToId: replyToId,
                   quotedStatusId: first ? quoteId : undefined,
@@ -841,6 +875,12 @@ function ComposeInner(): JSX.Element {
             <button type="button" class="cw-toggle" onClick={() => setScheduledAt("")}>
               {t.scheduleClear}
             </button>
+          </div>
+        )}
+        {codeBlocks.length > 0 && (
+          <div class="compose-code-hint pill">
+            <Icon name="code-line" size={14} />
+            <span>{t.codeAsImage}</span>
           </div>
         )}
         {emojiOpen && (

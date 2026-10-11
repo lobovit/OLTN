@@ -242,6 +242,8 @@ export const en = {
   translateTo: "Translate to",
   errorTranslate: "Couldn't translate right now.",
   undo: "Undo",
+  codeAsImage: "Fenced code will be posted as an image.",
+  codeImageFailed: "Couldn't render the code image.",
   visPublic: "Public",
   visPublicHint: "Everyone, on any instance.",
   visLocal: "Local",

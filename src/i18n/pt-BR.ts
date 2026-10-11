@@ -244,6 +244,8 @@ const pt: Record<TKey, string> = {
   translateTo: "Traduzir para",
   errorTranslate: "Não foi possível traduzir agora.",
   undo: "Desfazer",
+  codeAsImage: "Código entre ``` será publicado como imagem.",
+  codeImageFailed: "Não foi possível gerar a imagem do código.",
   visPublic: "Público",
   visPublicHint: "Todos veem, em qualquer instância.",
   visLocal: "Local",
