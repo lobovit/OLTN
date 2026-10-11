@@ -7,11 +7,11 @@ Another Mastodon WebClient.
 - OAuth2 + PKCE sign-in on any Mastodon-compatible instance (popup or redirect)
 - Real-time home timeline with a "new posts" queue; grouped notifications and mentions
 - Threaded conversations and profiles (posts, replies, media, followers/following)
-- Composer with media, polls, CW, visibility, drafts, editing, emoji picker (Unicode + instance emojis), draft translation, and post scheduling
+- Composer with media, polls, CW, visibility, drafts, editing, emoji picker (Unicode + instance emojis), draft translation, post scheduling, and automatic code-to-image for fenced code blocks
 - Search (accounts, hashtags, posts), public hashtags, local/federated timelines
 - Lists, bookmarks, favourites, filters (v2), trending
 - Multi-column deck with pinned shortcuts, drag-to-reorder and resize
-- Keyboard shortcuts (`j/k`, `c`, `/`, `?`, `g h`, …)
+- Keyboard shortcuts (`j/k`, `c`, `/`, `?`, `g h`, …), plus a Pomodoro/reminder timer in the nav
 - Dark/light/auto themes, multi-account support, pt-BR and English UI
 
 ## Quick start
