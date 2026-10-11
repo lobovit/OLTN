@@ -1200,6 +1200,44 @@
   text-align: center;
 }
 
+/* ---------------- ajuda (intro) ---------------- */
+
+.help-sheet .help-intro {
+  margin: 0 0 var(--s3);
+  color: var(--text-2);
+}
+
+.help-sheet section {
+  padding: var(--s2) 0;
+  border-top: var(--hairline) solid var(--divider);
+}
+
+.help-sheet section h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.help-sheet section p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.help-sheet .help-code {
+  margin: var(--s2) 0 0;
+  padding: var(--s2) var(--s3);
+  overflow-x: auto;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre;
+}
+
 /* ---------------- atalhos (ajuda) ---------------- */
 
 .shortcuts-help section {
