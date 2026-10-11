@@ -68,6 +68,14 @@ const NAV_ITEMS: {
     column: "home",
   },
   {
+    id: "/p/l",
+    href: "/p/l",
+    icon: "globe-line",
+    iconActive: "globe-line",
+    labelKey: "local",
+    column: "local",
+  },
+  {
     id: "/notifications",
     href: "/notifications",
     icon: "notification-line",
@@ -429,6 +437,8 @@ function iconForShortcut(shortcut: Shortcut): string {
       return "bookmark-line";
     case "favourites":
       return "heart-line";
+    case "boosts":
+      return "repeat-line";
     case "trending":
       return "trending-up-line";
     case "list":
