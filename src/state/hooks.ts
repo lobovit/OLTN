@@ -76,6 +76,7 @@ export function usePagedFeed<T>(options: PagedFeedOptions<T>): PagedFeed<T> {
         dispatch({ type: "page", scope: "initial", page });
         onReadyRef.current?.(page.items);
       } catch (error) {
+        console.warn("[oltn] feed load failed", error);
         if (token === tokenRef.current) dispatch({ type: "fail", scope: "initial", error });
       }
     })();
@@ -100,6 +101,7 @@ export function usePagedFeed<T>(options: PagedFeedOptions<T>): PagedFeed<T> {
         if (token !== tokenRef.current) return;
         dispatch({ type: "page", scope: "more", page });
       } catch (error) {
+        console.warn("[oltn] feed load more failed", error);
         if (token === tokenRef.current) dispatch({ type: "fail", scope: "more", error });
       }
     })();

@@ -86,8 +86,9 @@ export function feedReducer<T>(
         ? { ...state, loading: true, error: null }
         : { ...state, loadingMore: true, moreError: null };
     case "page": {
-      const fresh = freshItems(state.items, event.page.items, adapter.keyOf);
       if (event.scope === "initial") {
+        // A reload replaces the list; dedupe only within the incoming page.
+        const fresh = freshItems([], event.page.items, adapter.keyOf);
         return {
           items: fresh,
           loading: false,
@@ -99,6 +100,7 @@ export function feedReducer<T>(
           cursor: nextCursor(fresh, adapter),
         };
       }
+      const fresh = freshItems(state.items, event.page.items, adapter.keyOf);
       return {
         ...state,
         items: [...state.items, ...fresh],

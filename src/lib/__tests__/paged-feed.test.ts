@@ -93,6 +93,15 @@ describe("paged feed", () => {
     expect(state.error).toBeInstanceOf(Error);
   });
 
+  it("reloading replaces the list instead of dropping repeated items", () => {
+    const state = stateAfter([
+      { type: "page", scope: "initial", page: page(["1", "2"]) },
+      { type: "start", scope: "initial" },
+      { type: "page", scope: "initial", page: page(["9", "1"]) },
+    ]);
+    expect(ids(state)).toEqual(["9", "1"]);
+  });
+
   it("pagination error stays in moreError without hiding the list", () => {
     const state = stateAfter([
       { type: "page", scope: "initial", page: page(["1"], true) },
