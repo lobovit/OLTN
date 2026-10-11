@@ -208,6 +208,23 @@ const pt: Record<TKey, string> = {
   scheduledCancelled: "Post agendado cancelado.",
   reschedule: "Reagendar",
   rescheduled: "Agendamento atualizado.",
+  pomodoro: "Pomodoro",
+  timerFocus: "Foco",
+  timerBreak: "Pausa",
+  timerLongBreak: "Pausa longa",
+  timerLabel: "Lembrete (opcional)",
+  timerLabelPlaceholder: "ex.: beber água",
+  timerMinutes: "minutos",
+  timerStart: "Iniciar",
+  timerPause: "Pausar",
+  timerResume: "Retomar",
+  timerReset: "Zerar",
+  timerDone: "Tempo esgotado!",
+  timerFocusDone: "Foco concluído!",
+  timerBreakDone: "Pausa encerrada!",
+  timerCycles: "Focos antes da pausa longa",
+  timerAuto: "Iniciar pausas automaticamente",
+  timerSkip: "Pular",
   pollOption: "Opção",
   pollAddOption: "Adicionar opção",
   pollRemove: "Remover opção",
@@ -334,6 +351,35 @@ const pt: Record<TKey, string> = {
 
   // Ajuda de atalhos
   shortcutsHelp: "Atalhos de teclado",
+  help: "Ajuda",
+  helpTitle: "Como o OLTN funciona",
+  helpIntro: "Um passeio rápido pelo básico.",
+  helpTimelinesTitle: "Timelines",
+  helpTimelinesText:
+    "Home mostra posts de quem você segue, em tempo real. Local mostra posts da sua instância e Federação o fediverso.",
+  helpPostTitle: "Publicar",
+  helpPostText:
+    "Escreva com mídia, enquetes, aviso de conteúdo, emojis e tradução. Blocos de código entre cercas viram imagem automaticamente e dá para agendar posts.",
+  helpCodeTitle: "Código como imagem",
+  helpCodeText:
+    "Envolva o código em três crases — opcionalmente com a linguagem logo após a abertura — e ele é publicado como imagem arredondada, com o código salvo na descrição da mídia.",
+  helpInteractTitle: "Interagir",
+  helpInteractText:
+    "Responder, impulsionar, curtir e salvar. Use ⋯ no post de alguém para denunciar ou bloquear a pessoa.",
+  helpColumnsTitle: "Colunas",
+  helpColumnsText:
+    "No deck inicial, clique nos ícones do nav para abrir colunas (até 6), arraste para reordenar e arraste a borda direita para redimensionar.",
+  helpDiscoverTitle: "Busca e descoberta",
+  helpDiscoverText:
+    "Busque contas, hashtags e posts; Em alta lista hashtags e posts que estão bombando agora.",
+  helpLibraryTitle: "Biblioteca",
+  helpLibraryText: "Salvos, curtidas, boosts e listas, além dos seus posts agendados.",
+  helpTimerTitle: "Pomodoro",
+  helpTimerText:
+    "O relógio no nav abre um timer de foco/pausa configurável que apita quando a fase termina.",
+  helpSettingsTitle: "Ajustes",
+  helpSettingsText:
+    "Tema, idioma, tamanho do texto e conexão em tempo real. Aperte ? para ver os atalhos de teclado.",
   navHelp: "Navegação",
   generalHelp: "Geral",
   yourProfile: "Seu perfil",

@@ -9,8 +9,17 @@ import { ConversationsFeed } from "../components/feed/ConversationsFeed";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
 import { t, type TKey } from "../i18n/pt-BR";
+import { formatDuration } from "../lib/format";
 import { useHotkeys } from "../lib/hotkeys";
-import { clampWidth, COLUMN_MAX, COLUMN_MIN, moveInOrder, orderColumns } from "../lib/layout";
+import {
+  clampWidth,
+  COLUMN_LIMIT,
+  COLUMN_MAX,
+  COLUMN_MIN,
+  ensureColumnVisible,
+  moveInOrder,
+  orderColumns,
+} from "../lib/layout";
 import { Link, matchRoutes, navigate, useRouter } from "../lib/router";
 import { shortcutLabel, shortcutRoute } from "./shortcuts";
 import { routes } from "./routes";
@@ -365,6 +374,32 @@ function Rail(): JSX.Element | null {
             <span>{t[item.labelKey]}</span>
           </Link>
         ))}
+        <button
+          type="button"
+          class={`rail-item timer-item ${state.timer.remainingMs > 0 ? "active" : ""}`}
+          title={t.pomodoro}
+          aria-label={t.pomodoro}
+          onClick={() => {
+            store.ui.timerOpen = true;
+          }}
+        >
+          <Icon name="time-line" size={22} />
+          <span>
+            {state.timer.remainingMs > 0 ? formatDuration(state.timer.remainingMs) : t.pomodoro}
+          </span>
+        </button>
+        <button
+          type="button"
+          class="rail-item help-item"
+          title={t.help}
+          aria-label={t.help}
+          onClick={() => {
+            store.ui.helpOpen = true;
+          }}
+        >
+          <Icon name="question-line" size={22} />
+          <span>{t.help}</span>
+        </button>
       </div>
       {railShortcuts.length > 0 && (
         <div class="rail-shortcuts">

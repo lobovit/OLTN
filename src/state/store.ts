@@ -16,6 +16,24 @@ import type {
 export type AuthState = "loading" | "anonymous" | "authenticated";
 export type StreamState = "off" | "connecting" | "on";
 
+export type TimerPhase = "focus" | "shortBreak" | "longBreak";
+
+export interface TimerState {
+  running: boolean;
+  /** Epoch ms em que termina (quando `running`). */
+  endsAt: number | null;
+  /** Milissegundos restantes (atualizado pelo watcher). */
+  remainingMs: number;
+  /** Duração total da fase atual (para a barra de progresso). */
+  totalMs: number;
+  /** Fase atual do ciclo. */
+  phase: TimerPhase;
+  /** Focos concluídos na sessão (define quando vem a pausa longa). */
+  completedFocus: number;
+  /** Lembrete opcional (ex.: "beber água"). */
+  label: string;
+}
+
 export interface AccountPrefs {
   shortcuts: Shortcut[];
   columnOrder?: string[];
@@ -42,12 +60,17 @@ export interface AppState {
   statusSources: Record<string, string>;
   /** Accts bloqueados nesta sessão (oculta posts imediatamente). */
   blockedAccounts: string[];
+  /** Pomodoro/lembrete (roda fora do sheet). */
+  timer: TimerState;
   ui: {
     compose: ComposeIntent | null;
     mediaViewer: MediaViewerIntent | null;
     toasts: ToastItem[];
     shortcutsHelp: boolean;
     searchOpen: boolean;
+    timerOpen: boolean;
+    /** Popup de introdução à plataforma. */
+    helpOpen: boolean;
     /** Chave do último status publicado/editado (para inserir na thread aberta). */
     lastPostedKey: string | null;
   };
@@ -60,6 +83,13 @@ export const DEFAULT_SETTINGS: Settings = {
   textSize: 16,
   railExpanded: false,
   autoStream: true,
+  pomodoro: {
+    focusMinutes: 25,
+    shortBreakMinutes: 5,
+    longBreakMinutes: 15,
+    cycles: 4,
+    autoContinue: true,
+  },
 };
 
 export const store = proxy<AppState>({
@@ -79,12 +109,23 @@ export const store = proxy<AppState>({
   statuses: {},
   statusSources: {},
   blockedAccounts: [],
+  timer: {
+    running: false,
+    endsAt: null,
+    remainingMs: 0,
+    totalMs: 0,
+    phase: "focus",
+    completedFocus: 0,
+    label: "",
+  },
   ui: {
     compose: null,
     mediaViewer: null,
     toasts: [],
     shortcutsHelp: false,
     searchOpen: false,
+    timerOpen: false,
+    helpOpen: false,
     lastPostedKey: null,
   },
 });
@@ -156,6 +197,96 @@ export function setCompose(intent: ComposeIntent | null): void {
 
 export function setMediaViewer(intent: MediaViewerIntent | null): void {
   store.ui.mediaViewer = intent;
+}
+
+/* ---------- pomodoro / lembrete ---------- */
+
+function pomodoroMinutes(phase: TimerPhase): number {
+  const cfg = store.settings.pomodoro;
+  const minutes =
+    phase === "focus"
+      ? cfg.focusMinutes
+      : phase === "shortBreak"
+        ? cfg.shortBreakMinutes
+        : cfg.longBreakMinutes;
+  return Math.max(1, Math.round(minutes));
+}
+
+/** Próxima fase do ciclo: foco → pausa curta (longa a cada N focos) → foco. */
+export function nextTimerPhase(phase: TimerPhase, completedFocus: number): TimerPhase {
+  if (phase !== "focus") return "focus";
+  const cycles = Math.max(1, Math.round(store.settings.pomodoro.cycles));
+  return completedFocus > 0 && completedFocus % cycles === 0 ? "longBreak" : "shortBreak";
+}
+
+function setTimerPhase(
+  phase: TimerPhase,
+  running: boolean,
+  completedFocus: number,
+  label: string,
+): void {
+  const totalMs = pomodoroMinutes(phase) * 60_000;
+  store.timer = {
+    running,
+    endsAt: running ? Date.now() + totalMs : null,
+    remainingMs: totalMs,
+    totalMs,
+    phase,
+    completedFocus,
+    label,
+  };
+}
+
+/** Começa um ciclo novo, no foco. */
+export function startPomodoro(label: string): void {
+  setTimerPhase("focus", true, 0, label.trim());
+}
+
+/** Encerra a fase atual (fim do timer ou "pular") e prepara a próxima. */
+export function completeTimerPhase(): void {
+  const timer = store.timer;
+  if (!timer.running && timer.remainingMs <= 0) return;
+  const completedFocus = timer.phase === "focus" ? timer.completedFocus + 1 : timer.completedFocus;
+  const next = nextTimerPhase(timer.phase, completedFocus);
+  setTimerPhase(next, store.settings.pomodoro.autoContinue, completedFocus, timer.label);
+}
+
+/** Pula a fase atual sem parar o ciclo. */
+export function skipTimerPhase(): void {
+  const timer = store.timer;
+  if (!timer.running && timer.remainingMs <= 0) return;
+  const completedFocus = timer.phase === "focus" ? timer.completedFocus + 1 : timer.completedFocus;
+  const next = nextTimerPhase(timer.phase, completedFocus);
+  setTimerPhase(next, timer.running, completedFocus, timer.label);
+}
+
+export function pauseTimer(): void {
+  const timer = store.timer;
+  if (!timer.running || !timer.endsAt) return;
+  store.timer = {
+    ...timer,
+    running: false,
+    endsAt: null,
+    remainingMs: Math.max(0, timer.endsAt - Date.now()),
+  };
+}
+
+export function resumeTimer(): void {
+  const timer = store.timer;
+  if (timer.running || timer.remainingMs <= 0) return;
+  store.timer = { ...timer, running: true, endsAt: Date.now() + timer.remainingMs };
+}
+
+export function stopTimer(): void {
+  store.timer = {
+    running: false,
+    endsAt: null,
+    remainingMs: 0,
+    totalMs: 0,
+    phase: "focus",
+    completedFocus: 0,
+    label: "",
+  };
 }
 
 export function currentAccount(): AccountMeta | null {

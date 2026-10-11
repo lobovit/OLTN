@@ -76,6 +76,19 @@ export interface Shortcut {
   value?: string;
 }
 
+export interface PomodoroSettings {
+  /** Minutos de foco (25 por padrão). */
+  focusMinutes: number;
+  /** Pausa curta após cada foco (5 por padrão). */
+  shortBreakMinutes: number;
+  /** Pausa longa após N focos (15 por padrão). */
+  longBreakMinutes: number;
+  /** Quantos focos antes de uma pausa longa (4 por padrão). */
+  cycles: number;
+  /** Inicia a próxima fase (pausa/foco) automaticamente. */
+  autoContinue: boolean;
+}
+
 export interface Settings {
   theme: ThemeSetting;
   accent: AccentSetting;
@@ -87,6 +100,8 @@ export interface Settings {
   autoStream: boolean;
   /** Ordem dos botões do nav (hrefs). */
   navOrder?: readonly string[];
+  /** Configurações do ciclo Pomodoro. */
+  pomodoro: PomodoroSettings;
 }
 
 export interface ComposeIntent {

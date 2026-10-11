@@ -1,0 +1,57 @@
+.timer-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.timer-phase {
+  color: var(--text-3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.timer-display {
+  font-size: 2.6rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.timer-label {
+  color: var(--text-2);
+  text-align: center;
+}
+
+.timer-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--border);
+}
+
+.timer-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.5s linear;
+}
+
+.timer-config {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
+}
+
+.timer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 0.8rem;
+}
+
+.timer-field .field {
+  width: 100%;
+}

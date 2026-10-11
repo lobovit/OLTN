@@ -206,6 +206,23 @@ export const en = {
   scheduledCancelled: "Scheduled post cancelled.",
   reschedule: "Reschedule",
   rescheduled: "Scheduled post updated.",
+  pomodoro: "Pomodoro",
+  timerFocus: "Focus",
+  timerBreak: "Break",
+  timerLongBreak: "Long break",
+  timerLabel: "Reminder (optional)",
+  timerLabelPlaceholder: "e.g. drink water",
+  timerMinutes: "minutes",
+  timerStart: "Start",
+  timerPause: "Pause",
+  timerResume: "Resume",
+  timerReset: "Reset",
+  timerDone: "Time's up!",
+  timerFocusDone: "Focus done!",
+  timerBreakDone: "Break's over!",
+  timerCycles: "Focuses before a long break",
+  timerAuto: "Start breaks automatically",
+  timerSkip: "Skip",
   pollOption: "Option",
   pollAddOption: "Add option",
   pollRemove: "Remove option",
@@ -332,6 +349,35 @@ export const en = {
 
   // Shortcuts help
   shortcutsHelp: "Keyboard shortcuts",
+  help: "Help",
+  helpTitle: "How OLTN works",
+  helpIntro: "A quick tour of the basics.",
+  helpTimelinesTitle: "Timelines",
+  helpTimelinesText:
+    "Home shows posts from people you follow, updated live. Local shows posts from your instance and Federated the wider fediverse.",
+  helpPostTitle: "Posting",
+  helpPostText:
+    "Write with media, polls, content warnings, emoji and translation. Fenced code blocks become images automatically and posts can be scheduled.",
+  helpCodeTitle: "Code as image",
+  helpCodeText:
+    "Wrap code in triple backticks — optionally with the language right after the opening fence — and it is posted as a rounded image, with the code saved as the media description.",
+  helpInteractTitle: "Interacting",
+  helpInteractText:
+    "Reply, boost, like and bookmark. Use ⋯ on someone's post to report it or block the user.",
+  helpColumnsTitle: "Columns",
+  helpColumnsText:
+    "On the home deck, click nav icons to open columns (up to 6), drag them to reorder and drag the right edge to resize.",
+  helpDiscoverTitle: "Search & discover",
+  helpDiscoverText:
+    "Search for accounts, hashtags and posts; Trending lists hashtags and posts that are hot right now.",
+  helpLibraryTitle: "Library",
+  helpLibraryText: "Bookmarks, likes, boosts and lists, plus your scheduled posts.",
+  helpTimerTitle: "Pomodoro",
+  helpTimerText:
+    "The clock in the nav opens a configurable focus/break timer that beeps when a phase ends.",
+  helpSettingsTitle: "Settings",
+  helpSettingsText:
+    "Theme, language, text size and real-time streaming. Press ? anytime for keyboard shortcuts.",
   navHelp: "Navigation",
   generalHelp: "General",
   yourProfile: "Your profile",
