@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
+    "emojibase-data": "^17.0.0",
     "happy-dom": "^20.0.0",
     "oxfmt": "^0.72.0",
     "typescript": "~5.9.3",

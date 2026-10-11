@@ -61,7 +61,10 @@ export function Sheet({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         // Escape primeiro fecha popups internos (ex.: sugestões de menção)
-        if (document.querySelector(".mention-menu")) return;
+        if (
+          document.querySelector(".mention-menu, .emoji-picker, .translate-menu, .schedule-panel")
+        )
+          return;
         e.stopPropagation();
         onClose();
       }

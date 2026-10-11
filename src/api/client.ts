@@ -1,7 +1,7 @@
 import { createRestAPIClient, createStreamingAPIClient } from "masto";
 import { TtlCache, asyncMemo } from "../lib/mem";
 import { isRetriable, withRetry } from "../lib/retry";
-import type { InstanceInfo, Notification, RestClient, Status } from "./types";
+import type { CustomEmoji, InstanceInfo, Notification, RestClient, Status } from "./types";
 
 const restCache = new Map<string, RestClient>();
 
@@ -21,6 +21,22 @@ export function getRest(instance: string, accessToken?: string): RestClient {
 
 export function dropRest(instance: string, accessToken?: string): void {
   restCache.delete(`${instance}|${accessToken ?? ""}`);
+}
+
+const customEmojisCache = new Map<string, Promise<CustomEmoji[]>>();
+
+/** Emojis personalizados da instância (cacheado por sessão/instância). */
+export function getCustomEmojis(instance: string, accessToken?: string): Promise<CustomEmoji[]> {
+  const key = `${instance}|${accessToken ?? ""}`;
+  let promise = customEmojisCache.get(key);
+  if (!promise) {
+    promise = (async () => getRest(instance, accessToken).v1.customEmojis.list())().catch((err) => {
+      customEmojisCache.delete(key);
+      throw err;
+    });
+    customEmojisCache.set(key, promise);
+  }
+  return promise;
 }
 
 const instanceCache = new TtlCache(5 * 60_000);

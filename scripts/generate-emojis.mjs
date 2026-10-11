@@ -1,0 +1,70 @@
+/* Gera src/lib/emoji-data.pt.ts e src/lib/emoji-data.en.ts a partir de emojibase-data.
+   Uso: node scripts/generate-emojis.mjs */
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const LOCALES = ["pt", "en"];
+
+/* Grupos seguem o padrão Emojibase (2 = componentes/tonalidades, omitido). */
+const GROUP_LABELS = {
+  pt: {
+    0: "Sorrisos e emoções",
+    1: "Pessoas e corpo",
+    3: "Animais e natureza",
+    4: "Comida e bebida",
+    5: "Viagens e lugares",
+    6: "Atividades",
+    7: "Objetos",
+    8: "Símbolos",
+    9: "Bandeiras",
+  },
+  en: {
+    0: "Smileys & emotion",
+    1: "People & body",
+    3: "Animals & nature",
+    4: "Food & drink",
+    5: "Travel & places",
+    6: "Activities",
+    7: "Objects",
+    8: "Symbols",
+    9: "Flags",
+  },
+};
+
+const MAX_TAGS = 10;
+
+for (const locale of LOCALES) {
+  const src = JSON.parse(
+    readFileSync(
+      resolve(process.cwd(), `node_modules/emojibase-data/${locale}/compact.json`),
+      "utf8",
+    ),
+  );
+
+  const byGroup = new Map();
+  for (const entry of src) {
+    if (typeof entry.group !== "number" || entry.group === 2) continue;
+    if (!entry.unicode) continue;
+    const item = { c: entry.unicode, l: entry.label };
+    if (entry.tags?.length) item.t = entry.tags.slice(0, MAX_TAGS);
+    const skins = entry.skins?.map((skin) => skin.unicode).filter(Boolean);
+    if (skins?.length) item.s = skins;
+    if (!byGroup.has(entry.group)) byGroup.set(entry.group, []);
+    byGroup.get(entry.group).push(item);
+  }
+
+  const groups = [...byGroup.keys()]
+    .sort((a, b) => a - b)
+    .map((id) => ({ id, label: GROUP_LABELS[locale][id] ?? String(id), emojis: byGroup.get(id) }));
+
+  const out = `// Gerado por scripts/generate-emojis.mjs — não editar à mão.
+// Dados: Emojibase (MIT) — https://emojibase.dev
+import type { EmojiGroup } from "./emoji";
+
+export const EMOJI_GROUPS: EmojiGroup[] = ${JSON.stringify(groups)};
+`;
+
+  writeFileSync(resolve(process.cwd(), `src/lib/emoji-data.${locale}.ts`), out);
+  const count = groups.reduce((sum, group) => sum + group.emojis.length, 0);
+  console.log(`OK: ${locale} — ${count} emojis em ${groups.length} grupos.`);
+}

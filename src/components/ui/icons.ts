@@ -216,6 +216,21 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "emoji-line": {
+    body: '<path fill="currentColor" d="M9 9.5a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0m7 0a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M8.5 14.57A4.98 4.98 0 0 0 12 16a4.98 4.98 0 0 0 3.5-1.43M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0ZM9 9.5a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0Zm7 0a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0Z"/>',
+    width: 24,
+    height: 24,
+  },
+  "report-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21h14M12 3v1M4.929 5.929l.707.707m13.435-.707l-.707.707M12 12.5L10.5 15h3L12 17.5m6 3.5v-7a6 6 0 0 0-12 0v7z"/>',
+    width: 24,
+    height: 24,
+  },
+  "user-forbid-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M12.21 14.064A12 12 0 0 0 11 14c-4.418 0-8 2.567-8 4.5S6.582 21 11 21q.339 0 .672-.005M16 16l3.975 3.975M15 7a4 4 0 1 1-8 0a4 4 0 0 1 8 0Zm6 11a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z"/>',
+    width: 24,
+    height: 24,
+  },
   "keyboard-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 9h1m3.5 0h1M16 9h1M7 12h1m3.5 0h1m3.5 0h1M7 15h10M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1"/>',
     width: 24,
