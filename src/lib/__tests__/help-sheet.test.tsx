@@ -8,13 +8,13 @@ describe("HelpSheet", () => {
     store.ui.helpOpen = false;
   });
 
-  it("não renderiza quando fechado", () => {
+  it("does not render when closed", () => {
     const host = document.createElement("div");
     render(<HelpSheet />, host);
     expect(host.querySelector(".help-sheet")).toBeNull();
   });
 
-  it("mostra as seções da doc quando aberto", () => {
+  it("shows the doc sections when open", () => {
     store.ui.helpOpen = true;
     const host = document.createElement("div");
     render(<HelpSheet />, host);

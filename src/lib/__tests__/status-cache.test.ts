@@ -13,19 +13,19 @@ function status(id: string, uri: string): Status {
   return { id, uri } as unknown as Status;
 }
 
-describe("origem dos status em cache", () => {
+describe("cached status sources", () => {
   beforeEach(() => {
     store.statuses = {};
     store.statusSources = {};
   });
 
-  it("registra a instância de origem ao guardar status", () => {
+  it("records the source instance when caching a status", () => {
     putStatus(status("1", "https://remote.example/users/a/statuses/1"), "my.instance");
     expect(store.statusSources["https://remote.example/users/a/statuses/1"]).toBe("my.instance");
     expect(statusSourceById("1")).toBe("my.instance");
   });
 
-  it("propaga a origem para o reblog interno", () => {
+  it("propagates the source to the inner reblog", () => {
     const inner = status("2", "https://remote.example/users/b/statuses/2");
     const outer = {
       id: "3",
@@ -37,7 +37,7 @@ describe("origem dos status em cache", () => {
     expect(statusSourceById("2")).toBe("my.instance");
   });
 
-  it("remove a origem junto com o status", () => {
+  it("removes the source together with the status", () => {
     putStatus(status("1", "https://my.instance/users/a/statuses/1"), "my.instance");
     removeStatusById("my.instance", "1");
     expect(store.statuses).toEqual({});

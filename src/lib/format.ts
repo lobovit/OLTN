@@ -4,7 +4,7 @@ const compactCache = new Map<string, Intl.NumberFormat>();
 
 let currentLocale = "en";
 
-/** Define o idioma usado na formatação (chamado em applyAppearance). */
+/** Sets the language used for formatting (called from applyAppearance). */
 export function setFormatLocale(locale: string): void {
   currentLocale = locale;
 }
@@ -70,7 +70,7 @@ export function shortDate(iso: string | number | Date): string {
   return new Date(iso).toLocaleDateString(currentLocale);
 }
 
-/** Valor de `<input type="datetime-local">` no fuso local. */
+/** Value for `<input type="datetime-local">` in the local timezone. */
 export function toLocalInputValue(date: Date): string {
   const pad = (n: number): string => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
@@ -78,7 +78,7 @@ export function toLocalInputValue(date: Date): string {
   )}:${pad(date.getMinutes())}`;
 }
 
-/** Duração em mm:ss (ou h:mm:ss), para timers. */
+/** Duration as mm:ss (or h:mm:ss), for timers. */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000));
   const seconds = total % 60;
@@ -88,7 +88,7 @@ export function formatDuration(ms: number): string {
   return hours ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
 }
 
-/** Nome do idioma no idioma atual da interface (ex.: "Portuguese (Brazil)"). */
+/** Language name in the current UI language (e.g. "Portuguese (Brazil)"). */
 export function languageName(code: string): string {
   try {
     return new Intl.DisplayNames([currentLocale], { type: "language" }).of(code) ?? code;
@@ -119,7 +119,7 @@ export function initials(name: string): string {
 export function normalizeInstance(input: string): string | null {
   let value = input.trim().toLowerCase();
   if (!value) return null;
-  // @user@host ou user@host → host
+  // @user@host or user@host → host
   const atMatch = value.match(/@([^@]+)$/);
   if (atMatch) value = atMatch[1];
   value = value.replace(/^https?:\/\//, "").replace(/\/+$/, "");
@@ -141,7 +141,7 @@ export function extractMention(input: string): {
   return host ? { host } : null;
 }
 
-/** Converte o HTML de um status em texto editável (usado ao editar post). */
+/** Converts a status HTML into editable text (used when editing a post). */
 export function htmlToPlainText(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const body = doc.body;
@@ -177,7 +177,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Converte texto puro (ex.: tradução) em HTML simples, escapado. */
+/** Converts plain text (e.g. a translation) into escaped simple HTML. */
 export function plainTextToHtml(text: string): string {
   return text
     .split(/\n{2,}/)

@@ -12,7 +12,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-/** Captura erros de renderização e mostra um fallback amigável. */
+/** Catches render errors and shows a friendly fallback. */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   override state: ErrorBoundaryState = { error: null };
 

@@ -62,7 +62,7 @@ export function ProfileEditor({ instance, onClose, onSaved }: ProfileEditorProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instance]);
 
-  /* libera URLs de preview temporárias */
+  /* releases temporary preview URLs */
   useEffect(
     () => () => {
       if (avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);

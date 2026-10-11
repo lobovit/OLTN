@@ -41,7 +41,7 @@ function defaultShortcuts(): Shortcut[] {
 
 let disconnectStream: (() => void) | null = null;
 
-/* ---------- persistência ---------- */
+/* ---------- persistence ---------- */
 
 function saveAccounts(): void {
   writeJSON("accounts", store.accounts);
@@ -94,7 +94,7 @@ function applyFavicon(): void {
   link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-/* ---------- conta ---------- */
+/* ---------- account ---------- */
 
 export function resolveShortcuts(): void {
   const account = currentAccount();
@@ -165,7 +165,7 @@ export function removeAccount(id: string): void {
   }
 }
 
-/** Atualiza dados públicos da conta atual (após editar o perfil). */
+/** Refreshes the current account's public data (after editing the profile). */
 export function updateCurrentAccountMeta(
   patch: Partial<Pick<AccountMeta, "displayName" | "avatar" | "handle">>,
 ): void {
@@ -249,7 +249,7 @@ export async function signOut(): Promise<void> {
 
 /* ---------- stream ---------- */
 
-/** Conecta ou desconecta o stream conforme a preferência de atualização automática. */
+/** Connects or disconnects the stream based on the auto-update preference. */
 export function syncStream(): void {
   const account = currentAccount();
   if (!account || store.auth !== "authenticated") return;
@@ -299,7 +299,7 @@ function connectStream(account: AccountMeta, streamingApi: string | null): void 
 /* ---------- callback OAuth ---------- */
 
 async function handleOAuthCallback(code: string, state?: string): Promise<boolean> {
-  // Popup: repassa o código para a janela principal e fecha.
+  // Popup: forwards the code to the main window and closes.
   if (window.opener && !window.opener.closed) {
     try {
       window.opener.postMessage({ type: "oltn-oauth", code, state }, location.origin);
@@ -359,7 +359,7 @@ async function handleOAuthCallback(code: string, state?: string): Promise<boolea
 export async function boot(): Promise<void> {
   migrateLegacyStorage();
 
-  // 1. estado persistido
+  // 1. persisted state
   store.accounts = readJSON<AccountMeta[]>("accounts", []);
   store.currentAccountId = readJSON<string | null>("currentAccount", null);
   store.settings = {
@@ -369,7 +369,7 @@ export async function boot(): Promise<void> {
   store.prefs = readJSON<AppState["prefs"]>("prefs", {});
   applyAppearance();
 
-  // 2. callback oauth (?code= pode estar no search ou no hash)
+  // 2. oauth callback (?code= may be in search or hash)
   const search = new URLSearchParams(location.search);
   const hashQuery = new URLSearchParams(location.hash.split("?")[1] ?? "");
   const code = search.get("code") ?? hashQuery.get("code");
@@ -383,7 +383,7 @@ export async function boot(): Promise<void> {
     history.replaceState(null, "", location.pathname + location.hash);
   }
 
-  // 3. sessão
+  // 3. session
   const account = currentAccount() ?? store.accounts[0] ?? null;
   if (account) {
     await signIn(account);
@@ -393,7 +393,7 @@ export async function boot(): Promise<void> {
 
   store.booted = true;
 
-  // 4. guarda de rota
+  // 4. route guard
   const { path } = parseHash();
   if (store.auth === "anonymous" && path !== "/login") {
     navigate("/login", { replace: true });

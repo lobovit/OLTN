@@ -11,11 +11,11 @@ interface SheetProps {
   footer?: ComponentChildren;
   flush?: boolean;
   class?: string;
-  /** Ações extras no cabeçalho, antes do botão de fechar (ex.: contador). */
+  /** Extra header actions, before the close button (e.g. counter). */
   headerActions?: ComponentChildren;
-  /** Permite arrastar e redimensionar a janela (desktop). */
+  /** Allows dragging and resizing the window (desktop). */
   draggable?: boolean;
-  /** Chave para lembrar posição e tamanho entre sessões. */
+  /** Key to remember position and size across sessions. */
   positionKey?: string;
 }
 
@@ -60,7 +60,7 @@ export function Sheet({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        // Escape primeiro fecha popups internos (ex.: sugestões de menção)
+        // Escape first closes inner popups (e.g. mention suggestions)
         if (
           document.querySelector(".mention-menu, .emoji-picker, .translate-menu, .schedule-panel")
         )
@@ -78,7 +78,7 @@ export function Sheet({
     };
   }, [onClose]);
 
-  /* Reencaixa posição e tamanho lembrados se a janela mudou de tamanho */
+  /* Re-anchors remembered position and size if the window resized */
   useEffect(() => {
     if (!draggable || !storageKey) return;
     const sheet = ref.current;

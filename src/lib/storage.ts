@@ -1,7 +1,7 @@
 const PREFIX = "oltn.";
 const LEGACY_PREFIX = "olanta.";
 
-/** Migra chaves do prefixo antigo (Olanta → OLTN), uma única vez. */
+/** Migrates keys from the old prefix (Olanta → OLTN), once. */
 export function migrateLegacyStorage(): void {
   try {
     for (const store of [localStorage, sessionStorage]) {
@@ -33,7 +33,7 @@ export function writeJSON(key: string, value: unknown): void {
   try {
     localStorage.setItem(PREFIX + key, JSON.stringify(value));
   } catch {
-    /* quota/privado */
+    /* quota/private */
   }
 }
 

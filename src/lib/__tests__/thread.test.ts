@@ -2,17 +2,17 @@ import { describe, expect, it } from "vitest";
 import { splitThreadText } from "../thread";
 
 describe("splitThreadText", () => {
-  it("texto curto devolve uma única parte", () => {
+  it("short text returns a single part", () => {
     expect(splitThreadText("oi mundo", 500)).toEqual(["oi mundo"]);
   });
 
-  it("divide em parágrafos quando possível", () => {
+  it("splits into paragraphs when possible", () => {
     const text = "a".repeat(60) + "\n\n" + "b".repeat(60);
     const parts = splitThreadText(text, 80);
     expect(parts).toEqual(["a".repeat(60), "b".repeat(60)]);
   });
 
-  it("divide em frases quando não há parágrafos", () => {
+  it("splits into sentences when there are no paragraphs", () => {
     const text = "Primeira frase longa. ".repeat(5).trim();
     const parts = splitThreadText(text, 50);
     expect(parts.length).toBeGreaterThan(1);
@@ -20,7 +20,7 @@ describe("splitThreadText", () => {
     expect(partesEndWithSentence(parts)).toBe(true);
   });
 
-  it("nunca perde conteúdo e respeita o limite", () => {
+  it("never loses content and respects the limit", () => {
     const text = (
       "palavra ".repeat(20) +
       "\n\n" +
@@ -33,7 +33,7 @@ describe("splitThreadText", () => {
     expect(strip(parts.join(""))).toBe(strip(text));
   });
 
-  it("faz corte duro quando não há separadores", () => {
+  it("hard-cuts when there are no separators", () => {
     const parts = splitThreadText("x".repeat(250), 100);
     expect(parts).toEqual(["x".repeat(100), "x".repeat(100), "x".repeat(50)]);
   });

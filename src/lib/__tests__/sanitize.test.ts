@@ -11,7 +11,7 @@ describe("normalizeEmojiUrl", () => {
 });
 
 describe("sanitizeContent", () => {
-  it("preserva imagens de emoji customizado vindas no content", () => {
+  it("keeps custom emoji images present in the content", () => {
     const html =
       '<p>Usando <img class="emojione custom-emoji" alt=":freebsd_logo:" src="https://ex.com/emoji/freebsd_logo.png" title=":freebsd_logo:"></p>';
     const out = sanitizeContent(html);
@@ -20,14 +20,14 @@ describe("sanitizeContent", () => {
     expect(out).toContain("emojione");
   });
 
-  it("remove scripts e javascript:", () => {
+  it("removes scripts and javascript:", () => {
     expect(sanitizeContent("<script>alert(1)</script><p>ok</p>")).not.toContain("<script");
     expect(sanitizeContent('<a href="javascript:alert(1)">x</a>')).not.toContain("javascript:");
   });
 });
 
 describe("emojifyInPlace", () => {
-  it("dá dimensões explícitas e lazy aos emojis marcados", () => {
+  it("gives explicit dimensions and lazy to marked emojis", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent(
       '<p>oi <img class="custom-thing" alt=":freebsd_logo:" src="https://ex.com/emoji/freebsd.png"></p>',
@@ -39,7 +39,7 @@ describe("emojifyInPlace", () => {
     expect(img.getAttribute("loading")).toBe("lazy");
   });
 
-  it("marca imgs de emoji do servidor mesmo com classe desconhecida", () => {
+  it("marks server emoji imgs even with an unknown class", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent(
       '<p>oi <img class="custom-thing" alt=":freebsd_logo:" src="https://ex.com/emoji/freebsd.png"></p>',
@@ -48,13 +48,13 @@ describe("emojifyInPlace", () => {
     expect(el.querySelector("img")?.classList.contains("emoji")).toBe(true);
   });
 
-  it("marca também por URL conhecida (sem alt)", () => {
+  it("also marks by known URL (without alt)", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent('<p>oi <img src="https://ex.com/emoji/emacs.png"></p>');
     emojifyInPlace(el, [{ shortcode: "emacs", url: "https://ex.com/emoji/emacs.png" } as never]);
     expect(el.querySelector("img")?.classList.contains("emoji")).toBe(true);
   });
-  it("troca :shortcode: por imagem quando o content traz texto puro", () => {
+  it("replaces :shortcode: with an image when the content has plain text", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent("<p>Usando :emacs: e :freebsd_logo: aqui</p>");
     emojifyInPlace(el, [
@@ -66,7 +66,7 @@ describe("emojifyInPlace", () => {
     expect((imgs[0] as HTMLImageElement).src).toContain("emacs.png");
   });
 
-  it("ignora urls não-https", () => {
+  it("ignores non-https urls", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent("<p>:emacs:</p>");
     emojifyInPlace(el, [{ shortcode: "emacs", url: "http://ex.com/emoji/emacs.png" } as never]);

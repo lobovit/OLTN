@@ -7,27 +7,27 @@ describe("parseHash", () => {
     expect(parseHash("#/notificacoes").query.get("x")).toBe(null);
   });
 
-  it("separa query string", () => {
+  it("splits the query string", () => {
     const parsed = parseHash("#/search?q=masto&page=2");
     expect(parsed.path).toBe("/search");
     expect(parsed.query.get("q")).toBe("masto");
     expect(parsed.query.get("page")).toBe("2");
   });
 
-  it("default para /", () => {
+  it("defaults to /", () => {
     expect(parseHash("").path).toBe("/");
     expect(parseHash("#").path).toBe("/");
   });
 });
 
 describe("matchPath", () => {
-  it("casa rotas estáticas", () => {
+  it("matches static routes", () => {
     expect(matchPath("/l/:id", "/l/42")).toEqual({ id: "42" });
     expect(matchPath("/b", "/b")).toEqual({});
     expect(matchPath("/b", "/f")).toBe(null);
   });
 
-  it("casa instance opcional no início", () => {
+  it("matches an optional instance at the start", () => {
     expect(matchPath("/:instance?/s/:id", "/mastodon.social/s/9")).toEqual({
       instance: "mastodon.social",
       id: "9",

@@ -1,4 +1,4 @@
-/* Bipe curto de fim de timer (Web Audio, sem arquivos externos). */
+/* Short timer-end beep (Web Audio, no external files). */
 
 export function playChime(): void {
   try {
@@ -23,6 +23,6 @@ export function playChime(): void {
     }
     window.setTimeout(() => void ctx.close(), 1200);
   } catch {
-    /* áudio indisponível */
+    /* audio unavailable */
   }
 }

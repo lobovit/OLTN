@@ -68,7 +68,7 @@ DOMPurify.addHook("afterSanitizeAttributes", (node) => {
     node.setAttribute("rel", "noopener noreferrer nofollow");
   }
   if (tag === "IMG") {
-    // `loading="lazy"` só quando há dimensões explícitas — evita CLS.
+    // `loading="lazy"` only with explicit dimensions — avoids CLS.
     if (node.hasAttribute("width") && node.hasAttribute("height")) {
       node.setAttribute("loading", "lazy");
     }
@@ -76,7 +76,7 @@ DOMPurify.addHook("afterSanitizeAttributes", (node) => {
   }
 });
 
-/** Sanitiza o HTML vindo do servidor antes de renderizar. */
+/** Sanitizes server HTML before rendering. */
 export function sanitizeContent(html: string): string {
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS,
@@ -85,7 +85,7 @@ export function sanitizeContent(html: string): string {
   }) as unknown as string;
 }
 
-/** Normaliza URL de emoji customizado (https ou protocolo-relativo). */
+/** Normalizes a custom emoji URL (https or protocol-relative). */
 export function normalizeEmojiUrl(url: string): string | null {
   const raw = url.startsWith("//") ? `https:${url}` : url;
   return /^https:\/\//.test(raw) ? raw : null;
@@ -94,17 +94,17 @@ export function normalizeEmojiUrl(url: string): string | null {
 const SHORTCODE_ALT = /^:([a-zA-Z0-9_]+):$/;
 
 /**
- * Marca como `.emoji` as imagens de emoji que o servidor já mandou no HTML.
- * A classe varia por software (emojione, emoji, custom-emoji...), então
- * detectamos pelo alt (:shortcode:) ou pela URL conhecida.
+ * Marks as `.emoji` the emoji images the server already sent in the HTML.
+ * The class varies by software (emojione, emoji, custom-emoji...), so we
+ * detect by alt (:shortcode:) or by a known URL.
  */
 function classifyServerEmojiImgs(root: HTMLElement, urls: ReadonlySet<string>): void {
   for (const img of root.querySelectorAll("img")) {
     const alt = img.getAttribute("alt") ?? "";
     if (urls.has(img.src) || SHORTCODE_ALT.test(alt)) {
       img.classList.add("emoji");
-      // Emojis são quadrados e escalados por CSS; dimensões explícitas
-      // permitem lazy sem layout shift (CLS).
+      // Emojis are square and scaled by CSS; explicit dimensions
+      // allow lazy without layout shift (CLS).
       if (!img.hasAttribute("width")) img.setAttribute("width", "20");
       if (!img.hasAttribute("height")) img.setAttribute("height", "20");
       img.setAttribute("loading", "lazy");
@@ -112,8 +112,8 @@ function classifyServerEmojiImgs(root: HTMLElement, urls: ReadonlySet<string>): 
   }
 }
 
-/** Ajusta emojis customizados no conteúdo: marca os do servidor e troca
-    shortcodes em texto puro por imagens. */
+/** Adjusts custom emojis in content: marks server ones and replaces
+    shortcodes in plain text with images. */
 export function emojifyInPlace(
   root: HTMLElement,
   emojis: readonly { shortcode: string; url: string; staticUrl?: string }[],

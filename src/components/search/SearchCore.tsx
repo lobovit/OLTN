@@ -14,7 +14,7 @@ type SearchTab = "accounts" | "hashtags" | "statuses";
 
 interface SearchCoreProps {
   initialQuery?: string;
-  /** Chamado ao abrir um resultado (ex.: fechar o popup). */
+  /** Called when opening a result (e.g. close the popup). */
   onNavigate?: () => void;
 }
 

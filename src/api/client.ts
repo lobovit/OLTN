@@ -25,7 +25,7 @@ export function dropRest(instance: string, accessToken?: string): void {
 
 const customEmojisCache = new Map<string, Promise<CustomEmoji[]>>();
 
-/** Emojis personalizados da instância (cacheado por sessão/instância). */
+/** Instance custom emojis (cached per session/instance). */
 export function getCustomEmojis(instance: string, accessToken?: string): Promise<CustomEmoji[]> {
   const key = `${instance}|${accessToken ?? ""}`;
   let promise = customEmojisCache.get(key);

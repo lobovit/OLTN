@@ -7,7 +7,7 @@ interface EmojiTextProps {
   emojis?: readonly CustomEmoji[] | null;
 }
 
-/** Texto com emojis customizados (:shortcode:) renderizados como imagens. */
+/** Text with custom emojis (:shortcode:) rendered as images. */
 export function EmojiText({ text, emojis }: EmojiTextProps): JSX.Element {
   if (!emojis?.length || !text.includes(":")) return <>{text}</>;
   const map = new Map<string, string>();

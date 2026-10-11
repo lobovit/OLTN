@@ -1,4 +1,4 @@
-/* Reset + estilos globais. */
+/* Reset + global styles. */
 
 *,
 *::before,
@@ -96,7 +96,7 @@ kbd {
   font-size: 0.9em;
 }
 
-/* Scrollbars discretas */
+/* Subtle scrollbars */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
@@ -126,7 +126,7 @@ kbd {
   }
 }
 
-/* ---------- utilidades ---------- */
+/* ---------- utilities ---------- */
 
 .glass {
   background: var(--glass-bg);
@@ -194,7 +194,7 @@ kbd {
   transform: rotate(180deg);
 }
 
-/* Animações globais */
+/* Global animations */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -250,7 +250,7 @@ kbd {
   }
 }
 
-/* Emoji customizado inline (conteúdo e nomes): altura fixa, largura proporcional */
+/* Inline custom emoji (content and names): fixed height, proportional width */
 .emoji,
 img.emojione {
   display: inline-block;

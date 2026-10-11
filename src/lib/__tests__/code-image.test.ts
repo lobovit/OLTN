@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { extractCodeBlocks, tokenizeLine } from "../code-image";
 
 describe("extractCodeBlocks", () => {
-  it("extrai blocos com e sem linguagem", () => {
+  it("extracts blocks with and without a language", () => {
     const text = "oi\n```python\nprint('x')\n```\nfim\n```\nplain\n```";
     const blocks = extractCodeBlocks(text);
     expect(blocks).toHaveLength(2);
@@ -13,7 +13,7 @@ describe("extractCodeBlocks", () => {
     expect(blocks[1].code).toBe("plain");
   });
 
-  it("preserva linhas internas e ignora cercas não fechadas", () => {
+  it("preserves inner lines and ignores unclosed fences", () => {
     const [block] = extractCodeBlocks("```js\nconst a = 1;\n\nconst b = 2;\n```");
     expect(block.code).toBe("const a = 1;\n\nconst b = 2;");
     expect(extractCodeBlocks("```js\nconst a = 1;")).toHaveLength(0);
@@ -22,7 +22,7 @@ describe("extractCodeBlocks", () => {
 });
 
 describe("tokenizeLine", () => {
-  it("separa comentário, string, número e palavra-chave", () => {
+  it("separates comment, string, number and keyword", () => {
     const tokens = tokenizeLine('let s = "hi"; // nota', "js");
     expect(tokens.find((token) => token.text === '"hi"')).toBeTruthy();
     expect(tokens.find((token) => token.text === "// nota")).toBeTruthy();
@@ -31,7 +31,7 @@ describe("tokenizeLine", () => {
     expect(keyword?.color).not.toBe(plain?.color);
   });
 
-  it("reconhece números e mantém o texto padrão", () => {
+  it("recognizes numbers and keeps the default text", () => {
     const tokens = tokenizeLine("x = 42", "python");
     expect(tokens.find((token) => token.text === "42")).toBeTruthy();
     expect(tokens.map((token) => token.text).join("")).toBe("x = 42");

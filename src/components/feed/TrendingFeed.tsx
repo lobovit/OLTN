@@ -8,7 +8,7 @@ import { currentAccount } from "../../state/store";
 import { Icon } from "../ui/Icon";
 import { Timeline } from "./Timeline";
 
-/** Hashtags em alta no momento + posts em alta. */
+/** Trending hashtags right now + trending posts. */
 export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
   const account = currentAccount();
   const target = instance ?? account?.instance ?? "";

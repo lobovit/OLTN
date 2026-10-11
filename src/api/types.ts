@@ -24,7 +24,7 @@ export type FilterAction = mastodon.v2.FilterAction;
 export type FilterContext = mastodon.v2.FilterContext;
 export type Search = mastodon.v2.Search;
 export type StatusVisibility = mastodon.v1.StatusVisibility;
-/** Visibilidade de composição — inclui "local" (Pleroma/Akkoma). */
+/** Compose visibility — includes "local" (Pleroma/Akkoma). */
 export type ComposeVisibility = StatusVisibility | "local";
 export type NotificationType = mastodon.v1.NotificationType;
 export type Translation = mastodon.v1.Translation;
@@ -77,15 +77,15 @@ export interface Shortcut {
 }
 
 export interface PomodoroSettings {
-  /** Minutos de foco (25 por padrão). */
+  /** Focus minutes (25 by default). */
   focusMinutes: number;
-  /** Pausa curta após cada foco (5 por padrão). */
+  /** Short break after each focus (5 by default). */
   shortBreakMinutes: number;
-  /** Pausa longa após N focos (15 por padrão). */
+  /** Long break after N focus rounds (15 by default). */
   longBreakMinutes: number;
-  /** Quantos focos antes de uma pausa longa (4 por padrão). */
+  /** Focus rounds before a long break (4 by default). */
   cycles: number;
-  /** Inicia a próxima fase (pausa/foco) automaticamente. */
+  /** Automatically starts the next phase (break/focus). */
   autoContinue: boolean;
 }
 
@@ -94,13 +94,13 @@ export interface Settings {
   accent: AccentSetting;
   language: LanguageSetting;
   textSize: number;
-  /** Rail lateral expandido (padrão: compacto, só ícones). */
+  /** Expanded side rail (default: compact, icons only). */
   railExpanded: boolean;
-  /** Recebe posts e notificações em tempo real. */
+  /** Receives posts and notifications in real time. */
   autoStream: boolean;
-  /** Ordem dos botões do nav (hrefs). */
+  /** Nav button order (hrefs). */
   navOrder?: readonly string[];
-  /** Configurações do ciclo Pomodoro. */
+  /** Pomodoro cycle settings. */
   pomodoro: PomodoroSettings;
 }
 

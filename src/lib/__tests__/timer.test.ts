@@ -17,7 +17,7 @@ describe("pomodoro", () => {
     vi.useRealTimers();
   });
 
-  it("inicia o ciclo no foco com a duração configurada", () => {
+  it("starts the cycle on focus with the configured duration", () => {
     startPomodoro(" beber água ");
     expect(store.timer.running).toBe(true);
     expect(store.timer.phase).toBe("focus");
@@ -27,7 +27,7 @@ describe("pomodoro", () => {
     expect(store.timer.endsAt).toBeGreaterThan(Date.now());
   });
 
-  it("alterna foco → pausa curta → foco automaticamente", () => {
+  it("alternates focus → short break → focus automatically", () => {
     startPomodoro("");
     completeTimerPhase();
     expect(store.timer.phase).toBe("shortBreak");
@@ -39,7 +39,7 @@ describe("pomodoro", () => {
     expect(store.timer.completedFocus).toBe(1);
   });
 
-  it("usa a pausa longa após N focos", () => {
+  it("uses the long break after N rounds", () => {
     store.settings = {
       ...store.settings,
       pomodoro: { ...store.settings.pomodoro, cycles: 2 },
@@ -53,7 +53,7 @@ describe("pomodoro", () => {
     expect(store.timer.remainingMs).toBe(15 * 60_000);
   });
 
-  it("respeita o autoContinue desligado", () => {
+  it("respects autoContinue turned off", () => {
     store.settings = {
       ...store.settings,
       pomodoro: { ...store.settings.pomodoro, autoContinue: false },
@@ -65,7 +65,7 @@ describe("pomodoro", () => {
     expect(store.timer.remainingMs).toBe(5 * 60_000);
   });
 
-  it("pausa e retoma mantendo o restante", () => {
+  it("pauses and resumes keeping the remainder", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     startPomodoro("");
@@ -80,7 +80,7 @@ describe("pomodoro", () => {
     expect(store.timer.endsAt).toBe(Date.now() + 21 * 60_000);
   });
 
-  it("pular avança a fase e `stopTimer` limpa tudo", () => {
+  it("skip advances the phase and `stopTimer` clears everything", () => {
     startPomodoro("");
     skipTimerPhase();
     expect(store.timer.phase).toBe("shortBreak");

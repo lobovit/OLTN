@@ -1,6 +1,6 @@
 import { t } from "../i18n/pt-BR";
 
-/* Erros tipados + mensagens amigáveis (nunca vaza detalhes internos). */
+/* Typed errors + friendly messages (never leaks internal details). */
 
 export class HttpError extends Error {
   readonly status: number;
@@ -13,7 +13,7 @@ export class HttpError extends Error {
   }
 }
 
-/** Extrai o status HTTP de um erro (nosso HttpError ou MastoHttpError). */
+/** Extracts the HTTP status from an error (our HttpError or MastoHttpError). */
 export function httpStatusOf(error: unknown): number | null {
   if (error instanceof HttpError) return error.status;
   if (error && typeof error === "object" && "statusCode" in error) {
@@ -28,8 +28,8 @@ export function isTimeoutError(error: unknown): boolean {
 }
 
 /**
- * Mensagem amigável para o usuário a partir de um erro.
- * `fallback` permite manter o contexto da ação ("não foi possível salvar").
+ * Friendly message for the user from an error.
+ * `fallback` keeps the action context ("could not save").
  */
 export function userMessageForError(error: unknown, fallback: string = t.errorGeneric): string {
   const status = httpStatusOf(error);

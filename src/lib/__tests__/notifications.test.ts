@@ -12,20 +12,20 @@ describe("pushNotification", () => {
     store.notifBadge = 0;
   });
 
-  it("enfileira a notificação e incrementa o badge", () => {
+  it("queues the notification and increments the badge", () => {
     pushNotification(notif("1"));
     expect(store.notifQueue.map((n) => n.id)).toEqual(["1"]);
     expect(store.notifBadge).toBe(1);
   });
 
-  it("não duplica a mesma notificação", () => {
+  it("does not duplicate the same notification", () => {
     pushNotification(notif("1"));
     pushNotification(notif("1"));
     expect(store.notifQueue).toHaveLength(1);
     expect(store.notifBadge).toBe(1);
   });
 
-  it("mantém no máximo 40 itens na fila", () => {
+  it("keeps at most 40 items in the queue", () => {
     for (let i = 0; i < 45; i++) pushNotification(notif(String(i)));
     expect(store.notifQueue).toHaveLength(40);
     expect(store.notifQueue[0].id).toBe("44");

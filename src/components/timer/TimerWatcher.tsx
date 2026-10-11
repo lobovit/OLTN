@@ -5,7 +5,7 @@ import { playChime } from "../../lib/chime";
 import { formatDuration } from "../../lib/format";
 import { completeTimerPhase, store, toast } from "../../state/store";
 
-/** Mantém o timer rodando fora do sheet: tick, título da aba e aviso no fim. */
+/** Keeps the timer running outside the sheet: tick, tab title and end notice. */
 export function TimerWatcher(): null {
   const timer = useSnapshot(store).timer;
 

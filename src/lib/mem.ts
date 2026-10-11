@@ -1,4 +1,4 @@
-/* Cache simples com TTL (memória). */
+/* Simple in-memory cache with TTL. */
 
 interface Entry<T> {
   value: T;

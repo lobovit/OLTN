@@ -1,5 +1,5 @@
-/* Verifica se todo ícone referenciado no código existe em icons.ts.
-   Uso: node scripts/check-icons.mjs */
+/* Checks that every icon referenced in the code exists in icons.ts.
+   Usage: node scripts/check-icons.mjs */
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
@@ -18,7 +18,7 @@ const files = [];
   }
 })("src");
 
-/* Nomes que parecem ícone mas são classes CSS usadas como string. */
+/* Names that look like icons but are CSS classes used as strings. */
 const CSS_CLASS_EXCEPTIONS = new Set(["reblog-line"]);
 
 const found = new Map();

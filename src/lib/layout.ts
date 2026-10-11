@@ -1,11 +1,11 @@
-/* Helpers puros de layout de colunas e posicionamento. */
+/* Pure column layout and positioning helpers. */
 
 import type { Shortcut, ShortcutType } from "../api/types";
 import type { TKey } from "../i18n/pt-BR";
 
 export const COLUMN_MIN = 240;
 export const COLUMN_MAX = 720;
-/** Máximo de colunas renderizadas no deck. */
+/** Maximum columns rendered in the deck. */
 export const COLUMN_LIMIT = 6;
 
 export function clampNumber(n: number, min: number, max: number): number {
@@ -16,7 +16,7 @@ export function clampWidth(width: number): number {
   return clampNumber(Math.round(width), COLUMN_MIN, COLUMN_MAX);
 }
 
-/** Ordena itens pelo id; ids ausentes no order mantêm a ordem original no fim. */
+/** Orders items by id; ids missing from order keep their original order at the end. */
 export function orderColumns<T extends { id: string }>(
   items: readonly T[],
   order: readonly string[],
@@ -33,7 +33,7 @@ export function orderColumns<T extends { id: string }>(
     .map((entry) => entry.item);
 }
 
-/** Move `id` para antes/depois de `targetId` numa lista de ids. */
+/** Moves `id` before/after `targetId` in a list of ids. */
 export function moveInOrder(
   ids: readonly string[],
   id: string,
@@ -47,8 +47,8 @@ export function moveInOrder(
   return rest;
 }
 
-/** Garante que a coluna esteja entre as `limit` primeiras (área visível),
-    movendo-a para a última posição visível quando necessário. */
+/** Ensures the column is among the first `limit` ones (visible area),
+    moving it to the last visible position when needed. */
 export function ensureColumnVisible(
   shortcuts: readonly Shortcut[],
   shortcut: Shortcut,
@@ -65,7 +65,7 @@ export function ensureColumnVisible(
   return next;
 }
 
-/* ---------------- layouts predefinidos ---------------- */
+/* ---------------- preset layouts ---------------- */
 
 export interface PresetColumn {
   id: string;
@@ -137,7 +137,7 @@ export const LAYOUT_PRESETS: readonly LayoutPreset[] = [
   },
 ];
 
-/** Monta as colunas de um layout: as do preset na ordem, listas/hashtags fixadas no fim. */
+/** Builds a layout's columns: preset ones in order, pinned lists/hashtags at the end. */
 export function buildLayoutShortcuts(
   preset: LayoutPreset,
   existing: readonly Shortcut[],

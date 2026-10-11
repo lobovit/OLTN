@@ -16,39 +16,39 @@ import { isRetriable, withRetry } from "../retry";
 import { t } from "../../i18n/pt-BR";
 
 describe("httpStatusOf", () => {
-  it("lê o status do nosso HttpError", () => {
+  it("reads the status from our HttpError", () => {
     expect(httpStatusOf(new HttpError("x", 404))).toBe(404);
   });
 
-  it("lê statusCode de erros estilo masto", () => {
+  it("reads statusCode from masto-style errors", () => {
     expect(httpStatusOf({ statusCode: 429 })).toBe(429);
   });
 
-  it("devolve null para erros comuns", () => {
+  it("returns null for ordinary errors", () => {
     expect(httpStatusOf(new Error("boom"))).toBeNull();
     expect(httpStatusOf("string")).toBeNull();
   });
 });
 
 describe("userMessageForError", () => {
-  it("mapeia códigos para mensagens amigáveis", () => {
+  it("maps codes to friendly messages", () => {
     expect(userMessageForError(new HttpError("x", 401))).toBe(t.loggedOut);
     expect(userMessageForError({ statusCode: 403 })).toBe(t.errorForbidden);
     expect(userMessageForError(new HttpError("x", 429))).toBe(t.errorRateLimit);
   });
 
-  it("trata falha de rede como TypeError", () => {
+  it("treats network failure as TypeError", () => {
     expect(userMessageForError(new TypeError("Failed to fetch"))).toBe(t.errorNetwork);
   });
 
-  it("usa o fallback contextual em 5xx e desconhecidos", () => {
+  it("uses the contextual fallback on 5xx and unknown errors", () => {
     expect(userMessageForError(new HttpError("x", 500), "ctx")).toBe("ctx");
     expect(userMessageForError(new Error("boom"), "ctx")).toBe("ctx");
   });
 });
 
 describe("isRetriable", () => {
-  it("repete 5xx, timeout e rede; nunca 4xx", () => {
+  it("retries 5xx, timeout and network; never 4xx", () => {
     expect(isRetriable(new HttpError("x", 500))).toBe(true);
     expect(isRetriable(new TypeError("Failed to fetch"))).toBe(true);
     expect(isRetriable(new HttpError("x", 404))).toBe(false);
@@ -59,13 +59,13 @@ describe("isRetriable", () => {
 describe("withRetry", () => {
   const noSleep = () => Promise.resolve();
 
-  it("sucesso na primeira tentativa não repete", async () => {
+  it("success on the first attempt does not retry", async () => {
     const fn = vi.fn().mockResolvedValue("ok");
     await expect(withRetry(fn, { sleep: noSleep })).resolves.toBe("ok");
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
-  it("repete até conseguir", async () => {
+  it("retries until it succeeds", async () => {
     const fn = vi
       .fn()
       .mockRejectedValueOnce(new TypeError("net"))
@@ -77,7 +77,7 @@ describe("withRetry", () => {
     expect(fn).toHaveBeenCalledTimes(3);
   });
 
-  it("para no limite e propaga o último erro", async () => {
+  it("stops at the limit and propagates the last error", async () => {
     const fn = vi.fn().mockRejectedValue(new TypeError("net"));
     await expect(
       withRetry(fn, { maxAttempts: 3, retryIf: isRetriable, sleep: noSleep }),
@@ -85,7 +85,7 @@ describe("withRetry", () => {
     expect(fn).toHaveBeenCalledTimes(3);
   });
 
-  it("não repete erros não elegíveis", async () => {
+  it("does not retry ineligible errors", async () => {
     const fn = vi.fn().mockRejectedValue(new HttpError("x", 422));
     await expect(
       withRetry(fn, { maxAttempts: 3, retryIf: isRetriable, sleep: noSleep }),

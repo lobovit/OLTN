@@ -1,4 +1,4 @@
-/* Dicionário mestre: as chaves (TKey) derivam daqui; inglês é o padrão. */
+/* Master dictionary: keys (TKey) derive from here; English is the default. */
 export const en = {
   appName: "OLTN",
   tagline: "local web client for Mastodon",

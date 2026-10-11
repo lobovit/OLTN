@@ -1,6 +1,6 @@
-/* Divide um texto longo em partes para virar thread, respeitando o limite. */
+/* Splits long text into parts to become a thread, respecting the limit. */
 
-/** Ponto de corte preferencial: evita cortar no meio de palavras/frases. */
+/** Preferred cut point: avoids cutting mid-word/mid-sentence. */
 function findCut(rest: string, limit: number): number {
   const window = rest.slice(0, limit + 1);
   const min = Math.floor(limit * 0.4);
@@ -19,7 +19,7 @@ function findCut(rest: string, limit: number): number {
   return limit;
 }
 
-/** Divide `text` em partes de até `limit` caracteres para publicar como thread. */
+/** Splits `text` into parts of up to `limit` chars to publish as a thread. */
 export function splitThreadText(text: string, limit: number): string[] {
   const trimmed = text.trim();
   if (limit <= 0 || trimmed.length <= limit) return [trimmed];

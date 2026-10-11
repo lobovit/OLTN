@@ -1,4 +1,4 @@
-/* Shell: rail lateral (desktop), tab bar (mobile), coluna central, primitivas. */
+/* Shell: side rail (desktop), tab bar (mobile), center column, primitives. */
 
 .shell {
   display: flex;
@@ -7,12 +7,12 @@
   color: var(--text);
 }
 
-/* Rail recolhido: coluna de colunas/posição usa a largura menor */
+/* Collapsed rail: columns/position column uses the smaller width */
 .shell.rail-collapsed {
   --rail-width: var(--rail-width-collapsed);
 }
 
-/* Pular para o conteúdo (leitores de tela / teclado) */
+/* Skip to content (screen readers / keyboard) */
 .skip-link {
   position: fixed;
   top: var(--s2);
@@ -283,7 +283,7 @@
   }
 }
 
-/* ---------------- Deck (coluna central) ---------------- */
+/* ---------------- Deck (center column) ---------------- */
 
 .deck {
   position: relative;
@@ -295,26 +295,26 @@
   border-inline-end: var(--hairline) solid var(--divider);
 }
 
-/* Desktop: coluna encosta no rail; arena (bg-arena) fica à direita.
-   Sem margin-inline-start — era ela que abria o vão vazio. */
+/* Desktop: the column sits against the rail; arena (bg-arena) stays to the right.
+   No margin-inline-start — that was what opened the empty gap. */
 @media (min-width: 48em) {
   .deck {
     max-width: var(--main-width);
   }
 
-  /* Views de leitura (thread do toot): coluna centralizada no espaço após o rail */
+  /* Reading views (toot thread): column centered in the space after the rail */
   .deck.centered {
     margin-inline-start: max(0px, calc((100% - var(--rail-width) - var(--main-width)) / 2));
     border-inline-start: var(--hairline) solid var(--divider);
   }
 
-  /* Sem rail (login/público): coluna centralizada na tela */
+  /* No rail (login/public): column centered on screen */
   .shell-no-rail .deck {
     margin-inline: auto;
     border-inline-start: var(--hairline) solid var(--divider);
   }
 
-  /* Login ocupa a tela toda (grid de 2 colunas) */
+  /* Login takes the whole screen (2-column grid) */
   .deck.full {
     max-width: none;
     border-inline-start: none;
@@ -358,14 +358,14 @@
   scroll-behavior: smooth;
 }
 
-/* Mobile: folga para o tab bar e o FAB não cobrirem o fim do conteúdo */
+/* Mobile: spacing so tab bar and FAB do not cover the end of content */
 @media (max-width: 47.99em) {
   .deck-body {
     padding-bottom: calc(var(--tabbar-height) + var(--s5) + env(safe-area-inset-bottom));
   }
 }
 
-/* ---------------- Multi-coluna ---------------- */
+/* ---------------- Multi-column ---------------- */
 
 .columns {
   flex: 1;
@@ -407,7 +407,7 @@
   }
 }
 
-/* cabo de reordenar (header da coluna) */
+/* reorder handle (column header) */
 
 .col-grip {
   position: relative;
@@ -445,7 +445,7 @@
   cursor: grabbing;
 }
 
-/* borda de redimensionar (lado direito da coluna) */
+/* resize edge (right side of the column) */
 
 .col-resize {
   position: absolute;
@@ -485,7 +485,7 @@
   }
 }
 
-/* estados do arrasto */
+/* drag states */
 
 .column.dragging {
   z-index: 3;
@@ -507,7 +507,7 @@
   box-shadow: inset -3px 0 0 var(--accent);
 }
 
-/* ---------------- Botões ---------------- */
+/* ---------------- Buttons ---------------- */
 
 .btn {
   display: inline-flex;
@@ -788,7 +788,7 @@ textarea.field {
     background: var(--border-strong);
   }
 
-  /* alça de redimensionar (canto inferior direito) */
+  /* resize handle (bottom-right corner) */
   .sheet-resize {
     position: absolute;
     right: 2px;
@@ -1000,7 +1000,7 @@ textarea.field {
   align-items: center;
 }
 
-/* ---------------- Utilidades de layout de página ---------------- */
+/* ---------------- Page layout utilities ---------------- */
 
 .page-pad {
   padding: var(--s4);

@@ -8,7 +8,7 @@ const emojis = [
 ] as never;
 
 describe("EmojiText", () => {
-  it("troca shortcodes por imagens em nomes", () => {
+  it("replaces shortcodes with images in names", () => {
     const host = document.createElement("div");
     render(<EmojiText text="lobo :freebsd_logo: :emacs:" emojis={emojis} />, host);
     const imgs = host.querySelectorAll("img.emoji");
@@ -18,7 +18,7 @@ describe("EmojiText", () => {
     expect(host.textContent).toBe("lobo  ");
   });
 
-  it("sem emojis ou sem shortcode devolve texto puro", () => {
+  it("without emojis or shortcodes returns plain text", () => {
     const host = document.createElement("div");
     render(<EmojiText text="lobo" emojis={null} />, host);
     expect(host.textContent).toBe("lobo");

@@ -1,7 +1,7 @@
 import { navigate } from "./router";
 
-/* Converte cliques em links do conteúdo (menções, hashtags, posts,
-   links externos) em navegação interna quando possível. */
+/* Converts clicks on content links (mentions, hashtags, posts,
+   external links) into internal navigation when possible. */
 
 function pathToInternal(host: string, pathname: string): string | null {
   const clean = pathname.replace(/\/+$/, "");
@@ -14,7 +14,7 @@ function pathToInternal(host: string, pathname: string): string | null {
     clean.match(/^\/@[^/]+\/(\d+)$/) || clean.match(/^\/users\/[^/]+\/statuses\/(\d+)$/);
   if (status) return `/${encodeURIComponent(host)}/s/${status[1]}`;
 
-  // conta: /@user | /users/user
+  // account: /@user | /users/user
   const account = clean.match(/^\/@([^/]+)$/) || clean.match(/^\/users\/([^/]+)$/);
   if (account) {
     const username = account[1];

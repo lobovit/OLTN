@@ -56,7 +56,7 @@ export function Shell({ children }: { children?: ComponentChildren }): JSX.Eleme
   );
 }
 
-/* ---------------- navegação ---------------- */
+/* ---------------- navigation ---------------- */
 
 const NAV_ITEMS: {
   id: string;
@@ -173,7 +173,7 @@ const NAV_ITEMS: {
 
 let navDragSuppress = false;
 
-/* Tipos já representados por botões do nav — não repetir nos atalhos do rail */
+/* Types already represented by nav buttons — do not repeat in rail shortcuts */
 const NAV_COLUMN_TYPES = new Set(NAV_ITEMS.flatMap((item) => (item.column ? [item.column] : [])));
 
 function startNavDrag(e: PointerEvent, id: string): void {
@@ -306,7 +306,7 @@ function Rail(): JSX.Element | null {
       next.length !== store.shortcuts.length ||
       next.some((s, index) => s.id !== store.shortcuts[index]?.id);
     if (changed) saveShortcuts(next);
-    // Espera o render quando a ordem/lista mudou antes de rolar até a coluna.
+    // Waits for the render when order/list changed before scrolling to the column.
     window.setTimeout(() => scrollToColumn(shortcut.id), changed ? 60 : 0);
   };
 
@@ -546,7 +546,7 @@ function ComposeFab(): JSX.Element {
   );
 }
 
-/* ---------------- multi-coluna (arrastar p/ reordenar e redimensionar) ---------------- */
+/* ---------------- multi-column (drag to reorder and resize) ---------------- */
 
 let activeDndCleanup: (() => void) | null = null;
 
@@ -841,7 +841,7 @@ function ColumnContent({
   }
 }
 
-/* ---------------- roteamento + guard ---------------- */
+/* ---------------- routing + guard ---------------- */
 
 export function Routed(): JSX.Element {
   const route = useRouter();
@@ -913,7 +913,7 @@ export function Routed(): JSX.Element {
   );
 }
 
-/* ---------------- hotkeys globais ---------------- */
+/* ---------------- global hotkeys ---------------- */
 
 function useGotoHotkeys(profileHref: string): void {
   const map = useMemo(

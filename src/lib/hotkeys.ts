@@ -1,6 +1,6 @@
 import { useEffect } from "preact/hooks";
 
-/* Motor de atalhos de teclado: combinações + sequências ("g h"). */
+/* Keyboard shortcut engine: combinations + sequences ("g h"). */
 
 export type HotkeyHandler = (e: KeyboardEvent) => void;
 export type HotkeyMap = Record<string, HotkeyHandler | undefined>;
@@ -73,7 +73,7 @@ function onKeydown(e: KeyboardEvent) {
 
   if (typing && !isEsc && !hasMod) return;
 
-  // sequências
+  // sequences
   if (pending) {
     const combined = `${pending} ${kbd}`;
     const handler = findHandler(combined);

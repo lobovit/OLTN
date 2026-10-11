@@ -1,4 +1,4 @@
-/* Componentes de status: conteúdo, mídia, enquete, cartão. */
+/* Status components: content, media, poll, card. */
 
 .content {
   font-size: 0.97rem;
@@ -74,7 +74,7 @@
   display: none;
 }
 
-/* ---------- mídia ---------- */
+/* ---------- media ---------- */
 
 .media-grid {
   display: grid;
@@ -125,7 +125,7 @@
   object-fit: cover;
 }
 
-/* blurhash aparece só enquanto a imagem carrega */
+/* blurhash only shows while the image loads */
 .media-item img {
   opacity: 0;
   transition: opacity var(--dur) var(--ease);
@@ -189,7 +189,7 @@
   color: var(--text-2);
 }
 
-/* ---------- enquete ---------- */
+/* ---------- poll ---------- */
 
 .poll {
   margin-top: var(--s3);
@@ -250,7 +250,7 @@
   gap: var(--s3);
 }
 
-/* ---------- cartão de status ---------- */
+/* ---------- status card ---------- */
 
 .status-card {
   position: relative;
@@ -422,7 +422,7 @@
   background: var(--hover);
 }
 
-/* ---------------- menu de ações (denunciar/bloquear) ---------------- */
+/* ---------------- action menu (report/block) ---------------- */
 
 .action-more {
   display: inline-flex;
@@ -462,7 +462,7 @@
   color: var(--danger);
 }
 
-/* ---------------- denúncia ---------------- */
+/* ---------------- report ---------------- */
 
 .report-sheet {
   display: flex;
@@ -590,7 +590,7 @@
   font-size: 0.9rem;
 }
 
-/* thread context: linha vertical */
+/* thread context: vertical line */
 .status-card.in-thread {
   cursor: default;
 }

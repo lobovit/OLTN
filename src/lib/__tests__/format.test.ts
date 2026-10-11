@@ -14,18 +14,18 @@ describe("normalizeInstance", () => {
     expect(normalizeInstance("mastodon.social")).toBe("mastodon.social");
   });
 
-  it("remove https:// e caminho", () => {
+  it("removes https:// and path", () => {
     expect(normalizeInstance("https://mastodon.social/")).toBe("mastodon.social");
     expect(normalizeInstance("https://mastodon.social/about")).toBe("mastodon.social");
   });
 
-  it("extrai host de menção", () => {
+  it("extracts mention host", () => {
     expect(normalizeInstance("@user@mastodon.social")).toBe("mastodon.social");
   });
 });
 
 describe("extractMention", () => {
-  it("extrai user e host", () => {
+  it("extracts user and host", () => {
     expect(extractMention("@user@mastodon.social")).toEqual({
       username: "user",
       host: "mastodon.social",
@@ -42,7 +42,7 @@ describe("timeAgo", () => {
 });
 
 describe("toLocalInputValue", () => {
-  it("formata para datetime-local com zero à esquerda", () => {
+  it("formats for datetime-local with leading zero", () => {
     expect(toLocalInputValue(new Date(2026, 0, 5, 9, 7))).toBe("2026-01-05T09:07");
   });
 });
@@ -57,7 +57,7 @@ describe("formatDuration", () => {
 });
 
 describe("plainTextToHtml", () => {
-  it("converte parágrafos e quebras de linha", () => {
+  it("converts paragraphs and line breaks", () => {
     expect(plainTextToHtml("um\n\n dois\nlinha")).toBe("<p>um</p><p> dois<br>linha</p>");
   });
 
@@ -69,16 +69,16 @@ describe("plainTextToHtml", () => {
 });
 
 describe("htmlToPlainText", () => {
-  it("quebra parágrafos e <br>", () => {
+  it("splits paragraphs and <br>", () => {
     expect(htmlToPlainText("<p>Olá<br>mundo</p>")).toBe("Olá\nmundo");
     expect(htmlToPlainText("<p>um</p><p>dois</p>")).toBe("um\n\ndois");
   });
 
-  it("preserva links comuns como texto + URL", () => {
+  it("keeps plain links as text + URL", () => {
     expect(htmlToPlainText('<a href="https://ex.com/x">site</a>')).toBe("site https://ex.com/x");
   });
 
-  it("não repete URL de hashtag e menção", () => {
+  it("does not repeat hashtag and mention URLs", () => {
     expect(htmlToPlainText('<a href="https://h/tags/t">#t</a>')).toBe("#t");
     expect(htmlToPlainText('<a href="https://h/@ana">@ana</a>')).toBe("@ana");
     expect(htmlToPlainText('<a href="https://ex.com/x">https://ex.com/x</a>')).toBe(
@@ -86,7 +86,7 @@ describe("htmlToPlainText", () => {
     );
   });
 
-  it("decodifica entidades e remove tags", () => {
+  it("decodes entities and strips tags", () => {
     expect(htmlToPlainText("<p>a &amp; b &lt;3</p>")).toBe("a & b <3");
     expect(htmlToPlainText("<p><span>nada</span> de novo</p>")).toBe("nada de novo");
   });

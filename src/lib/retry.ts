@@ -5,11 +5,11 @@ export interface RetryOptions {
   baseDelayMs?: number;
   maxDelayMs?: number;
   retryIf?: (error: unknown) => boolean;
-  /** Injetável para testes. */
+  /** Injectable for tests. */
   sleep?: (ms: number) => Promise<void>;
 }
 
-/** Reexecuta `fn` com backoff exponencial + jitter; só repete erros elegíveis. */
+/** Retries `fn` with exponential backoff + jitter; only retries eligible errors. */
 export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const {
     maxAttempts = 3,
@@ -34,7 +34,7 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
   throw lastError;
 }
 
-/** Repetível = 5xx, timeout ou falha de rede (TypeError). 4xx nunca. */
+/** Retryable = 5xx, timeout or network failure (TypeError). Never 4xx. */
 export function isRetriable(error: unknown): boolean {
   const status = httpStatusOf(error);
   if (status != null) return status >= 500;

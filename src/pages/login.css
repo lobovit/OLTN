@@ -13,7 +13,7 @@
   align-items: center;
 }
 
-/* ---------- hero: marca + wordmark ---------- */
+/* ---------- hero: brand + wordmark ---------- */
 
 .login-hero {
   display: flex;
@@ -69,7 +69,7 @@
   }
 }
 
-/* ---------- card de formulário ---------- */
+/* ---------- form card ---------- */
 
 .login-card {
   padding: var(--s6);

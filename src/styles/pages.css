@@ -1,4 +1,4 @@
-/* Estilos das páginas e features (notificações, perfil, thread, compose, viewer…). */
+/* Page and feature styles (notifications, profile, thread, compose, viewer…). */
 
 .boot-screen {
   height: 100dvh;
@@ -54,7 +54,7 @@
   display: contents;
 }
 
-/* ---------------- foco j/k ---------------- */
+/* ---------------- j/k focus ---------------- */
 
 .status-card.is-focused {
   outline: 2px solid var(--accent);
@@ -62,7 +62,7 @@
   border-radius: var(--r-md);
 }
 
-/* ---------------- notificações ---------------- */
+/* ---------------- notifications ---------------- */
 
 .notif-group {
   border-bottom: var(--hairline) solid var(--divider);
@@ -121,7 +121,7 @@
   flex-shrink: 0;
 }
 
-/* ---------------- perfil ---------------- */
+/* ---------------- profile ---------------- */
 
 .account-profile {
   padding: var(--s4);
@@ -193,7 +193,7 @@
   border-top: var(--hairline) solid var(--divider);
 }
 
-/* ---------------- busca ---------------- */
+/* ---------------- search ---------------- */
 
 .search-form {
   padding: var(--s3) var(--s4) 0;
@@ -216,7 +216,7 @@
   padding-inline-start: 42px;
 }
 
-/* ---------------- listas / filtros ---------------- */
+/* ---------------- lists / filters ---------------- */
 
 .list-create,
 .filter-create,
@@ -256,7 +256,7 @@
   background: var(--hover);
 }
 
-/* ---------------- configurações ---------------- */
+/* ---------------- settings ---------------- */
 
 .settings {
   padding-bottom: var(--s7);
@@ -326,7 +326,7 @@
   gap: var(--s2);
 }
 
-/* ---------------- cor de destaque ---------------- */
+/* ---------------- accent color ---------------- */
 
 .accent-swatches {
   display: flex;
@@ -355,7 +355,7 @@
     0 0 0 4px var(--swatch);
 }
 
-/* ---------------- interruptor ---------------- */
+/* ---------------- toggle switch ---------------- */
 
 .switch {
   position: relative;
@@ -588,7 +588,7 @@
   pointer-events: none;
 }
 
-/* A área de texto acompanha o tamanho da janela do compose */
+/* The text area follows the composer window size */
 .sheet.compose-sheet .sheet-body {
   display: flex;
   flex-direction: column;
@@ -691,14 +691,14 @@
   color: var(--accent);
 }
 
-/* Botão "CW" do compose (texto em vez de ícone) */
+/* Composer "CW" button (text instead of an icon) */
 .toolbar-cw {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-/* ---------------- autocomplete de menção ---------------- */
+/* ---------------- mention autocomplete ---------------- */
 
 .mention-menu {
   display: flex;
@@ -743,7 +743,7 @@
   white-space: nowrap;
 }
 
-/* ---------------- seletor de emojis ---------------- */
+/* ---------------- emoji picker ---------------- */
 
 .emoji-picker {
   display: flex;
@@ -842,7 +842,7 @@
   text-align: center;
 }
 
-/* ---------------- tradução do rascunho ---------------- */
+/* ---------------- draft translation ---------------- */
 
 .compose-translation {
   display: flex;
@@ -882,7 +882,7 @@
   background: var(--hover);
 }
 
-/* ---------------- agendamento do rascunho ---------------- */
+/* ---------------- draft scheduling ---------------- */
 
 .compose-schedule {
   display: inline-flex;
@@ -939,7 +939,7 @@
   margin-top: var(--s1);
 }
 
-/* ---------------- seletor de visibilidade ---------------- */
+/* ---------------- visibility picker ---------------- */
 
 .vis-picker {
   position: relative;
@@ -1010,7 +1010,7 @@
   color: var(--accent);
 }
 
-/* ---------------- editar perfil ---------------- */
+/* ---------------- edit profile ---------------- */
 
 .profile-edit {
   display: flex;
@@ -1200,7 +1200,7 @@
   text-align: center;
 }
 
-/* ---------------- ajuda (intro) ---------------- */
+/* ---------------- help (intro) ---------------- */
 
 .help-sheet .help-intro {
   margin: 0 0 var(--s3);
@@ -1238,7 +1238,7 @@
   white-space: pre;
 }
 
-/* ---------------- atalhos (ajuda) ---------------- */
+/* ---------------- shortcuts (help) ---------------- */
 
 .shortcuts-help section {
   margin-bottom: var(--s4);

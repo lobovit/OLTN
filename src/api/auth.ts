@@ -1,4 +1,4 @@
-/* OAuth + descoberta de instância (baseado no fluxo do Phanpy, simplificado). */
+/* OAuth + instance discovery (based on Phanpy's flow, simplified). */
 
 import { isRetriable, withRetry } from "../lib/retry";
 
@@ -108,7 +108,7 @@ export function makeVerifier(): string {
   return Array.from(array, (n) => n.toString(16).padStart(2, "0")).join("");
 }
 
-/** Valor aleatório para o parâmetro `state` do OAuth (CSRF/replay). */
+/** Random value for the OAuth `state` parameter (CSRF/replay). */
 export function makeState(): string {
   const array = new Uint32Array(16);
   crypto.getRandomValues(array);
@@ -209,7 +209,7 @@ export interface PendingAuth {
 
 export const PENDING_AUTH_KEY = "pendingAuth";
 
-/** Abre a URL de autorização (popup com fallback para redirect completo). */
+/** Opens the authorization URL (popup with full-redirect fallback). */
 export function openAuthorize(url: string): void {
   const popup = window.open(url, "oltn-oauth", "width=560,height=720");
   if (!popup) location.href = url;

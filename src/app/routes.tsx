@@ -21,7 +21,7 @@ export interface AppRoute {
   pattern: string;
   page: ComponentType<any>;
   auth?: boolean;
-  /** Coluna centralizada na tela (views de leitura, ex.: thread do toot). */
+  /** Column centered on screen (reading views, e.g. the toot thread). */
   centered?: boolean;
 }
 

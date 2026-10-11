@@ -5,7 +5,7 @@ const pt: Record<TKey, string> = {
   appName: "OLTN",
   tagline: "cliente web local para Mastodon",
 
-  // Geral
+  // General
   home: "Início",
   all: "Todas",
   back: "Voltar",
@@ -160,7 +160,7 @@ const pt: Record<TKey, string> = {
   newListPlaceholder: "Nova lista…",
   emptyProfile: "Esta pessoa ainda não postou.",
 
-  // Notificações
+  // Notifications
   notifMention: "mencionou você",
   notifPosted: "publicou",
   notifReblog: "impulsionou seu post",
@@ -328,14 +328,14 @@ const pt: Record<TKey, string> = {
   autoStreamHint:
     "Com isso ligado, novos posts e notificações chegam em tempo real. Desligue para atualizar só quando você pedir.",
 
-  // Filtros (contextos)
+  // Filters (contexts)
   contextHome: "timeline",
   contextNotifications: "notificações",
   contextPublic: "público",
   contextThread: "thread",
   contextAccount: "perfil",
 
-  // Erros / toasts
+  // Errors / toasts
   errorGeneric: "Não deu certo. Tente novamente.",
   errorAuth: "Falha na autenticação.",
   errorPost: "Não foi possível publicar.",
@@ -351,7 +351,7 @@ const pt: Record<TKey, string> = {
   statusNotFound: "Este post não foi encontrado (ou não é público).",
   accountNotFound: "Esta conta não foi encontrada.",
 
-  // Ajuda de atalhos
+  // Shortcut help
   shortcutsHelp: "Atalhos de teclado",
   help: "Ajuda",
   helpTitle: "Como o OLTN funciona",
@@ -396,7 +396,7 @@ export type { TKey };
 
 const dictionaries: Record<string, Record<string, string>> = { "pt-BR": pt, en };
 
-/** Dicionário vivo — segue o idioma escolhido em Ajustes (padrão: inglês). */
+/** Live dictionary — follows the language chosen in Settings (default: English). */
 export const t = new Proxy({} as typeof en, {
   get(_target, key): string | undefined {
     if (typeof key !== "string") return undefined;

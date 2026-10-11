@@ -10,7 +10,7 @@ interface HelpSection {
   example?: string;
 }
 
-/** Introdução rápida à plataforma (ícone de interrogação no nav). */
+/** Quick platform intro (question-mark icon in the nav). */
 export function HelpSheet(): JSX.Element | null {
   const ui = useSnapshot(store).ui;
   if (!ui.helpOpen) return null;

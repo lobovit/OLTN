@@ -14,21 +14,21 @@ const groups: EmojiGroup[] = [
 ];
 
 describe("searchEmojis", () => {
-  it("busca por rótulo, tag e sem acento", () => {
+  it("searches by label, tag and accent-less text", () => {
     expect(searchEmojis(groups, "risada").map((e) => e.c)).toEqual(["😀"]);
     expect(searchEmojis(groups, "mao").map((e) => e.c)).toEqual(["👋"]);
   });
 
-  it("busca pelo próprio caractere", () => {
+  it("searches by the character itself", () => {
     expect(searchEmojis(groups, "😢").map((e) => e.c)).toEqual(["😢"]);
   });
 
-  it("respeita o limite de resultados", () => {
+  it("respects the result limit", () => {
     const results = searchEmojis(groups, "o", 1);
     expect(results).toHaveLength(1);
   });
 
-  it("devolve vazio para busca vazia", () => {
+  it("returns empty for an empty search", () => {
     expect(searchEmojis(groups, "  ")).toEqual([]);
   });
 });

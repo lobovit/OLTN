@@ -2,7 +2,7 @@ import type { ComponentChildren, ComponentType } from "preact";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-/* Router hash-based, mínimo e tipado. */
+/* Minimal, typed hash-based router. */
 
 export interface ParsedHash {
   path: string;
@@ -70,7 +70,7 @@ export function matchRoutes<T extends { pattern: string }>(
   return null;
 }
 
-/* --- estado global do roteador --- */
+/* --- global router state --- */
 
 const listeners = new Set<() => void>();
 let current: ParsedHash = parseHash();

@@ -44,7 +44,7 @@ export function StatusPage({ params }: Props): JSX.Element {
   const focusRef = useRef<HTMLDivElement>(null);
   const lastPostedKey = useSnapshot(store).ui.lastPostedKey;
 
-  /* Insere a resposta recém-publicada na thread aberta (sem recarregar) */
+  /* Inserts the just-published reply into the open thread (without reloading) */
   useEffect(() => {
     if (!lastPostedKey) return;
     const status = store.statuses[lastPostedKey];
@@ -65,8 +65,8 @@ export function StatusPage({ params }: Props): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastPostedKey]);
 
-  /* Centraliza o toot focado na tela ao abrir a thread. Re-centraliza quando
-     mídias de posts acima terminam de carregar, sem brigar com o usuário. */
+  /* Centers the focused toot on screen when the thread opens. Re-centers when
+     media in posts above finishes loading, without fighting the user. */
   useEffect(() => {
     if (!focusKey) return;
     const container = focusRef.current?.closest<HTMLElement>(".deck-body");
@@ -138,8 +138,8 @@ export function StatusPage({ params }: Props): JSX.Element {
         try {
           result = await attempt(inst);
         } catch (err) {
-          // A rota pode apontar para a instância do autor; o `id` só é válido
-          // na instância que originou o post (fonte registrada no cache).
+          // The route may point to the author's instance; the `id` is only valid
+          // on the instance that originated the post (source recorded in the cache).
           const source = statusSourceById(id);
           if (!source || source === inst) throw err;
           result = await attempt(source);

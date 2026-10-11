@@ -1,13 +1,13 @@
-/* Emojis Unicode: dados gerados (pt/en) carregados sob demanda + busca. */
+/* Unicode emojis: generated data (pt/en) lazy-loaded + search. */
 
 export interface EmojiItem {
-  /** Caractere do emoji. */
+  /** Emoji character. */
   c: string;
-  /** Rótulo localizado. */
+  /** Localized label. */
   l: string;
-  /** Tags de busca localizadas. */
+  /** Localized search tags. */
   t?: string[];
-  /** Variantes de tom de pele, da clara à escura. */
+  /** Skin-tone variants, from light to dark. */
   s?: string[];
 }
 
@@ -17,7 +17,7 @@ export interface EmojiGroup {
   emojis: EmojiItem[];
 }
 
-/** Carrega o dataset do idioma como chunk separado. */
+/** Loads the language dataset as a separate chunk. */
 export async function loadEmojiGroups(language: string): Promise<EmojiGroup[]> {
   if (language === "en") {
     return (await import("./emoji-data.en")).EMOJI_GROUPS;
@@ -32,7 +32,7 @@ function normalize(value: string): string {
     .toLowerCase();
 }
 
-/** Busca plana por caractere, rótulo e tags; devolve no máximo `limit` itens. */
+/** Flat search by character, label and tags; returns at most `limit` items. */
 export function searchEmojis(groups: EmojiGroup[], query: string, limit = 160): EmojiItem[] {
   const raw = query.trim();
   const needle = normalize(raw);

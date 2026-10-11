@@ -1,11 +1,11 @@
-/* Converte blocos de código (```lang ... ```) em imagem estilo Carbon,
-   desenhada em canvas: cartão escuro com cantos arredondados, "semáforo",
-   linguagem e realce de sintaxe simplificado. */
+/* Converts code blocks (```lang ... ```) into a Carbon-style image,
+   drawn on canvas: dark card with rounded corners, traffic lights,
+   language label and simplified syntax highlighting. */
 
 export interface CodeBlock {
   lang: string;
   code: string;
-  /** Trecho original (com as cercas), usado para removê-lo do texto. */
+  /** Original snippet (including fences), used to remove it from the text. */
   raw: string;
 }
 
@@ -478,7 +478,7 @@ function normalizeLang(lang: string): string {
   return LANG_ALIASES[first] ?? first;
 }
 
-/** Extrai blocos cercados por ``` (com ou sem linguagem). */
+/** Extracts blocks fenced by ``` (with or without a language). */
 export function extractCodeBlocks(text: string): CodeBlock[] {
   const blocks: CodeBlock[] = [];
   const re = /^[ \t]*```[ \t]*([^\n`]*)\n([\s\S]*?)^[ \t]*```[ \t]*$/gm;
@@ -493,7 +493,7 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
   return blocks;
 }
 
-/** Realce simplificado: comentário, string, número e palavra-chave. */
+/** Simplified highlight: comment, string, number and keyword. */
 export function tokenizeLine(line: string, lang: string): Token[] {
   const keywords = KEYWORDS[normalizeLang(lang)] ?? [];
   const tokens: Token[] = [];
@@ -543,7 +543,7 @@ function roundRect(
   ctx.closePath();
 }
 
-/** Renderiza o bloco como PNG (2x) e devolve um File para upload. */
+/** Renders the block as PNG (2x) and returns a File for upload. */
 export async function codeBlockToImageFile(block: CodeBlock): Promise<File | null> {
   if (typeof document === "undefined") return null;
   const canvas = document.createElement("canvas");
@@ -565,7 +565,7 @@ export async function codeBlockToImageFile(block: CodeBlock): Promise<File | nul
   }
   const contentWidth = Math.max(160, Math.min(maxWidth, MAX_CONTENT));
 
-  // Quebra visual das linhas (mantendo as cores dos tokens).
+  // Visual line wrapping (keeping token colors).
   const visual: Token[][] = [];
   for (const tokens of tokenLines) {
     let line: Token[] = [];
