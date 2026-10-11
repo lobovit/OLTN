@@ -366,6 +366,16 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "time-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3m6-3a9 9 0 1 1-18 0a9 9 0 0 1 18 0"/>',
+    width: 24,
+    height: 24,
+  },
+  "code-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.216 4.106L9.784 19.894M6.5 7.757L2.257 12L6.5 16.243m11-8.486L21.743 12L17.5 16.243"/>',
+    width: 24,
+    height: 24,
+  },
   "quill-pen-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5.93 16.865s6.189.174 9.899-3.536c.988-.988 1.7-2.152 2.214-3.328c.294-.673.523-1.35.7-2l.181-.702M5.93 16.865s.533-5.483 4.243-9.193c3.668-3.668 9.069-4.23 9.19-4.242q.004 0 .005.004c.066.095 1.091 1.63-.187 3.567a2 2 0 0 1-.256.298M5.93 16.865S5.5 20 5.5 21M14 10c1.349-.45 3.965-1.767 4.924-2.702"/>',
     width: 24,

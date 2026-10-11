@@ -76,6 +76,8 @@ const wanted = [
   "refresh-2-line",
   "delete-line",
   "clock-line",
+  "time-line",
+  "code-line",
   "quill-pen-line",
   "rocket-line",
   "photo-album-line",
