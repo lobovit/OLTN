@@ -211,6 +211,7 @@ export async function switchAccount(id: string): Promise<void> {
   store.stream = "off";
   store.homeQueue = [];
   store.notifQueue = [];
+  store.blockedAccounts = [];
   store.notifBadge = 0;
   store.me = null;
   store.instance = null;

@@ -417,6 +417,73 @@
   color: var(--accent);
 }
 
+.status-action.more.on {
+  color: var(--text);
+  background: var(--hover);
+}
+
+/* ---------------- menu de ações (denunciar/bloquear) ---------------- */
+
+.action-more {
+  display: inline-flex;
+}
+
+.action-menu {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--s1);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-2);
+}
+
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 8px var(--s3);
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.action-menu-item:hover {
+  background: var(--hover);
+}
+
+.action-menu-item.danger {
+  color: var(--danger);
+}
+
+/* ---------------- denúncia ---------------- */
+
+.report-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.report-target {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.report-preview {
+  padding: var(--s2) var(--s3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
 .status-card.filtered {
   opacity: 0.85;
 }
@@ -438,6 +505,11 @@
   margin-top: var(--s3);
   padding-top: var(--s3);
   border-top: var(--hairline) solid var(--divider);
+}
+
+.status-card .status-translate-menu {
+  margin-top: var(--s2);
+  min-width: 200px;
 }
 
 .status-card .edit-badge {
