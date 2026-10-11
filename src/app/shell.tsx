@@ -300,12 +300,14 @@ function Rail(): JSX.Element | null {
     const type = item.column;
     if (!type) return;
     const existing = store.shortcuts.find((s) => s.type === type);
-    if (existing) {
-      scrollToColumn(existing.id);
-      return;
-    }
-    saveShortcuts([...store.shortcuts, { id: type, type, label: t[item.labelKey] }]);
-    window.setTimeout(() => scrollToColumn(type), 60);
+    const shortcut = existing ?? { id: type, type, label: t[item.labelKey] };
+    const next = ensureColumnVisible(store.shortcuts, shortcut);
+    const changed =
+      next.length !== store.shortcuts.length ||
+      next.some((s, index) => s.id !== store.shortcuts[index]?.id);
+    if (changed) saveShortcuts(next);
+    // Espera o render quando a ordem/lista mudou antes de rolar até a coluna.
+    window.setTimeout(() => scrollToColumn(shortcut.id), changed ? 60 : 0);
   };
 
   const navActive = (item: (typeof NAV_ITEMS)[number]): boolean =>
@@ -558,7 +560,7 @@ export function MultiColumns(): JSX.Element {
   const account = currentAccount();
   const layout = account ? snap.prefs[accountNS(account)] : undefined;
   const widths: Record<string, number> = layout?.columnWidths ?? {};
-  const list = orderColumns(shortcuts.slice(0, 6), layout?.columnOrder ?? []);
+  const list = orderColumns(shortcuts.slice(0, COLUMN_LIMIT), layout?.columnOrder ?? []);
 
   useEffect(() => () => activeDndCleanup?.(), []);
 

@@ -5,6 +5,8 @@ import type { TKey } from "../i18n/pt-BR";
 
 export const COLUMN_MIN = 240;
 export const COLUMN_MAX = 720;
+/** Máximo de colunas renderizadas no deck. */
+export const COLUMN_LIMIT = 6;
 
 export function clampNumber(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
@@ -43,6 +45,24 @@ export function moveInOrder(
   if (at === -1) return [...ids];
   rest.splice(side === "before" ? at : at + 1, 0, id);
   return rest;
+}
+
+/** Garante que a coluna esteja entre as `limit` primeiras (área visível),
+    movendo-a para a última posição visível quando necessário. */
+export function ensureColumnVisible(
+  shortcuts: readonly Shortcut[],
+  shortcut: Shortcut,
+  limit = COLUMN_LIMIT,
+): Shortcut[] {
+  const next = shortcuts.some((s) => s.id === shortcut.id)
+    ? [...shortcuts]
+    : [...shortcuts, shortcut];
+  const index = next.findIndex((s) => s.id === shortcut.id);
+  if (index >= limit) {
+    next.splice(index, 1);
+    next.splice(limit - 1, 0, shortcut);
+  }
+  return next;
 }
 
 /* ---------------- layouts predefinidos ---------------- */

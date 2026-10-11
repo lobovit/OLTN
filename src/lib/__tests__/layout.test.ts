@@ -3,6 +3,7 @@ import type { Shortcut } from "../../api/types";
 import {
   buildLayoutShortcuts,
   clampWidth,
+  ensureColumnVisible,
   LAYOUT_PRESETS,
   moveInOrder,
   orderColumns,
@@ -55,6 +56,48 @@ describe("moveInOrder", () => {
 
   it("alvo inexistente devolve a lista original", () => {
     expect(moveInOrder(ids, "a", "zz", "before")).toEqual(ids);
+  });
+});
+
+describe("ensureColumnVisible", () => {
+  const shortcut = (id: string): Shortcut => ({ id, type: "home", label: id });
+
+  it("adiciona no fim quando há espaço", () => {
+    expect(ensureColumnVisible([shortcut("a")], shortcut("b")).map((s) => s.id)).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  it("com 6 colunas, a nova entra na 6ª posição visível", () => {
+    const base = ["a", "b", "c", "d", "e", "f"].map(shortcut);
+    expect(ensureColumnVisible(base, shortcut("g")).map((s) => s.id)).toEqual([
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "g",
+      "f",
+    ]);
+  });
+
+  it("traz uma coluna escondida para a área visível", () => {
+    const base = ["a", "b", "c", "d", "e", "f", "notifications"].map(shortcut);
+    expect(ensureColumnVisible(base, shortcut("notifications")).map((s) => s.id)).toEqual([
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "notifications",
+      "f",
+    ]);
+  });
+
+  it("não muda nada quando a coluna já está visível", () => {
+    const base = ["a", "b"].map(shortcut);
+    expect(ensureColumnVisible(base, shortcut("a")).map((s) => s.id)).toEqual(["a", "b"]);
   });
 });
 
