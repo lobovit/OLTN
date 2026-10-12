@@ -2,28 +2,45 @@ import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import { getRest } from "../../api/client";
-import type { Account, ComposeIntent, ComposeVisibility, MediaAttachment } from "../../api/types";
+import type { ComposeIntent, ComposeVisibility, MediaAttachment } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { extractCodeBlocks } from "../../lib/code-image";
-import { fullDate, htmlToPlainText, languageName } from "../../lib/format";
 import { userMessageForError } from "../../lib/errors";
-import { GIPHY_PUBLIC_KEY, type GifResult } from "../../lib/giphy";
-import { clientFor } from "../../lib/identity";
-import { planPublish, type ComposeDraft, type PublishPoll } from "../../lib/publish-plan";
+import { GIPHY_PUBLIC_KEY } from "../../lib/giphy";
+import {
+  planPublish,
+  type ComposeDraft,
+  type PublishExecution,
+  type PublishPoll,
+  type QuotePolicy,
+} from "../../lib/publish-plan";
 import { readJSON, writeJSON } from "../../lib/storage";
 import { splitThreadText } from "../../lib/thread";
 import { translateText } from "../../lib/translate";
 import { currentAccount, setCompose, store, toast } from "../../state/store";
 import { executePublish } from "../../state/publish";
 import { Sheet } from "../ui/Sheet";
-import { Icon } from "../ui/Icon";
+import { applyComposeContext, normalizeQuotePolicy } from "./compose-context";
+import { ComposeDropZone } from "./ComposeDropZone";
+import { ComposeInput } from "./ComposeInput";
+import {
+  ComposeCodeHint,
+  ComposeContextPills,
+  ComposeCwInput,
+  ComposeScheduleNotice,
+  ComposeTranslation,
+  ComposeUploading,
+} from "./ComposeNotices";
+import { ComposeToolbar } from "./ComposeToolbar";
 import { EmojiPanel } from "./EmojiPanel";
 import { GifPicker } from "./GifPicker";
 import { MediaAttachments } from "./MediaAttachments";
-import { MentionMenu } from "./MentionMenu";
 import { PollEditor } from "./PollEditor";
-import { SchedulePanel } from "./SchedulePanel";
-import { TranslateMenu } from "./TranslateMenu";
+import { QuotePolicyPicker } from "./QuotePolicyPicker";
+import { useComposePanels } from "./useComposePanels";
+import { useMediaUpload } from "./useMediaUpload";
+import { useMentionMenu } from "./useMentionMenu";
+import { usePopoverDismiss } from "./usePopoverDismiss";
 import { VisibilityPicker } from "./VisibilityPicker";
 
 const CHAR_LIMIT = 500;
@@ -48,6 +65,7 @@ interface ComposeDraftInput {
   media: MediaAttachment[];
   replyToId?: string;
   quoteId?: string;
+  quotePolicy: QuotePolicy;
   scheduledAt?: string;
 }
 
@@ -72,6 +90,7 @@ function buildComposeDraft(input: ComposeDraftInput): ComposeDraft {
     media: input.media,
     replyToId: input.replyToId,
     quoteId: input.quoteId,
+    quotePolicy: input.quotePolicy,
     scheduledAt: input.scheduledAt,
   };
 }
@@ -89,13 +108,24 @@ function composeTitle(mode: ComposeIntent["mode"]): string {
   }
 }
 
-function submitLabel(state: { busy: boolean; isEdit: boolean; scheduled: boolean }): string {
-  if (state.busy) {
-    if (state.isEdit) return t.saving;
-    return state.scheduled ? t.scheduling : t.posting;
-  }
-  if (state.isEdit) return t.save;
-  return state.scheduled ? t.schedule : t.post;
+interface ScheduleState {
+  date: Date | null;
+  valid: boolean;
+  blocked: boolean;
+}
+
+function scheduleState(value: string, isEdit: boolean, threadParts: number): ScheduleState {
+  const date = value ? new Date(value) : null;
+  return {
+    date,
+    valid: !date || date.getTime() >= Date.now() + 5 * 60_000,
+    blocked: isEdit || threadParts > 1,
+  };
+}
+
+function publishedMessage(kind: PublishExecution["kind"], isEdit: boolean): string {
+  if (kind === "schedule") return t.scheduledPost;
+  return isEdit ? t.saved : t.post;
 }
 
 export function ComposeSheet(): JSX.Element | null {
@@ -114,9 +144,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const [visibility, setVisibility] = useState<ComposeVisibility>("public");
   const [sensitive, setSensitive] = useState(false);
   const [media, setMedia] = useState<MediaAttachment[]>([]);
-  const [uploading, setUploading] = useState(0);
   const [poll, setPoll] = useState<PublishPoll | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [charLimit, setCharLimit] = useState(CHAR_LIMIT);
   const [localSupported, setLocalSupported] = useState(() =>
@@ -124,20 +152,45 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   );
   const [replyTo, setReplyTo] = useState<{ id: string; acct: string } | null>(null);
   const [quoteId, setQuoteId] = useState<string | null>(null);
-  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-  const [mentionItems, setMentionItems] = useState<Account[]>([]);
-  const [mentionIndex, setMentionIndex] = useState(0);
-  const [emojiOpen, setEmojiOpen] = useState(false);
-  const [gifOpen, setGifOpen] = useState(false);
-  const [transOpen, setTransOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translation, setTranslation] = useState<{ target: string; original: string } | null>(null);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
-  const mentionSeq = useRef(0);
+  const [quotePolicy, setQuotePolicy] = useState<QuotePolicy>(() =>
+    normalizeQuotePolicy(store.me?.source?.quotePolicy),
+  );
   const fileRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const cwRef = useRef<HTMLInputElement>(null);
+
+  const panels = useComposePanels();
+  const mentions = useMentionMenu({ instance, account, text, setText, textRef });
+  const uploader = useMediaUpload({ instance, account, media, poll, setMedia });
+  usePopoverDismiss([
+    {
+      isOpen: panels.emojiOpen,
+      panel: ".emoji-picker",
+      toggle: "[data-emoji-toggle]",
+      close: panels.closeEmoji,
+    },
+    {
+      isOpen: panels.gifOpen,
+      panel: ".gif-picker",
+      toggle: "[data-gif-toggle]",
+      close: panels.closeGif,
+    },
+    {
+      isOpen: panels.transOpen,
+      panel: ".translate-menu",
+      toggle: "[data-translate-toggle]",
+      close: panels.closeTranslation,
+    },
+    {
+      isOpen: panels.scheduleOpen,
+      panel: ".schedule-panel",
+      toggle: "[data-schedule-toggle]",
+      close: panels.closeSchedule,
+    },
+  ]);
 
   /* instance character limit + local post support (Pleroma/Akkoma) */
   useEffect(() => {
@@ -161,99 +214,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     };
   }, [instance, account]);
 
-  /* closes popovers (emoji/gif/translation/schedule) when clicking outside or pressing Escape */
-  useEffect(() => {
-    if (!emojiOpen && !transOpen && !scheduleOpen && !gifOpen) return;
-    const onDown = (e: PointerEvent): void => {
-      const el = e.target as HTMLElement;
-      if (emojiOpen && !el.closest(".emoji-picker") && !el.closest("[data-emoji-toggle]")) {
-        setEmojiOpen(false);
-      }
-      if (gifOpen && !el.closest(".gif-picker") && !el.closest("[data-gif-toggle]")) {
-        setGifOpen(false);
-      }
-      if (transOpen && !el.closest(".translate-menu") && !el.closest("[data-translate-toggle]")) {
-        setTransOpen(false);
-      }
-      if (scheduleOpen && !el.closest(".schedule-panel") && !el.closest("[data-schedule-toggle]")) {
-        setScheduleOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === "Escape") {
-        setEmojiOpen(false);
-        setGifOpen(false);
-        setTransOpen(false);
-        setScheduleOpen(false);
-      }
-    };
-    window.addEventListener("pointerdown", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [emojiOpen, gifOpen, transOpen, scheduleOpen]);
-
-  /* account search for mention autocomplete (@partial) */
-  useEffect(() => {
-    if (mentionQuery == null || mentionQuery.length < 1 || !account) {
-      setMentionItems([]);
-      return;
-    }
-    const query = mentionQuery;
-    const seq = ++mentionSeq.current;
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        try {
-          const client = getRest(instance, account.accessToken);
-          const result = await client.v2.search.list({
-            q: query,
-            type: "accounts",
-            resolve: false,
-            limit: 5,
-          });
-          if (seq !== mentionSeq.current) return;
-          setMentionItems(result.accounts.slice(0, 5));
-          setMentionIndex(0);
-        } catch (err) {
-          console.warn("[oltn] mention search failed", err);
-        }
-      })();
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [mentionQuery, instance, account]);
-
-  const syncMentionQuery = (target: HTMLTextAreaElement): void => {
-    const cursor = target.selectionStart ?? target.value.length;
-    const before = target.value.slice(0, cursor);
-    const match = /(^|[\s\u00a0(])@([a-zA-Z0-9_]{1,})$/.exec(before);
-    setMentionQuery(match ? match[2] : null);
-  };
-
-  const applyMention = (picked: Account): void => {
-    const ta = textRef.current;
-    if (!ta) return;
-    const cursor = ta.selectionStart ?? text.length;
-    const before = text.slice(0, cursor);
-    const match = /@([a-zA-Z0-9_]*)$/.exec(before);
-    if (!match) {
-      setMentionQuery(null);
-      return;
-    }
-    const start = cursor - match[0].length;
-    const insert = `@${picked.acct}`;
-    const next = text.slice(0, start) + insert + text.slice(cursor);
-    setText(next);
-    setMentionQuery(null);
-    setMentionItems([]);
-    const pos = start + insert.length;
-    requestAnimationFrame(() => {
-      ta.focus();
-      ta.setSelectionRange(pos, pos);
-    });
-  };
-
   const insertAtCursor = (snippet: string): void => {
     const ta = textRef.current;
     const start = ta?.selectionStart ?? text.length;
@@ -271,7 +231,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const translateDraft = async (target: string): Promise<void> => {
     const source = text.trim();
     if (!source || translating) return;
-    setTransOpen(false);
+    panels.closeTranslation();
     setTranslating(true);
     try {
       const result = await translateText(source, target);
@@ -289,6 +249,17 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     if (!translation) return;
     setText(translation.original);
     setTranslation(null);
+  };
+
+  const toggleCw = (): void => {
+    const next = !showCw;
+    setShowCw(next);
+    if (next) requestAnimationFrame(() => cwRef.current?.focus());
+  };
+
+  const togglePoll = (): void => {
+    setPoll(poll ? null : makePoll());
+    if (!poll) setMedia([]);
   };
 
   /* draft (new mode) */
@@ -323,32 +294,18 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
       try {
         const status = await client.v1.statuses.$select(statusId).fetch();
         if (cancelled) return;
-        if (intent.mode === "reply") {
-          const acct = status.account.acct.includes("@")
-            ? status.account.acct
-            : `${status.account.acct}@${instance}`;
-          setReplyTo({ id: status.id, acct });
-          setText((prev) => prev || `@${status.account.username} `);
-        } else if (intent.mode === "quote") {
-          setQuoteId(status.id);
-        } else if (intent.mode === "edit") {
-          setText(htmlToPlainText(status.content));
-          setSpoiler(status.spoilerText);
-          if (status.spoilerText) setShowCw(true);
-          setVisibility(status.visibility);
-          setSensitive(status.sensitive);
-          setMedia(status.mediaAttachments);
-          const statusPoll = status.poll;
-          if (statusPoll) {
-            setPoll({
-              options: statusPoll.options.map((o) => o.title),
-              expiresIn: statusPoll.expiresAt
-                ? Math.max(300, Math.ceil((Date.parse(statusPoll.expiresAt) - Date.now()) / 1000))
-                : 86400,
-              multiple: statusPoll.multiple,
-            });
-          }
-        }
+        applyComposeContext(status, intent.mode, instance, {
+          setReplyTo,
+          setQuoteId,
+          setText,
+          setSpoiler,
+          setShowCw,
+          setVisibility,
+          setSensitive,
+          setMedia,
+          setPoll,
+          setQuotePolicy,
+        });
       } catch {
         toast(t.errorLoad, "error");
       }
@@ -363,67 +320,24 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   }, []);
 
   const remaining = charLimit - text.length;
-  const canPoll = !media.length && !uploading;
+  const canPoll = !media.length && !uploader.uploading;
   const pollReady = !poll || poll.options.every((o) => o.trim());
   const threadParts =
     !isEdit && text.trim().length > charLimit ? splitThreadText(text.trim(), charLimit).length : 1;
-  const scheduleDate = scheduledAt ? new Date(scheduledAt) : null;
-  const scheduleValid = !scheduleDate || scheduleDate.getTime() >= Date.now() + 5 * 60_000;
-  const scheduleBlocked = isEdit || threadParts > 1;
+  const {
+    date: scheduleDate,
+    valid: scheduleValid,
+    blocked: scheduleBlocked,
+  } = scheduleState(scheduledAt, isEdit, threadParts);
   const canSubmit =
     !busy &&
-    !uploading &&
+    !uploader.uploading &&
     (text.trim().length > 0 || media.length > 0) &&
     (isEdit || remaining >= 0) &&
     pollReady &&
     (!scheduleDate || (scheduleValid && !scheduleBlocked));
 
   const codeBlocks = isEdit || poll ? [] : extractCodeBlocks(text);
-
-  const uploadFile = async (file: File, description?: string): Promise<void> => {
-    if (!account) return;
-    setUploading((n) => n + 1);
-    try {
-      const attachment = await clientFor(instance).client.v1.media.create({
-        file,
-        description,
-      });
-      setMedia((prev) => [...prev, attachment].slice(0, 4));
-    } catch (err) {
-      console.warn("[oltn] upload failed", err);
-      toast(t.errorUpload, "error");
-    } finally {
-      setUploading((n) => n - 1);
-    }
-  };
-
-  const upload = async (files: FileList | File[]): Promise<void> => {
-    let count = media.length;
-    for (const file of files) {
-      if (count >= 4) break;
-      count += 1;
-      await uploadFile(file);
-    }
-  };
-
-  /** Downloads the selected GIF and attaches it with its alt text. */
-  const pickGif = async (gif: GifResult): Promise<void> => {
-    if (!account || media.length >= 4 || poll || uploading) return;
-    setGifOpen(false);
-    setUploading((n) => n + 1);
-    try {
-      const blob = await fetch(gif.url, { referrerPolicy: "no-referrer" }).then((res) =>
-        res.blob(),
-      );
-      const file = new File([blob], "image.gif", { type: blob.type || "image/gif" });
-      await uploadFile(file, gif.alt || undefined);
-    } catch (err) {
-      console.warn("[oltn] gif download failed", err);
-      toast(t.errorUpload, "error");
-    } finally {
-      setUploading((n) => n - 1);
-    }
-  };
 
   const submit = async (): Promise<void> => {
     if (!account || !canSubmit) return;
@@ -439,6 +353,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
         media,
         replyToId: replyTo?.id,
         quoteId: quoteId ?? undefined,
+        quotePolicy,
         scheduledAt:
           scheduleDate && scheduleValid && !scheduleBlocked
             ? scheduleDate.toISOString()
@@ -462,7 +377,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
         return;
       }
       if (intent.mode === "new") writeJSON(DRAFT_KEY, null);
-      toast(outcome.kind === "schedule" ? t.scheduledPost : isEdit ? t.saved : t.post, "ok");
+      toast(publishedMessage(outcome.kind, isEdit), "ok");
       setCompose(null);
     } finally {
       setBusy(false);
@@ -485,267 +400,66 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
         </span>
       }
       footer={
-        <>
-          <input
-            ref={fileRef}
-            class="compose-file"
-            type="file"
-            accept="image/*,video/*,audio/*"
-            multiple
-            onChange={(e) => {
-              const files = (e.target as HTMLInputElement).files;
-              if (files?.length) void upload(files);
-              (e.target as HTMLInputElement).value = "";
-            }}
-          />
-          <button
-            type="button"
-            class="icon-btn"
-            title={t.attachMedia}
-            aria-label={t.attachMedia}
-            disabled={media.length >= 4 || !!poll}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Icon name="attachment-line" size={20} />
-          </button>
-          <button
-            type="button"
-            class={`icon-btn ${poll ? "active" : ""}`}
-            title={t.addPoll}
-            aria-label={t.addPoll}
-            disabled={!canPoll}
-            onClick={() => {
-              setPoll(poll ? null : makePoll());
-              if (!poll) setMedia([]);
-            }}
-          >
-            <Icon name="list-check-line" size={20} />
-          </button>
-          <button
-            type="button"
-            class={`icon-btn toolbar-cw ${showCw ? "active" : ""}`}
-            title={t.contentWarning}
-            aria-label={t.contentWarning}
-            aria-pressed={showCw}
-            onClick={() => {
-              const next = !showCw;
-              setShowCw(next);
-              if (next) requestAnimationFrame(() => cwRef.current?.focus());
-            }}
-          >
-            CW
-          </button>
-          <button
-            type="button"
-            class={`icon-btn ${emojiOpen ? "active" : ""}`}
-            data-emoji-toggle
-            title={t.emojiPicker}
-            aria-label={t.emojiPicker}
-            aria-expanded={emojiOpen}
-            onClick={() => {
-              setEmojiOpen((v) => !v);
-              setGifOpen(false);
-              setTransOpen(false);
-            }}
-          >
-            <Icon name="emoji-line" size={20} />
-          </button>
-          <button
-            type="button"
-            class={`icon-btn ${gifOpen ? "active" : ""}`}
-            data-gif-toggle
-            title={t.gif}
-            aria-label={t.gif}
-            aria-expanded={gifOpen}
-            disabled={media.length >= 4 || !!poll}
-            onClick={() => {
-              setGifOpen((v) => !v);
-              setEmojiOpen(false);
-              setTransOpen(false);
-              setScheduleOpen(false);
-            }}
-          >
-            <Icon name="movie-line" size={20} />
-          </button>
-          <button
-            type="button"
-            class={`icon-btn ${transOpen ? "active" : ""}`}
-            data-translate-toggle
-            title={t.translateTo}
-            aria-label={t.translateTo}
-            aria-expanded={transOpen}
-            disabled={!text.trim() || translating}
-            onClick={() => {
-              setTransOpen((v) => !v);
-              setEmojiOpen(false);
-            }}
-          >
-            {translating ? <span class="spinner" /> : <Icon name="translate-line" size={20} />}
-          </button>
-          <button
-            type="button"
-            class={`icon-btn ${scheduleOpen || scheduleDate ? "active" : ""}`}
-            data-schedule-toggle
-            title={scheduleBlocked ? t.scheduleNoThread : t.schedule}
-            aria-label={t.schedule}
-            aria-expanded={scheduleOpen}
-            disabled={scheduleBlocked}
-            onClick={() => {
-              setScheduleOpen((v) => !v);
-              setEmojiOpen(false);
-              setTransOpen(false);
-            }}
-          >
-            <Icon name="calendar-line" size={20} />
-          </button>
-          <div class="spacer" />
-          <button
-            type="button"
-            class="btn primary"
-            disabled={!canSubmit}
-            onClick={() => void submit()}
-          >
-            {busy && <span class="spinner" />}
-            {submitLabel({ busy, isEdit, scheduled: !!scheduleDate })}
-          </button>
-        </>
+        <ComposeToolbar
+          fileRef={fileRef}
+          onFiles={(files) => void uploader.upload(files)}
+          mediaCount={media.length}
+          hasPoll={!!poll}
+          canPoll={canPoll}
+          showCw={showCw}
+          onToggleCw={toggleCw}
+          onTogglePoll={togglePoll}
+          panels={panels}
+          translating={translating}
+          hasText={!!text.trim()}
+          scheduleBlocked={scheduleBlocked}
+          scheduled={!!scheduleDate}
+          canSubmit={canSubmit}
+          busy={busy}
+          isEdit={isEdit}
+          onSubmit={() => void submit()}
+        />
       }
     >
-      <div
-        class={`compose ${dragOver ? "drag-over" : ""}`}
-        onDragOver={(e) => {
-          if (e.dataTransfer?.types.includes("Files")) {
-            e.preventDefault();
-            setDragOver(true);
-          }
-        }}
-        onDragLeave={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(false);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          const files = e.dataTransfer?.files;
-          if (files?.length) void upload(files);
-        }}
-      >
-        {replyTo && (
-          <div class="compose-context pill">
-            <Icon name="message-1-line" size={14} />
-            {t.respondingTo} @{replyTo.acct}
-          </div>
-        )}
-        {quoteId && (
-          <div class="compose-context pill">
-            <Icon name="share-forward-line" size={14} />
-            {t.quoting}
-          </div>
-        )}
-        {showCw && (
-          <input
-            ref={cwRef}
-            class="field"
-            placeholder={t.contentWarning}
-            aria-label={t.contentWarning}
-            value={spoiler}
-            onInput={(e) => setSpoiler((e.target as HTMLInputElement).value)}
+      <ComposeDropZone onFiles={(files) => void uploader.upload(files)}>
+        <ComposeContextPills replyTo={replyTo} quoteId={quoteId} />
+        <ComposeCwInput open={showCw} inputRef={cwRef} value={spoiler} onInput={setSpoiler} />
+        <ComposeInput
+          text={text}
+          textRef={textRef}
+          mentions={mentions}
+          reply={intent.mode === "reply"}
+          onText={setText}
+          onResetTranslation={() => setTranslation(null)}
+          onUpload={(files) => void uploader.upload(files)}
+          onSubmit={() => void submit()}
+        />
+        <ComposeTranslation
+          translation={translation}
+          menuOpen={panels.transOpen}
+          onUndo={undoTranslation}
+          onPick={(code) => void translateDraft(code)}
+        />
+        <ComposeScheduleNotice
+          open={panels.scheduleOpen}
+          value={scheduledAt}
+          date={scheduleDate}
+          valid={scheduleValid}
+          onInput={setScheduledAt}
+          onClear={() => setScheduledAt("")}
+          onConfirm={panels.closeSchedule}
+        />
+        <ComposeCodeHint show={codeBlocks.length > 0} />
+        {panels.gifOpen && (
+          <GifPicker
+            apiKey={GIPHY_API_KEY}
+            onSelect={(gif) => {
+              panels.closeGif();
+              void uploader.pickGif(gif);
+            }}
           />
         )}
-        <textarea
-          ref={textRef}
-          class="field compose-text"
-          rows={6}
-          placeholder={intent.mode === "reply" ? t.composeReplyPlaceholder : t.composePlaceholder}
-          value={text}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            setText(target.value);
-            syncMentionQuery(target);
-            if (translation) setTranslation(null);
-          }}
-          onClick={(e) => syncMentionQuery(e.currentTarget as HTMLTextAreaElement)}
-          onKeyUp={(e) => {
-            if (e.key.startsWith("Arrow") || e.key === "Home" || e.key === "End") {
-              syncMentionQuery(e.currentTarget as HTMLTextAreaElement);
-            }
-          }}
-          onPaste={(e) => {
-            const files = e.clipboardData?.files;
-            if (files?.length) {
-              e.preventDefault();
-              void upload(files);
-            }
-          }}
-          onBlur={() => setMentionItems([])}
-          onKeyDown={(e) => {
-            if (mentionItems.length) {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setMentionIndex((i) => Math.min(i + 1, mentionItems.length - 1));
-                return;
-              }
-              if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setMentionIndex((i) => Math.max(i - 1, 0));
-                return;
-              }
-              if (e.key === "Enter" || e.key === "Tab") {
-                e.preventDefault();
-                applyMention(mentionItems[mentionIndex]);
-                return;
-              }
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") void submit();
-          }}
-        />
-        <MentionMenu
-          items={mentionItems}
-          index={mentionIndex}
-          onIndex={setMentionIndex}
-          onPick={applyMention}
-        />
-        {translation && (
-          <div class="compose-translation">
-            <Icon name="translate-line" size={14} />
-            <span>
-              {t.translated} · {languageName(translation.target)}
-            </span>
-            <button type="button" class="cw-toggle" onClick={undoTranslation}>
-              {t.undo}
-            </button>
-          </div>
-        )}
-        {transOpen && <TranslateMenu onPick={(code) => void translateDraft(code)} />}
-        {scheduleOpen && (
-          <SchedulePanel
-            value={scheduledAt}
-            date={scheduleDate}
-            valid={scheduleValid}
-            onInput={setScheduledAt}
-            onClear={() => setScheduledAt("")}
-            onConfirm={() => setScheduleOpen(false)}
-          />
-        )}
-        {scheduleDate && !scheduleOpen && (
-          <div class={`compose-schedule pill ${scheduleValid ? "" : "invalid"}`}>
-            <Icon name="calendar-line" size={14} />
-            <span>
-              {t.scheduledFor} {fullDate(scheduleDate)}
-            </span>
-            {!scheduleValid && <span class="schedule-error">{t.scheduleTooSoon}</span>}
-            <button type="button" class="cw-toggle" onClick={() => setScheduledAt("")}>
-              {t.scheduleClear}
-            </button>
-          </div>
-        )}
-        {codeBlocks.length > 0 && (
-          <div class="compose-code-hint pill">
-            <Icon name="code-line" size={14} />
-            <span>{t.codeAsImage}</span>
-          </div>
-        )}
-        {gifOpen && <GifPicker apiKey={GIPHY_API_KEY} onSelect={(gif) => void pickGif(gif)} />}
-        {emojiOpen && (
+        {panels.emojiOpen && (
           <EmojiPanel instance={instance} account={account} onInsert={insertAtCursor} />
         )}
         <MediaAttachments
@@ -755,18 +469,15 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           }
           onRemove={(index) => setMedia((prev) => prev.filter((_, i) => i !== index))}
         />
-        {uploading > 0 && (
-          <div class="compose-uploading">
-            <span class="spinner" /> {t.loading}
-          </div>
-        )}
+        <ComposeUploading count={uploader.uploading} />
         {poll && <PollEditor value={poll} onChange={setPoll} />}
         <VisibilityPicker
           value={visibility}
           localSupported={localSupported}
           onChange={setVisibility}
         />
-      </div>
+        <QuotePolicyPicker value={quotePolicy} onChange={setQuotePolicy} />
+      </ComposeDropZone>
     </Sheet>
   );
 }
