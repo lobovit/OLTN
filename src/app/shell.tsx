@@ -67,6 +67,7 @@ const NAV_ITEMS: {
   badge?: boolean;
   column?: ShortcutType;
   popup?: "search";
+  action?: "timer" | "help";
 }[] = [
   {
     id: "/",
@@ -176,6 +177,22 @@ const NAV_ITEMS: {
     iconActive: "settings-3-fill",
     labelKey: "settingsShort",
   },
+  {
+    id: "/pomodoro",
+    href: "/pomodoro",
+    icon: "time-line",
+    iconActive: "time-line",
+    labelKey: "pomodoro",
+    action: "timer",
+  },
+  {
+    id: "/help",
+    href: "/help",
+    icon: "question-line",
+    iconActive: "question-line",
+    labelKey: "help",
+    action: "help",
+  },
 ];
 
 let navDragSuppress = false;
@@ -187,9 +204,11 @@ function startNavDrag(e: PointerEvent, id: string): void {
   const target = e.currentTarget as HTMLElement;
   const wrap = target.parentElement;
   if (!wrap) return;
-  const els = [...wrap.querySelectorAll<HTMLElement>("a.rail-item")];
+  const els = [...wrap.querySelectorAll<HTMLElement>("a.rail-item, button.rail-item")];
   if (els.length < 2) return;
-  const ids = els.map((el) => (el.getAttribute("href") ?? "").replace(/^#/, ""));
+  const ids = els.map(
+    (el) => el.dataset.navId ?? (el.getAttribute("href") ?? "").replace(/^#/, ""),
+  );
   const extents = els.map((el) => {
     const r = el.getBoundingClientRect();
     return { start: r.top, end: r.bottom };
@@ -312,66 +331,69 @@ function Rail(): JSX.Element | null {
         />
       </button>
       <div class="rail-main">
-        {orderedNav.map((item) => (
-          <Link
-            key={item.id}
-            href={item.href}
-            class={`rail-item ${navActive(item) ? "active" : ""}`}
-            title={t[item.labelKey]}
-            ariaCurrent={navActive(item) ? "page" : undefined}
-            draggable={false}
-            onPointerDown={(e) => startNavDrag(e, item.id)}
-            onClick={(e) => {
-              if (navDragSuppress) {
+        {orderedNav.map((item) => {
+          if (item.action) {
+            const running = item.action === "timer" && state.timer.remainingMs > 0;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                class={`rail-item ${item.action === "timer" ? "timer-item" : "help-item"} ${
+                  running ? "active" : ""
+                }`}
+                title={t[item.labelKey]}
+                aria-label={t[item.labelKey]}
+                data-nav-id={item.id}
+                onPointerDown={(e) => startNavDrag(e, item.id)}
+                onClick={() => {
+                  if (navDragSuppress) return;
+                  if (item.action === "timer") {
+                    store.ui.timerOpen = true;
+                  } else {
+                    store.ui.helpOpen = true;
+                  }
+                }}
+              >
+                <Icon name={item.action === "timer" ? "time-line" : "question-line"} size={22} />
+                <span>{running ? formatDuration(state.timer.remainingMs) : t[item.labelKey]}</span>
+              </button>
+            );
+          }
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              class={`rail-item ${navActive(item) ? "active" : ""}`}
+              title={t[item.labelKey]}
+              ariaCurrent={navActive(item) ? "page" : undefined}
+              draggable={false}
+              onPointerDown={(e) => startNavDrag(e, item.id)}
+              onClick={(e) => {
+                if (navDragSuppress) {
+                  e.preventDefault();
+                  return;
+                }
+                if (item.popup === "search") {
+                  e.preventDefault();
+                  store.ui.searchOpen = true;
+                  return;
+                }
+                if (!multi || !item.column) return;
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                 e.preventDefault();
-                return;
-              }
-              if (item.popup === "search") {
-                e.preventDefault();
-                store.ui.searchOpen = true;
-                return;
-              }
-              if (!multi || !item.column) return;
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-              e.preventDefault();
-              openColumn(item);
-            }}
-          >
-            <span style={{ position: "relative", display: "grid" }}>
-              <Icon name={navActive(item) ? item.iconActive : item.icon} size={22} />
-              {item.badge && state.notifBadge > 0 && (
-                <span class="badge">{state.notifBadge > 99 ? "99+" : state.notifBadge}</span>
-              )}
-            </span>
-            <span>{t[item.labelKey]}</span>
-          </Link>
-        ))}
-        <button
-          type="button"
-          class={`rail-item timer-item ${state.timer.remainingMs > 0 ? "active" : ""}`}
-          title={t.pomodoro}
-          aria-label={t.pomodoro}
-          onClick={() => {
-            store.ui.timerOpen = true;
-          }}
-        >
-          <Icon name="time-line" size={22} />
-          <span>
-            {state.timer.remainingMs > 0 ? formatDuration(state.timer.remainingMs) : t.pomodoro}
-          </span>
-        </button>
-        <button
-          type="button"
-          class="rail-item help-item"
-          title={t.help}
-          aria-label={t.help}
-          onClick={() => {
-            store.ui.helpOpen = true;
-          }}
-        >
-          <Icon name="question-line" size={22} />
-          <span>{t.help}</span>
-        </button>
+                openColumn(item);
+              }}
+            >
+              <span style={{ position: "relative", display: "grid" }}>
+                <Icon name={navActive(item) ? item.iconActive : item.icon} size={22} />
+                {item.badge && state.notifBadge > 0 && (
+                  <span class="badge">{state.notifBadge > 99 ? "99+" : state.notifBadge}</span>
+                )}
+              </span>
+              <span>{t[item.labelKey]}</span>
+            </Link>
+          );
+        })}
       </div>
       {railShortcuts.length > 0 && (
         <div class="rail-shortcuts">
