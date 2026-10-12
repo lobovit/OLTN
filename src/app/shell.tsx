@@ -134,6 +134,13 @@ const NAV_ITEMS: {
     column: "boosts",
   },
   {
+    id: "/apps",
+    href: "/apps",
+    icon: "planet-line",
+    iconActive: "planet-fill",
+    labelKey: "fediverseApps",
+  },
+  {
     id: "/l",
     href: "/l",
     icon: "list-check-line",

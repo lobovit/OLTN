@@ -24,6 +24,8 @@ const wanted = [
   "list-check-fill",
   "trending-up-line",
   "trending-up-fill",
+  "planet-line",
+  "planet-fill",
   "filter-line",
   "filter-fill",
   "hashtag-line",

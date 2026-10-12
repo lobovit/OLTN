@@ -1,0 +1,106 @@
+/* Fediverse apps directory page: category chips + cards grid. */
+
+.fediverse-apps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4) var(--s6);
+}
+
+.fediverse-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.fediverse-chip {
+  padding: 4px 12px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.82rem;
+}
+
+.fediverse-chip:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.fediverse-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast, #08130d);
+}
+
+.fediverse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--s3);
+}
+
+.fediverse-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.fediverse-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.fediverse-card-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.fediverse-cat {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fediverse-card p {
+  flex: 1;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.fediverse-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-3);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.fediverse-card a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.fediverse-source {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.fediverse-source a {
+  color: var(--text-3);
+}
+
+.fediverse-source a:hover {
+  color: var(--accent);
+}
