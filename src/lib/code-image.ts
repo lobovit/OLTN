@@ -1,6 +1,6 @@
-/* Converts code blocks (```lang ... ```) into a Carbon-style image,
-   drawn on canvas: dark card with rounded corners, traffic lights,
-   language label and simplified syntax highlighting. */
+/* Converts code blocks (```lang ... ```) into a simple dark card image,
+   drawn on canvas: flat rounded background and basic syntax highlighting
+   (keyword, string, number, comment). */
 
 export interface CodeBlock {
   lang: string;
@@ -15,11 +15,11 @@ export interface Token {
 }
 
 const COLORS = {
-  text: "#e6edf3",
-  comment: "#8b949e",
-  string: "#a5d6ff",
-  number: "#79c0ff",
-  keyword: "#ff7b72",
+  text: "#d7deeb",
+  comment: "#7c85a0",
+  string: "#a5e075",
+  number: "#f6a76f",
+  keyword: "#c792ea",
 };
 
 const JS_KEYWORDS = [
@@ -517,12 +517,10 @@ export function tokenizeLine(line: string, lang: string): Token[] {
 }
 
 const FONT_STACK = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
-const UI_STACK = 'system-ui, -apple-system, "Segoe UI", sans-serif';
-const FONT_SIZE = 15;
-const LINE_HEIGHT = 24;
-const PAD = 22;
-const HEADER = 46;
-const RADIUS = 18;
+const FONT_SIZE = 14;
+const LINE_HEIGHT = 22;
+const PAD = 20;
+const RADIUS = 12;
 const MAX_CONTENT = 1180;
 
 function roundRect(
@@ -597,49 +595,24 @@ export async function codeBlockToImageFile(block: CodeBlock): Promise<File | nul
   }
 
   const width = Math.ceil(contentWidth) + PAD * 2;
-  const height = Math.ceil(
-    HEADER + PAD * 2 + visual.length * LINE_HEIGHT - (LINE_HEIGHT - FONT_SIZE),
-  );
+  const height = Math.ceil(PAD * 2 + visual.length * LINE_HEIGHT - (LINE_HEIGHT - FONT_SIZE));
   const scale = 2;
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(height * scale);
   ctx.scale(scale, scale);
 
   roundRect(ctx, 0, 0, width, height, RADIUS);
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#1b222c");
-  gradient.addColorStop(1, "#0d1117");
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = "#1e222b";
   ctx.fill();
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.09)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
   ctx.lineWidth = 1;
   roundRect(ctx, 0.5, 0.5, width - 1, height - 1, RADIUS - 1);
-  ctx.stroke();
-
-  const dotY = HEADER / 2;
-  for (const [index, color] of ["#ff5f57", "#febc2e", "#28c840"].entries()) {
-    ctx.beginPath();
-    ctx.arc(PAD + 6 + index * 18, dotY, 5.5, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-  }
-  if (block.lang) {
-    ctx.font = `600 12px ${UI_STACK}`;
-    ctx.fillStyle = COLORS.comment;
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    ctx.fillText(block.lang, width - PAD, dotY + 1);
-  }
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
-  ctx.beginPath();
-  ctx.moveTo(0, HEADER + 0.5);
-  ctx.lineTo(width, HEADER + 0.5);
   ctx.stroke();
 
   ctx.font = `${FONT_SIZE}px ${FONT_STACK}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  let y = HEADER + PAD + FONT_SIZE;
+  let y = PAD + FONT_SIZE;
   for (const line of visual) {
     let x = PAD;
     for (const token of line) {
