@@ -256,6 +256,25 @@
   background: var(--hover);
 }
 
+.trend-row .row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trend-row .row-sub {
+  color: var(--text-3);
+  font-size: 0.82rem;
+}
+
+.trend-chart {
+  flex-shrink: 0;
+  width: 72px;
+  height: 22px;
+  fill: var(--accent);
+  opacity: 0.85;
+}
+
 /* ---------------- settings ---------------- */
 
 .settings {

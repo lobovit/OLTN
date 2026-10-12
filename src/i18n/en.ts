@@ -152,6 +152,7 @@ export const en = {
   emptyBoosts: "No boosts yet.",
   emptySearch: "Search for people, hashtags or posts.",
   emptyTrending: "Nothing trending right now.",
+  trendUses: "posts",
   emptyFilters: "No filters configured.",
   filterKeywordPlaceholder: "word or phrase…",
   filterHides: "hides in",

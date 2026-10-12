@@ -154,6 +154,7 @@ const pt: Record<TKey, string> = {
   emptyBoosts: "Nenhum boost ainda.",
   emptySearch: "Busque por pessoas, hashtags ou posts.",
   emptyTrending: "Nada em alta agora.",
+  trendUses: "publicações",
   emptyFilters: "Nenhum filtro configurado.",
   filterKeywordPlaceholder: "palavra ou frase…",
   filterHides: "oculta em",
