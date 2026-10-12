@@ -1,9 +1,11 @@
-import type { JSX } from "preact";
+import type { JSX, RefObject } from "preact";
+import { useRef } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
 import { userMessageForError } from "../../lib/errors";
 import { clientFor } from "../../lib/identity";
 import type { FeedAdapter } from "../../lib/paged-feed";
+import { scrollFeedToTop } from "../../lib/scroll";
 import type { Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
 import { usePagedFeed, type PagedFeed } from "../../state/hooks";
@@ -51,6 +53,7 @@ export function Timeline({
   limit = 20,
 }: TimelineProps): JSX.Element {
   const snap = useSnapshot(store);
+  const rootRef = useRef<HTMLDivElement>(null);
   const kindKey = JSON.stringify(kind);
   const account = currentAccount();
   const targetInstance = instance ?? account?.instance ?? "";
@@ -76,17 +79,30 @@ export function Timeline({
   });
 
   return (
-    <div class="timeline">
-      <UpdatesPill feed={feed} />
+    <div class="timeline" ref={rootRef}>
+      <UpdatesPill feed={feed} rootRef={rootRef} />
       <TimelineBody feed={feed} emptyTitle={emptyTitle} emptyHint={emptyHint} />
     </div>
   );
 }
 
-function UpdatesPill({ feed }: { feed: PagedFeed<Status> }): JSX.Element | null {
+function UpdatesPill({
+  feed,
+  rootRef,
+}: {
+  feed: PagedFeed<Status>;
+  rootRef: RefObject<HTMLDivElement | null>;
+}): JSX.Element | null {
   if (!feed.queue.length) return null;
   return (
-    <button type="button" class="updates-pill" onClick={feed.flushQueue}>
+    <button
+      type="button"
+      class="updates-pill"
+      onClick={() => {
+        feed.flushQueue();
+        scrollFeedToTop(rootRef.current);
+      }}
+    >
       <Icon name="arrow-down-line" size={15} />
       {feed.queue.length} {feed.queue.length === 1 ? t.queueOne : t.queueMany}
     </button>
