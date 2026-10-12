@@ -1,5 +1,5 @@
 import type { JSX } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import {
   buildAuthorizeUrl,
   exchangeCode,
@@ -17,6 +17,7 @@ import {
 } from "../api/auth";
 import { getRest } from "../api/client";
 import type { AccountMeta } from "../api/types";
+import supportQr from "../assets/support-qr.png";
 import { t } from "../i18n/pt-BR";
 import { sessionRead, sessionRemove, sessionWrite } from "../lib/storage";
 import { navigate } from "../lib/router";
@@ -49,6 +50,24 @@ export function LoginPage(): JSX.Element {
   const [instance, setInstance] = useState<InstanceSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exchanging, setExchanging] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const supportRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!supportOpen) return;
+    const onDown = (e: PointerEvent): void => {
+      if (!supportRef.current?.contains(e.target as Node)) setSupportOpen(false);
+    };
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") setSupportOpen(false);
+    };
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [supportOpen]);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -281,11 +300,35 @@ export function LoginPage(): JSX.Element {
           </div>
         </div>
       </main>
-      <footer class="login-footer">
-        {t.landingDevelopedBy}{" "}
-        <a href="https://github.com/lobovit" target="_blank" rel="noopener noreferrer">
-          lobovit
-        </a>
+      <footer class="login-footer" ref={supportRef}>
+        <span>
+          {t.landingDevelopedBy}{" "}
+          <a href="https://github.com/lobovit" target="_blank" rel="noopener noreferrer">
+            lobovit
+          </a>
+        </span>
+        <button
+          type="button"
+          class="login-support-btn"
+          aria-expanded={supportOpen}
+          onClick={() => setSupportOpen((v) => !v)}
+        >
+          <Icon name="heart-line" size={14} />
+          {t.supportProject}
+        </button>
+        {supportOpen && (
+          <div class="login-support-pop" role="dialog" aria-label={t.supportProject}>
+            <img src={supportQr} alt={t.supportQrAlt} width={180} height={180} />
+            <p>{t.supportText}</p>
+            <a
+              href="https://nubank.com.br/cobrar/1z437/6accfdbf-ea20-443b-878e-5618946fad4a"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t.supportLink}
+            </a>
+          </div>
+        )}
       </footer>
     </div>
   );

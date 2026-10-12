@@ -135,6 +135,10 @@ const pt: Record<TKey, string> = {
   loginNotFound: "Não consegui encontrar essa instância. Confira o endereço e tente de novo.",
   loginInstanceDown: "A instância não respondeu. Tente mais tarde.",
   landingDevelopedBy: "Developed by",
+  supportProject: "Apoie o projeto",
+  supportText: "Se o OLTN é útil pra você, dá pra apoiar o desenvolvimento com qualquer valor.",
+  supportLink: "Abrir o link de pagamento",
+  supportQrAlt: "QR code do link de pagamento",
   logoutConfirm: "Sair desta conta?",
 
   // Timeline

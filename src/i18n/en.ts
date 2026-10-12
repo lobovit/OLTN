@@ -133,6 +133,10 @@ export const en = {
   loginNotFound: "Couldn't find that instance. Check the address and try again.",
   loginInstanceDown: "The instance didn't respond. Try again later.",
   landingDevelopedBy: "Developed by",
+  supportProject: "Support the project",
+  supportText: "If OLTN is useful to you, you can support its development with any amount.",
+  supportLink: "Open the payment link",
+  supportQrAlt: "QR code for the payment link",
   logoutConfirm: "Sign out of this account?",
 
   // Timeline
