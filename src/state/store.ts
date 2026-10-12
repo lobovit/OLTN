@@ -87,6 +87,7 @@ export const DEFAULT_SETTINGS: Settings = {
   textSize: 16,
   railExpanded: false,
   autoStream: true,
+  autoplayGifs: true,
   pomodoro: {
     focusMinutes: 25,
     shortBreakMinutes: 5,

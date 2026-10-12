@@ -68,8 +68,18 @@ function MediaViewerInner(): JSX.Element | null {
         <Icon name="back-line" size={22} />
       </button>
       <div class="media-viewer-stage">
-        {item.type === "image" || item.type === "gifv" ? (
+        {item.type === "image" ? (
           <img src={item.url ?? item.previewUrl} alt={item.description ?? ""} />
+        ) : item.type === "gifv" ? (
+          <video
+            src={item.url ?? item.previewUrl}
+            poster={item.previewUrl}
+            controls
+            autoplay
+            loop
+            muted
+            playsinline
+          />
         ) : item.type === "video" ? (
           <video src={item.url ?? item.previewUrl} controls autoplay />
         ) : item.type === "audio" ? (

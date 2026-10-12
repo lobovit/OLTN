@@ -333,6 +333,8 @@ const pt: Record<TKey, string> = {
   autoStream: "Atualizar o feed automaticamente",
   autoStreamHint:
     "Com isso ligado, novos posts e notificações chegam em tempo real. Desligue para atualizar só quando você pedir.",
+  autoplayGifs: "Reproduzir GIFs automaticamente",
+  autoplayGifsHint: "GIFs animados tocam sozinhos nas timelines.",
 
   // Filters (contexts)
   contextHome: "timeline",

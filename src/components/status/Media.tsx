@@ -1,5 +1,6 @@
 import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { useSnapshot } from "valtio";
 import { decodeBlurHash } from "fast-blurhash";
 import type { MediaAttachment } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
@@ -14,6 +15,16 @@ function attachmentRatio(att: MediaAttachment): number | undefined {
     original.aspect ||
     (original.width && original.height ? original.width / original.height : undefined)
   );
+}
+
+/** An animated GIF kept as an `image` attachment (instance did not convert it). */
+function isGifUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    return new URL(url, location.origin).pathname.toLowerCase().endsWith(".gif");
+  } catch {
+    return false;
+  }
 }
 
 function BlurhashCanvas({ hash }: { hash: string }): JSX.Element | null {
@@ -53,11 +64,17 @@ function MediaItem({
 }): JSX.Element {
   const [revealed, setRevealed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const autoplayGifs = useSnapshot(store).settings.autoplayGifs;
   const ratio = attachmentRatio(attachment);
   const blurred = sensitive && !revealed;
   const style = ratio ? { aspectRatio: String(ratio) } : undefined;
   const description = attachment.description || t.media;
   const full = attachment.url ?? attachment.previewUrl;
+  const isGif = attachment.type === "gifv" || isGifUrl(attachment.url);
+  const animated = autoplayGifs && isGif && !blurred;
+  // Mastodon turns uploaded GIFs into silent MP4s (`gifv`), so they need a
+  // video element to animate; GIFs kept as `image` animate in the img itself.
+  const animatedVideo = animated && attachment.type === "gifv";
 
   return (
     <figure
@@ -66,20 +83,33 @@ function MediaItem({
       onClick={onOpen}
     >
       {!blurred && attachment.blurhash && <BlurhashCanvas hash={attachment.blurhash} />}
-      {!blurred && (attachment.type === "image" || attachment.type === "gifv") && (
-        <img
-          src={attachment.previewUrl}
-          alt={description}
-          width={attachment.meta?.original?.width ?? undefined}
-          height={attachment.meta?.original?.height ?? undefined}
-          loading="lazy"
-          decoding="async"
-          style={style}
-          class={loaded ? "loaded" : ""}
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+      {!blurred && animatedVideo && (
+        <video
+          src={full}
+          poster={attachment.previewUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-label={description}
         />
       )}
+      {!blurred &&
+        !animatedVideo &&
+        (attachment.type === "image" || attachment.type === "gifv") && (
+          <img
+            src={animated ? full : attachment.previewUrl}
+            alt={description}
+            width={attachment.meta?.original?.width ?? undefined}
+            height={attachment.meta?.original?.height ?? undefined}
+            loading="lazy"
+            decoding="async"
+            style={style}
+            class={loaded ? "loaded" : ""}
+            onLoad={() => setLoaded(true)}
+            onError={() => setLoaded(true)}
+          />
+        )}
       {!blurred && attachment.type === "video" && (
         <video
           src={full}

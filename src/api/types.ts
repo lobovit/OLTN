@@ -98,6 +98,8 @@ export interface Settings {
   railExpanded: boolean;
   /** Receives posts and notifications in real time. */
   autoStream: boolean;
+  /** Animate GIFs in timelines (default: on). */
+  autoplayGifs: boolean;
   /** Nav button order (hrefs). */
   navOrder?: readonly string[];
   /** Pomodoro cycle settings. */

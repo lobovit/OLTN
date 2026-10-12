@@ -140,7 +140,8 @@
   max-height: 480px;
 }
 
-.media-item.single img {
+.media-item.single img,
+.media-item.single video {
   object-fit: contain;
 }
 

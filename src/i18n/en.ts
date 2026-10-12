@@ -331,6 +331,8 @@ export const en = {
   autoStream: "Update the feed automatically",
   autoStreamHint:
     "With this on, new posts and notifications arrive in realtime. Turn it off to refresh only when you ask.",
+  autoplayGifs: "Autoplay GIFs",
+  autoplayGifsHint: "Animated GIFs play on their own in timelines.",
 
   // Filter contexts
   contextHome: "timeline",

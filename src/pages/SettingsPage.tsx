@@ -186,6 +186,24 @@ export function SettingsPage(): JSX.Element {
         </section>
 
         <section class="settings-section">
+          <h2 class="section-title">{t.media}</h2>
+          <div class="setting-row">
+            <span>{t.autoplayGifs}</span>
+            <input
+              type="checkbox"
+              class="switch"
+              role="switch"
+              checked={settings.autoplayGifs}
+              aria-label={t.autoplayGifs}
+              onChange={(e) => {
+                update({ autoplayGifs: (e.target as HTMLInputElement).checked });
+              }}
+            />
+          </div>
+          <p class="muted">{t.autoplayGifsHint}</p>
+        </section>
+
+        <section class="settings-section">
           <h2 class="section-title">{t.shortcuts}</h2>
           <p class="muted">{t.shortcutsHint}</p>
           <div class="shortcut-list">
