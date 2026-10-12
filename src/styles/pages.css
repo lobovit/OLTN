@@ -1239,7 +1239,7 @@
 }
 
 .media-viewer-bar .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: #24272d;
 }
 
 .media-viewer-stage {
@@ -1271,12 +1271,12 @@
   height: 44px;
   border-radius: 50%;
   color: #eee;
-  background: rgba(255, 255, 255, 0.08);
+  background: #1c1e23;
   transition: background var(--dur-fast) var(--ease);
 }
 
 .media-viewer-nav:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: #30343b;
 }
 
 .media-viewer-nav.prev {
