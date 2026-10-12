@@ -16,8 +16,6 @@ import { beginPointerDrag, dropTarget, type DropTarget } from "../lib/pointer-dr
 import {
   clampWidth,
   COLUMN_LIMIT,
-  COLUMN_MAX,
-  COLUMN_MIN,
   ensureColumnVisible,
   moveInOrder,
   orderColumns,
@@ -276,12 +274,11 @@ function Rail(): JSX.Element | null {
     window.setTimeout(() => scrollToColumn(shortcut.id), changed ? 60 : 0);
   };
 
-  const navActive = (item: (typeof NAV_ITEMS)[number]): boolean =>
-    multi && item.column
-      ? hasColumn(item.column)
-      : item.popup === "search"
-        ? pathActive(item.href) || state.ui.searchOpen
-        : pathActive(item.href);
+  const navActive = (item: (typeof NAV_ITEMS)[number]): boolean => {
+    if (multi && item.column) return hasColumn(item.column);
+    if (item.popup === "search") return pathActive(item.href) || state.ui.searchOpen;
+    return pathActive(item.href);
+  };
 
   return (
     <nav class={`rail ${expanded ? "" : "collapsed"}`} aria-label={t.navHelp}>
@@ -583,7 +580,6 @@ export function MultiColumns(): JSX.Element {
       width = w;
       col.classList.add("with-width");
       col.style.setProperty("--col-w", `${Math.round(w)}px`);
-      handle.setAttribute("aria-valuenow", String(Math.round(w)));
     };
 
     const finish = (commit: boolean): void => {
@@ -591,11 +587,9 @@ export function MultiColumns(): JSX.Element {
       if (!commit) {
         if (baseWidth != null) {
           col.style.setProperty("--col-w", `${baseWidth}px`);
-          handle.setAttribute("aria-valuenow", String(baseWidth));
         } else {
           col.style.removeProperty("--col-w");
           col.classList.remove("with-width");
-          handle.setAttribute("aria-valuenow", String(Math.round(startW)));
         }
         return;
       }
@@ -660,15 +654,13 @@ export function MultiColumns(): JSX.Element {
             <div class="deck-body">
               <ColumnContent shortcut={shortcut} instance={account?.instance} />
             </div>
-            <div
+            <button
+              type="button"
               class="col-resize"
-              role="separator"
-              aria-orientation="vertical"
-              aria-label={`${t.resizeColumn}: ${shortcut.label}`}
-              aria-valuemin={COLUMN_MIN}
-              aria-valuemax={COLUMN_MAX}
-              aria-valuenow={width != null ? Math.round(width) : undefined}
-              tabIndex={0}
+              title={`${t.resizeColumn}: ${shortcutLabel(shortcut)}`}
+              aria-label={`${t.resizeColumn}: ${shortcutLabel(shortcut)}${
+                width ? ` (${Math.round(width)}px)` : ""
+              }`}
               onPointerDown={(e) => startResize(e, shortcut.id)}
               onKeyDown={(e) => {
                 if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
