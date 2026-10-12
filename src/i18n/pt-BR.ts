@@ -134,6 +134,7 @@ const pt: Record<TKey, string> = {
   loginLooking: "Procurando instância…",
   loginNotFound: "Não consegui encontrar essa instância. Confira o endereço e tente de novo.",
   loginInstanceDown: "A instância não respondeu. Tente mais tarde.",
+  landingDevelopedBy: "Developed by",
   logoutConfirm: "Sair desta conta?",
 
   // Timeline

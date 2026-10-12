@@ -132,6 +132,7 @@ export const en = {
   loginLooking: "Looking for instance…",
   loginNotFound: "Couldn't find that instance. Check the address and try again.",
   loginInstanceDown: "The instance didn't respond. Try again later.",
+  landingDevelopedBy: "Developed by",
   logoutConfirm: "Sign out of this account?",
 
   // Timeline

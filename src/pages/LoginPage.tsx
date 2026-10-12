@@ -185,98 +185,108 @@ export function LoginPage(): JSX.Element {
 
   return (
     <div class="login-page">
-      <div class="login-stack">
-        <div class="login-brand">
-          <svg class="login-mark" viewBox="0 0 64 64" width={104} height={104} aria-hidden>
-            <circle class="mark-ring" cx="32" cy="32" r="21" fill="none" strokeWidth="5" />
-            <g class="mark-orbit">
-              <circle cx="32" cy="11" r="6.5" />
-            </g>
-          </svg>
-          <h1 class="login-wordmark">OLTN</h1>
-          <p class="login-tagline">{t.tagline}</p>
-        </div>
+      <main class="login-main">
+        <div class="login-stack">
+          <div class="login-brand">
+            <svg class="login-mark" viewBox="0 0 64 64" width={104} height={104} aria-hidden>
+              <circle class="mark-ring" cx="32" cy="32" r="21" fill="none" strokeWidth="5" />
+              <g class="mark-orbit">
+                <circle cx="32" cy="11" r="6.5" />
+              </g>
+            </svg>
+            <h1 class="login-wordmark">OLTN</h1>
+            <p class="login-tagline">{t.tagline}</p>
+          </div>
 
-        <div class="login-card glass">
-          {!instance ? (
-            <form onSubmit={(e) => void discover(e)}>
-              <p class="login-lead">{t.loginSubtitle}</p>
-              <label class="login-label" htmlFor="instance">
-                {t.instanceLabel}
-              </label>
-              <input
-                id="instance"
-                class="field"
-                placeholder={t.instancePlaceholder}
-                value={input}
-                autocomplete="url"
-                autocapitalize="off"
-                spellcheck={false}
-                onInput={(e) => setInput((e.target as HTMLInputElement).value)}
-                autoFocus
-              />
-              {error && <p class="login-error">{error}</p>}
-              <button type="submit" class="btn primary block" disabled={busy || !input.trim()}>
-                {busy ? <span class="spinner" /> : <Icon name="arrow-right-line" size={16} />}
-                {busy ? t.loginLooking : t.loginButton}
-              </button>
-            </form>
-          ) : (
-            <div class="instance-preview">
-              {instance.thumbnail && <img class="instance-thumb" src={instance.thumbnail} alt="" />}
-              <div class="instance-title">{instance.title}</div>
-              <div class="instance-uri muted">{instance.uri}</div>
-              {error && <p class="login-error">{error}</p>}
-              <div class="login-actions">
-                <button
-                  type="button"
-                  class="btn ghost"
-                  onClick={() => {
-                    setInstance(null);
-                    setError(null);
-                  }}
-                >
-                  {t.back}
+          <div class="login-card glass">
+            {!instance ? (
+              <form onSubmit={(e) => void discover(e)}>
+                <p class="login-lead">{t.loginSubtitle}</p>
+                <label class="login-label" htmlFor="instance">
+                  {t.instanceLabel}
+                </label>
+                <input
+                  id="instance"
+                  class="field"
+                  placeholder={t.instancePlaceholder}
+                  value={input}
+                  autocomplete="url"
+                  autocapitalize="off"
+                  spellcheck={false}
+                  onInput={(e) => setInput((e.target as HTMLInputElement).value)}
+                  autoFocus
+                />
+                {error && <p class="login-error">{error}</p>}
+                <button type="submit" class="btn primary block" disabled={busy || !input.trim()}>
+                  {busy ? <span class="spinner" /> : <Icon name="arrow-right-line" size={16} />}
+                  {busy ? t.loginLooking : t.loginButton}
                 </button>
-                <button
-                  type="button"
-                  class="btn primary"
-                  onClick={() => void startLogin()}
-                  disabled={busy || exchanging}
-                >
-                  {busy || exchanging ? <span class="spinner" /> : null}
-                  {exchanging ? t.loading : t.loginButton}
-                </button>
+              </form>
+            ) : (
+              <div class="instance-preview">
+                {instance.thumbnail && (
+                  <img class="instance-thumb" src={instance.thumbnail} alt="" />
+                )}
+                <div class="instance-title">{instance.title}</div>
+                <div class="instance-uri muted">{instance.uri}</div>
+                {error && <p class="login-error">{error}</p>}
+                <div class="login-actions">
+                  <button
+                    type="button"
+                    class="btn ghost"
+                    onClick={() => {
+                      setInstance(null);
+                      setError(null);
+                    }}
+                  >
+                    {t.back}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn primary"
+                    onClick={() => void startLogin()}
+                    disabled={busy || exchanging}
+                  >
+                    {busy || exchanging ? <span class="spinner" /> : null}
+                    {exchanging ? t.loading : t.loginButton}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {store.accounts.length > 0 && (
-            <div class="existing-accounts">
-              <div class="section-title" style={{ padding: "16px 0 8px" }}>
-                {t.accounts}
+            {store.accounts.length > 0 && (
+              <div class="existing-accounts">
+                <div class="section-title" style={{ padding: "16px 0 8px" }}>
+                  {t.accounts}
+                </div>
+                {store.accounts.map((account) => (
+                  <button
+                    key={account.id}
+                    type="button"
+                    class="list-row"
+                    onClick={() => {
+                      void signIn(account).then(() => navigate("/", { replace: true }));
+                    }}
+                  >
+                    <img class="avatar" src={account.avatar} alt="" width={36} height={36} />
+                    <div class="row-main">
+                      <div class="row-title">{account.displayName}</div>
+                      <div class="row-sub">{account.handle}</div>
+                    </div>
+                    <Icon name="arrow-right-line" size={16} />
+                  </button>
+                ))}
               </div>
-              {store.accounts.map((account) => (
-                <button
-                  key={account.id}
-                  type="button"
-                  class="list-row"
-                  onClick={() => {
-                    void signIn(account).then(() => navigate("/", { replace: true }));
-                  }}
-                >
-                  <img class="avatar" src={account.avatar} alt="" width={36} height={36} />
-                  <div class="row-main">
-                    <div class="row-title">{account.displayName}</div>
-                    <div class="row-sub">{account.handle}</div>
-                  </div>
-                  <Icon name="arrow-right-line" size={16} />
-                </button>
-              ))}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </main>
+      <footer class="login-footer">
+        {t.landingDevelopedBy}{" "}
+        <a href="https://github.com/lobovit" target="_blank" rel="noopener noreferrer">
+          lobovit
+        </a>
+      </footer>
     </div>
   );
 }
