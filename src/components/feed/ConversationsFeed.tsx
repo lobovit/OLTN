@@ -1,9 +1,9 @@
 import type { JSX } from "preact";
-import { getRest } from "../../api/client";
 import type { Conversation } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { userMessageForError } from "../../lib/errors";
 import { htmlToPlainText, timeAgo } from "../../lib/format";
+import { clientFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
 import { currentAccount, putStatuses } from "../../state/store";
 import { usePagedFeed } from "../../state/hooks";
@@ -28,7 +28,7 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
     enabled: !!account && !!target,
     adapter: {
       fetchPage: async (cursor) => {
-        const page = await getRest(target, account?.accessToken).v1.conversations.list({
+        const page = await clientFor(target).client.v1.conversations.list({
           limit: PAGE,
           maxId: cursor ?? undefined,
         });
@@ -42,8 +42,8 @@ export function ConversationsFeed({ instance }: { instance?: string }): JSX.Elem
   const open = (conversation: Conversation): void => {
     if (!account) return;
     if (conversation.unread) {
-      void getRest(account.instance, account.accessToken)
-        .v1.conversations.$select(conversation.id)
+      void clientFor(account.instance)
+        .client.v1.conversations.$select(conversation.id)
         .read()
         .catch((err) => console.warn("[oltn] mark read failed", err));
       feed.patch(conversation.id, { unread: false } as Partial<Conversation>);
