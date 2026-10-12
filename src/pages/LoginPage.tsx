@@ -185,9 +185,9 @@ export function LoginPage(): JSX.Element {
 
   return (
     <div class="login-page">
-      <div class="login-grid">
-        <div class="login-hero">
-          <svg class="login-mark" viewBox="0 0 64 64" width="132" height="132" aria-hidden>
+      <div class="login-stack">
+        <div class="login-brand">
+          <svg class="login-mark" viewBox="0 0 64 64" width={104} height={104} aria-hidden>
             <circle class="mark-ring" cx="32" cy="32" r="21" fill="none" strokeWidth="5" />
             <g class="mark-orbit">
               <circle cx="32" cy="11" r="6.5" />

@@ -6,20 +6,43 @@
   background: var(--bg-arena);
 }
 
-.login-grid {
-  width: min(960px, 100%);
-  display: grid;
-  gap: var(--s6);
-  align-items: center;
-}
-
-/* ---------- hero: brand + wordmark ---------- */
-
-.login-hero {
+.login-stack {
+  width: min(420px, 100%);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--s4);
+  gap: var(--s5);
+}
+
+/* ---------- brand + wordmark ---------- */
+
+.login-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  text-align: center;
+}
+
+.login-brand::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translate(-50%, -58%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-brand > * {
+  position: relative;
 }
 
 .login-mark {
@@ -57,19 +80,9 @@
 .login-tagline {
   margin: 0;
   color: var(--text-2);
-  font-size: 1rem;
+  font-size: 0.98rem;
   line-height: 1.45;
-  max-width: 32ch;
 }
-
-@media (min-width: 48em) {
-  .login-grid {
-    grid-template-columns: 1.05fr 0.95fr;
-    gap: var(--s7);
-  }
-}
-
-/* ---------- form card ---------- */
 
 .login-card {
   padding: var(--s6);
