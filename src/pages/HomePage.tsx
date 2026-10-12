@@ -5,11 +5,18 @@ import { navigate } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
-import { currentAccount, store } from "../state/store";
+import { currentAccount, store, type StreamState } from "../state/store";
+
+function streamLabel(stream: StreamState): string {
+  if (stream === "on") return t.streamingOn;
+  if (stream === "connecting") return t.streamingConnecting;
+  return t.streamingOff;
+}
 
 export function HomePage(): JSX.Element {
   const account = currentAccount();
   const stream = useSnapshot(store).stream;
+  const label = streamLabel(stream);
 
   return (
     <PageShell
@@ -18,22 +25,10 @@ export function HomePage(): JSX.Element {
         <>
           <span
             class={`stream-dot ${stream === "on" ? "on" : ""}`}
-            role="img"
-            aria-label={
-              stream === "on"
-                ? t.streamingOn
-                : stream === "connecting"
-                  ? t.streamingConnecting
-                  : t.streamingOff
-            }
-            title={
-              stream === "on"
-                ? t.streamingOn
-                : stream === "connecting"
-                  ? t.streamingConnecting
-                  : t.streamingOff
-            }
+            aria-hidden="true"
+            title={label}
           />
+          <span class="sr-only">{label}</span>
           <button
             type="button"
             class="icon-btn"
