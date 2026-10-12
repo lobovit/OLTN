@@ -259,6 +259,13 @@ export const en = {
   visPrivate: "Followers",
   visPrivateHint: "Only your followers.",
   visDirect: "Private mention",
+  quotePolicy: "Who can quote",
+  quotePolicyPublic: "Everyone",
+  quotePolicyPublicHint: "Anyone can quote this post.",
+  quotePolicyFollowers: "Followers",
+  quotePolicyFollowersHint: "Only your followers can quote this post.",
+  quotePolicyNobody: "Nobody",
+  quotePolicyNobodyHint: "Only you can quote this post.",
   visDirectHint: "Only the people you mention.",
 
   // Settings

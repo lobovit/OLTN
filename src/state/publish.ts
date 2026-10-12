@@ -67,6 +67,7 @@ async function updateStatus(
         sensitive: execution.sensitive,
         mediaIds: part.mediaIds,
         mediaAttributes: part.mediaAttributes,
+        quoteApprovalPolicy: part.quoteApprovalPolicy,
       })
     : await selected.update({
         status: part.status,
@@ -74,6 +75,7 @@ async function updateStatus(
         visibility: execution.visibility,
         sensitive: execution.sensitive,
         poll: part.poll,
+        quoteApprovalPolicy: part.quoteApprovalPolicy,
       });
   store.ui.lastPostedKey = putStatus(status, ctx.instance);
   return status;
@@ -87,6 +89,7 @@ async function scheduleStatus(ctx: PublishContext, execution: PublishExecution):
     sensitive: execution.sensitive,
     inReplyToId: part.inReplyToId,
     quotedStatusId: part.quotedStatusId,
+    quoteApprovalPolicy: part.quoteApprovalPolicy,
     scheduledAt: execution.scheduledAt,
   };
   if (part.mediaIds.length) {
@@ -115,6 +118,7 @@ async function createStatus(
         mediaIds: part.mediaIds,
         inReplyToId: replyToId,
         quotedStatusId: part.quotedStatusId,
+        quoteApprovalPolicy: part.quoteApprovalPolicy,
       })
     : await ctx.client.v1.statuses.create({
         status: part.status,
@@ -123,6 +127,7 @@ async function createStatus(
         poll: part.poll,
         inReplyToId: replyToId,
         quotedStatusId: part.quotedStatusId,
+        quoteApprovalPolicy: part.quoteApprovalPolicy,
       });
   store.ui.lastPostedKey = putStatus(status, ctx.instance);
   return status;

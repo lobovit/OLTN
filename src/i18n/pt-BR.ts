@@ -261,6 +261,13 @@ const pt: Record<TKey, string> = {
   visPrivate: "Seguidores",
   visPrivateHint: "Só quem te segue.",
   visDirect: "Mensagem privada",
+  quotePolicy: "Quem pode citar",
+  quotePolicyPublic: "Todos",
+  quotePolicyPublicHint: "Qualquer pessoa pode citar este post.",
+  quotePolicyFollowers: "Seguidores",
+  quotePolicyFollowersHint: "Só quem te segue pode citar este post.",
+  quotePolicyNobody: "Ninguém",
+  quotePolicyNobodyHint: "Só você pode citar este post.",
   visDirectHint: "Só as pessoas mencionadas.",
 
   // Settings

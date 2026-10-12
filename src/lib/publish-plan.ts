@@ -16,6 +16,9 @@ export interface PublishPoll {
   multiple: boolean;
 }
 
+/** Quote approval policy (Mastodon 4.5+). Ignored for private/direct posts. */
+export type QuotePolicy = "public" | "followers" | "nobody";
+
 export interface ComposeDraft {
   text: string;
   spoiler: string;
@@ -27,6 +30,7 @@ export interface ComposeDraft {
   media: MediaAttachment[];
   replyToId?: string;
   quoteId?: string;
+  quotePolicy?: QuotePolicy;
   /** ISO timestamp — present when the post will be scheduled. */
   scheduledAt?: string;
 }
@@ -49,6 +53,7 @@ export interface PublishPlan {
   media: MediaAttachment[];
   rootReplyToId?: string;
   quoteId?: string;
+  quotePolicy?: QuotePolicy;
   /** Blocks the executor should convert into the free media slots. */
   blocks: CodeBlock[];
   text: string;
@@ -78,6 +83,7 @@ export function planPublish(
     media: draft.media,
     rootReplyToId: draft.replyToId,
     quoteId: draft.quoteId,
+    quotePolicy: draft.quotePolicy,
     blocks,
     text,
   };
@@ -91,6 +97,7 @@ export interface PublishPart {
   poll?: PublishPoll;
   inReplyToId?: string;
   quotedStatusId?: string;
+  quoteApprovalPolicy?: QuotePolicy;
 }
 
 export interface PublishExecution {
@@ -126,6 +133,7 @@ export function buildPublishExecution(
       status: text,
       spoilerText: plan.spoilerText,
       mediaIds,
+      quoteApprovalPolicy: plan.quotePolicy,
     };
     if (mediaIds.length) {
       part.mediaAttributes = plan.media.map((m) => ({
@@ -151,6 +159,7 @@ export function buildPublishExecution(
       mediaIds,
       inReplyToId: plan.rootReplyToId,
       quotedStatusId: plan.quoteId,
+      quoteApprovalPolicy: plan.quotePolicy,
     };
     if (!mediaIds.length) part.poll = plan.poll;
     return {
@@ -173,6 +182,7 @@ export function buildPublishExecution(
       poll: first && !mediaIds.length ? plan.poll : undefined,
       inReplyToId: first ? plan.rootReplyToId : undefined,
       quotedStatusId: first ? plan.quoteId : undefined,
+      quoteApprovalPolicy: first ? plan.quotePolicy : undefined,
     };
   });
   return {

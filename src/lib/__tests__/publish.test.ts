@@ -37,6 +37,7 @@ interface Call {
     inReplyToId?: string | null;
     poll?: unknown;
     scheduledAt?: string;
+    quoteApprovalPolicy?: string;
   };
   description?: string;
 }
@@ -104,7 +105,10 @@ beforeEach(() => {
 describe("executePublish", () => {
   it("converts code to an image, attaches it to the first part and publishes", async () => {
     const { client, calls } = fakeClient();
-    const plan = planFrom({ text: "antes\n\n```js\nconst a = 1;\n```\n\ndepois" });
+    const plan = planFrom({
+      text: "antes\n\n```js\nconst a = 1;\n```\n\ndepois",
+      quotePolicy: "public",
+    });
 
     const outcome = await executePublish(ctx(client), plan);
 
@@ -115,6 +119,7 @@ describe("executePublish", () => {
     expect(calls[1].op).toBe("create");
     expect(calls[1].params?.status).toBe("antes\n\ndepois");
     expect(calls[1].params?.mediaIds).toEqual(["m1"]);
+    expect(calls[1].params?.quoteApprovalPolicy).toBe("public");
     expect(store.ui.lastPostedKey).toBe("https://mock.instance/users/me/statuses/s1");
   });
 
@@ -158,7 +163,11 @@ describe("executePublish", () => {
 
   it("scheduling publishes once with scheduledAt", async () => {
     const { client, calls } = fakeClient();
-    const plan = planFrom({ scheduledAt: "2026-01-01T10:00:00.000Z", media: [] });
+    const plan = planFrom({
+      scheduledAt: "2026-01-01T10:00:00.000Z",
+      media: [],
+      quotePolicy: "followers",
+    });
 
     const outcome = await executePublish(ctx(client), plan);
 
@@ -166,12 +175,13 @@ describe("executePublish", () => {
     expect(outcome.kind).toBe("schedule");
     expect(calls.filter((call) => call.op === "create")).toHaveLength(1);
     expect(calls[0].params?.scheduledAt).toBe("2026-01-01T10:00:00.000Z");
+    expect(calls[0].params?.quoteApprovalPolicy).toBe("followers");
   });
 
   it("editing calls update with mediaAttributes", async () => {
     const { client, calls } = fakeClient();
     const attachments = [{ id: "m1", description: "alt" }] as unknown as MediaAttachment[];
-    const plan = planFrom({ media: attachments }, "edit");
+    const plan = planFrom({ media: attachments, quotePolicy: "nobody" }, "edit");
 
     const outcome = await executePublish(ctx(client), plan);
 
@@ -180,5 +190,6 @@ describe("executePublish", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0].op).toBe("update");
     expect(calls[0].params?.mediaAttributes).toEqual([{ id: "m1", description: "alt" }]);
+    expect(calls[0].params?.quoteApprovalPolicy).toBe("nobody");
   });
 });

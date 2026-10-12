@@ -45,7 +45,14 @@ describe("planPublish", () => {
 
   it("the plan touches neither DOM nor network: data only", () => {
     const plan = planPublish(
-      draft({ text: "  oi  ", showCw: true, spoiler: "cw", replyToId: "r1", quoteId: "q1" }),
+      draft({
+        text: "  oi  ",
+        showCw: true,
+        spoiler: "cw",
+        replyToId: "r1",
+        quoteId: "q1",
+        quotePolicy: "followers",
+      }),
       limits,
       { mode: "reply", statusId: undefined },
     );
@@ -53,6 +60,7 @@ describe("planPublish", () => {
     expect(plan.spoilerText).toBe("cw");
     expect(plan.rootReplyToId).toBe("r1");
     expect(plan.quoteId).toBe("q1");
+    expect(plan.quotePolicy).toBe("followers");
     expect(plan.editStatusId).toBeUndefined();
   });
 });
@@ -67,6 +75,7 @@ describe("buildPublishExecution", () => {
         media: [media("m1")],
         replyToId: "r1",
         quoteId: "q1",
+        quotePolicy: "nobody",
       }),
       limits,
       { mode: "new" },
@@ -80,10 +89,12 @@ describe("buildPublishExecution", () => {
     expect(first.poll).toBeUndefined();
     expect(first.inReplyToId).toBe("r1");
     expect(first.quotedStatusId).toBe("q1");
+    expect(first.quoteApprovalPolicy).toBe("nobody");
     expect(second.spoilerText).toBeNull();
     expect(second.mediaIds).toEqual([]);
     expect(second.inReplyToId).toBeUndefined();
     expect(second.quotedStatusId).toBeUndefined();
+    expect(second.quoteApprovalPolicy).toBeUndefined();
   });
 
   it("poll is dropped when there is media; kept without media", () => {
