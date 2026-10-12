@@ -64,7 +64,9 @@ export function Sheet({
         if (gestureActive.current) return;
         // Escape first closes inner popups (e.g. mention suggestions)
         if (
-          document.querySelector(".mention-menu, .emoji-picker, .translate-menu, .schedule-panel")
+          document.querySelector(
+            ".mention-menu, .emoji-picker, .translate-menu, .schedule-panel, .gif-picker",
+          )
         )
           return;
         e.stopPropagation();

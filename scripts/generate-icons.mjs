@@ -47,6 +47,7 @@ const wanted = [
   "eye-close-line",
   "translate-line",
   "emoji-line",
+  "movie-line",
   "report-line",
   "user-forbid-line",
   "keyboard-line",

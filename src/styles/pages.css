@@ -842,6 +842,82 @@
   text-align: center;
 }
 
+/* ---------------- GIF picker ---------------- */
+
+.gif-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.gif-search {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--text-3);
+}
+
+.gif-query {
+  flex: 1;
+  min-width: 0;
+}
+
+.gif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  grid-auto-rows: 100px;
+  gap: var(--s1);
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gif-item {
+  padding: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gif-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gif-state {
+  display: grid;
+  place-items: center;
+  margin: var(--s2) 0;
+  min-height: 64px;
+  text-align: center;
+}
+
+.gif-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.gif-attribution {
+  align-self: flex-end;
+  color: var(--text-3);
+  font-size: 0.72rem;
+  text-decoration: none;
+}
+
+.gif-attribution:hover {
+  text-decoration: underline;
+}
+
 /* ---------------- draft translation ---------------- */
 
 .compose-translation {

@@ -14,6 +14,8 @@ import { extractCodeBlocks } from "../../lib/code-image";
 import { fullDate, htmlToPlainText, languageName, toLocalInputValue } from "../../lib/format";
 import { userMessageForError } from "../../lib/errors";
 import { loadEmojiGroups, searchEmojis, type EmojiGroup, type EmojiItem } from "../../lib/emoji";
+import { GIPHY_PUBLIC_KEY, type GifResult } from "../../lib/giphy";
+import { clientFor } from "../../lib/identity";
 import { planPublish, type ComposeDraft } from "../../lib/publish-plan";
 import { splitThreadText } from "../../lib/thread";
 import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
@@ -24,10 +26,14 @@ import { Avatar } from "../ui/Avatar";
 import { EmojiText } from "../status/EmojiText";
 import { currentAccount, setCompose, store, toast } from "../../state/store";
 import { executePublish } from "../../state/publish";
+import { GifPicker } from "./GifPicker";
 
 const CHAR_LIMIT = 500;
 const DRAFT_KEY = "compose-draft";
 const EMOJI_TONES = ["🏻", "🏼", "🏽", "🏾", "🏿"];
+/** Zero-config GIPHY search: public web key, VITE_GIPHY_API_KEY overrides. */
+const GIPHY_API_KEY =
+  (import.meta.env.VITE_GIPHY_API_KEY as string | undefined) || GIPHY_PUBLIC_KEY;
 
 interface Draft {
   text: string;
@@ -73,6 +79,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const [emojiTone, setEmojiTone] = useState(0);
   const [emojiData, setEmojiData] = useState<EmojiGroup[] | null>(null);
   const [customEmojis, setCustomEmojis] = useState<CustomEmoji[]>([]);
+  const [gifOpen, setGifOpen] = useState(false);
   const [transOpen, setTransOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translation, setTranslation] = useState<{ target: string; original: string } | null>(null);
@@ -151,13 +158,16 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     };
   }, [emojiOpen, instance, account]);
 
-  /* closes popovers (emoji/translation/schedule) when clicking outside or pressing Escape */
+  /* closes popovers (emoji/gif/translation/schedule) when clicking outside or pressing Escape */
   useEffect(() => {
-    if (!emojiOpen && !transOpen && !scheduleOpen) return;
+    if (!emojiOpen && !transOpen && !scheduleOpen && !gifOpen) return;
     const onDown = (e: PointerEvent): void => {
       const el = e.target as HTMLElement;
       if (emojiOpen && !el.closest(".emoji-picker") && !el.closest("[data-emoji-toggle]")) {
         setEmojiOpen(false);
+      }
+      if (gifOpen && !el.closest(".gif-picker") && !el.closest("[data-gif-toggle]")) {
+        setGifOpen(false);
       }
       if (transOpen && !el.closest(".translate-menu") && !el.closest("[data-translate-toggle]")) {
         setTransOpen(false);
@@ -169,6 +179,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
         setEmojiOpen(false);
+        setGifOpen(false);
         setTransOpen(false);
         setScheduleOpen(false);
       }
@@ -179,7 +190,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("keydown", onKey);
     };
-  }, [emojiOpen, transOpen, scheduleOpen]);
+  }, [emojiOpen, gifOpen, transOpen, scheduleOpen]);
 
   /* account search for mention autocomplete (@partial) */
   useEffect(() => {
@@ -401,23 +412,48 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     emojiData && emojiQuery.trim() ? searchEmojis(emojiData, emojiQuery) : null;
   const codeBlocks = isEdit || pollOn ? [] : extractCodeBlocks(text);
 
-  const upload = async (files: FileList | File[]): Promise<void> => {
+  const uploadFile = async (file: File, description?: string): Promise<void> => {
     if (!account) return;
-    const client = getRest(instance, account.accessToken);
+    setUploading((n) => n + 1);
+    try {
+      const attachment = await clientFor(instance).client.v1.media.create({
+        file,
+        description,
+      });
+      setMedia((prev) => [...prev, attachment].slice(0, 4));
+    } catch (err) {
+      console.warn("[oltn] upload failed", err);
+      toast(t.errorUpload, "error");
+    } finally {
+      setUploading((n) => n - 1);
+    }
+  };
+
+  const upload = async (files: FileList | File[]): Promise<void> => {
     let count = media.length;
     for (const file of files) {
       if (count >= 4) break;
       count += 1;
-      setUploading((n) => n + 1);
-      try {
-        const attachment = await client.v1.media.create({ file });
-        setMedia((prev) => [...prev, attachment].slice(0, 4));
-      } catch (err) {
-        console.warn("[oltn] upload failed", err);
-        toast(t.errorUpload, "error");
-      } finally {
-        setUploading((n) => n - 1);
-      }
+      await uploadFile(file);
+    }
+  };
+
+  /** Downloads the selected GIF and attaches it with its alt text. */
+  const pickGif = async (gif: GifResult): Promise<void> => {
+    if (!account || media.length >= 4 || pollOn || uploading) return;
+    setGifOpen(false);
+    setUploading((n) => n + 1);
+    try {
+      const blob = await fetch(gif.url, { referrerPolicy: "no-referrer" }).then((res) =>
+        res.blob(),
+      );
+      const file = new File([blob], "image.gif", { type: blob.type || "image/gif" });
+      await uploadFile(file, gif.alt || undefined);
+    } catch (err) {
+      console.warn("[oltn] gif download failed", err);
+      toast(t.errorUpload, "error");
+    } finally {
+      setUploading((n) => n - 1);
     }
   };
 
@@ -555,10 +591,28 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             aria-expanded={emojiOpen}
             onClick={() => {
               setEmojiOpen((v) => !v);
+              setGifOpen(false);
               setTransOpen(false);
             }}
           >
             <Icon name="emoji-line" size={20} />
+          </button>
+          <button
+            type="button"
+            class={`icon-btn ${gifOpen ? "active" : ""}`}
+            data-gif-toggle
+            title={t.gif}
+            aria-label={t.gif}
+            aria-expanded={gifOpen}
+            disabled={media.length >= 4 || pollOn}
+            onClick={() => {
+              setGifOpen((v) => !v);
+              setEmojiOpen(false);
+              setTransOpen(false);
+              setScheduleOpen(false);
+            }}
+          >
+            <Icon name="movie-line" size={20} />
           </button>
           <button
             type="button"
@@ -808,6 +862,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             <span>{t.codeAsImage}</span>
           </div>
         )}
+        {gifOpen && <GifPicker apiKey={GIPHY_API_KEY} onSelect={(gif) => void pickGif(gif)} />}
         {emojiOpen && (
           <div class="emoji-picker" aria-label={t.emojiPicker}>
             <div class="emoji-picker-head">

@@ -221,6 +221,11 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "movie-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18Zm0 0h8M13 8a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm-4 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm4 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm4-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0Z"/>',
+    width: 24,
+    height: 24,
+  },
   "report-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 21h14M12 3v1M4.929 5.929l.707.707m13.435-.707l-.707.707M12 12.5L10.5 15h3L12 17.5m6 3.5v-7a6 6 0 0 0-12 0v7z"/>',
     width: 24,
