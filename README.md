@@ -40,6 +40,20 @@ icon/i18n workflows.
 Preact 11 · Vite 8 · valtio · masto v8 · vanilla CSS · TypeScript strict ·
 MingCute icons via Iconify (CC0).
 
+## Support
+
+OLTN is free, open-source software maintained in my spare time. If it is useful
+to you, consider supporting its development with any amount — every contribution
+helps keep the project alive and improving.
+
+<p align="center">
+  <a href="https://nubank.com.br/cobrar/1z437/6accfdbf-ea20-443b-878e-5618946fad4a">
+    <img src="src/assets/support-qr.png" alt="Support OLTN — payment QR code" width="220">
+  </a>
+</p>
+
+<p align="center">Scan the QR code with your phone or use the payment link above. Thank you for the support!</p>
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
