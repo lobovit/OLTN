@@ -69,6 +69,26 @@ function revertPatch(status: Status): Partial<Status> {
   };
 }
 
+/** Single API call for the toggle kind; returns the cached-worthy response. */
+async function callToggle(
+  statuses: RestClient["v1"]["statuses"],
+  localId: string,
+  status: Status,
+  kind: ToggleAction,
+): Promise<Status | null> {
+  const selected = statuses.$select(localId);
+  let updated: unknown;
+  if (kind === "boost") {
+    updated = status.reblogged ? await selected.unreblog() : await selected.reblog();
+  } else if (kind === "fav") {
+    updated = status.favourited ? await selected.unfavourite() : await selected.favourite();
+  } else {
+    updated = status.bookmarked ? await selected.unbookmark() : await selected.bookmark();
+  }
+  const result = updated as unknown as Status;
+  return result?.id ? result : null;
+}
+
 /** Fav / boost / bookmark with optimistic update and rollback. */
 export async function toggleStatusAction(
   ctx: StatusActionsContext,
@@ -87,19 +107,10 @@ export async function toggleStatusAction(
     // Resolving a remote status replaces the cached entry with the server
     // copy; re-apply the optimistic patch so the in-flight state stays.
     if (store.statuses[key] !== patched) patchStatus(key, optimistic);
-    const selected = ctx.client.v1.statuses.$select(local.id);
     // Save the server response (like Phanpy's saveStatus) so the cache is
     // authoritative; boosting returns the wrapper, unboosting the original.
-    if (kind === "boost") {
-      const updated = status.reblogged ? await selected.unreblog() : await selected.reblog();
-      if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
-    } else if (kind === "fav") {
-      const updated = status.favourited ? await selected.unfavourite() : await selected.favourite();
-      if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
-    } else {
-      const updated = status.bookmarked ? await selected.unbookmark() : await selected.bookmark();
-      if (updated?.id) putStatus(updated as unknown as Status, ctx.instance);
-    }
+    const updated = await callToggle(ctx.client.v1.statuses, local.id, status, kind);
+    if (updated) putStatus(updated, ctx.instance);
     // Boosts feeds (column/page) reload through this revision change.
     if (kind === "boost") store.ui.boostsRevision += 1;
     return true;
