@@ -9,8 +9,10 @@ import { ConversationsFeed } from "../components/feed/ConversationsFeed";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
 import { t, type TKey } from "../i18n/pt-BR";
+import { focusableCards, nextFocusIndex } from "../lib/deck-focus";
 import { formatDuration } from "../lib/format";
 import { useHotkeys } from "../lib/hotkeys";
+import { beginPointerDrag, dropTarget, type DropTarget } from "../lib/pointer-drag";
 import {
   clampWidth,
   COLUMN_LIMIT,
@@ -177,94 +179,58 @@ let navDragSuppress = false;
 const NAV_COLUMN_TYPES = new Set(NAV_ITEMS.flatMap((item) => (item.column ? [item.column] : [])));
 
 function startNavDrag(e: PointerEvent, id: string): void {
-  if (e.button > 0) return;
   const target = e.currentTarget as HTMLElement;
   const wrap = target.parentElement;
   if (!wrap) return;
   const els = [...wrap.querySelectorAll<HTMLElement>("a.rail-item")];
   if (els.length < 2) return;
   const ids = els.map((el) => (el.getAttribute("href") ?? "").replace(/^#/, ""));
-  const startY = e.clientY;
-  const rects = els.map((el) => {
+  const extents = els.map((el) => {
     const r = el.getBoundingClientRect();
-    return { top: r.top, bottom: r.bottom, height: r.height };
+    return { start: r.top, end: r.bottom };
   });
-  let dragging = false;
-  let drop: { index: number; side: "before" | "after" } | null = null;
+  let drop: DropTarget | null = null;
 
   const clearDrop = (): void => {
     for (const el of els) el.classList.remove("nav-drop-before", "nav-drop-after");
   };
 
-  const onMove = (ev: PointerEvent): void => {
-    const dy = ev.clientY - startY;
-    if (!dragging) {
-      if (Math.abs(dy) < 6) return;
-      dragging = true;
+  beginPointerDrag(e, {
+    threshold: 6,
+    onStart: () => {
       target.classList.add("nav-dragging");
-      try {
-        target.setPointerCapture(ev.pointerId);
-      } catch {
-        /* noop */
+    },
+    onMove: (ctx) => {
+      target.style.transform = `translateY(${ctx.delta.y}px)`;
+      drop = dropTarget(extents, ctx.event.clientY);
+      clearDrop();
+      if (drop) {
+        els[drop.index].classList.add(
+          drop.side === "before" ? "nav-drop-before" : "nav-drop-after",
+        );
       }
-    }
-    ev.preventDefault();
-    target.style.transform = `translateY(${dy}px)`;
-    const y = ev.clientY;
-    let index = -1;
-    let side: "before" | "after" = "before";
-    for (let i = 0; i < rects.length; i++) {
-      if (y >= rects[i].top && y <= rects[i].bottom) {
-        index = i;
-        side = y < rects[i].top + rects[i].height / 2 ? "before" : "after";
-        break;
+    },
+    onCommit: () => {
+      target.style.transform = "";
+      target.classList.remove("nav-dragging");
+      clearDrop();
+      if (!drop) return;
+      navDragSuppress = true;
+      window.setTimeout(() => {
+        navDragSuppress = false;
+      }, 0);
+      const next = moveInOrder(ids, id, ids[drop.index], drop.side);
+      if (next.some((v, i) => v !== ids[i])) {
+        store.settings = { ...store.settings, navOrder: next };
+        saveSettings();
       }
-    }
-    if (index === -1) {
-      if (y < rects[0].top) {
-        index = 0;
-        side = "before";
-      } else {
-        index = rects.length - 1;
-        side = "after";
-      }
-    }
-    clearDrop();
-    els[index].classList.add(side === "before" ? "nav-drop-before" : "nav-drop-after");
-    drop = { index, side };
-  };
-
-  const teardown = (): void => {
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerup", onUp);
-    window.removeEventListener("pointercancel", onCancel);
-    target.style.transform = "";
-    target.classList.remove("nav-dragging");
-    clearDrop();
-  };
-  const onUp = (): void => {
-    const wasDragging = dragging;
-    const result = drop;
-    teardown();
-    if (!wasDragging) return;
-    navDragSuppress = true;
-    window.setTimeout(() => {
-      navDragSuppress = false;
-    }, 0);
-    if (!result) return;
-    const next = moveInOrder(ids, id, ids[result.index], result.side);
-    if (next.some((v, i) => v !== ids[i])) {
-      store.settings = { ...store.settings, navOrder: next };
-      saveSettings();
-    }
-  };
-  const onCancel = (): void => {
-    teardown();
-  };
-
-  window.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
-  window.addEventListener("pointercancel", onCancel);
+    },
+    onCancel: () => {
+      target.style.transform = "";
+      target.classList.remove("nav-dragging");
+      clearDrop();
+    },
+  });
 }
 
 function scrollToColumn(id: string): void {
@@ -565,63 +531,23 @@ export function MultiColumns(): JSX.Element {
   useEffect(() => () => activeDndCleanup?.(), []);
 
   const startReorder = (e: PointerEvent, id: string): void => {
-    if (e.button > 0) return;
     const grip = e.currentTarget as HTMLElement;
     const col = grip.closest(".column") as HTMLElement | null;
     const container = col?.parentElement;
     if (!col || !container) return;
-    e.preventDefault();
-    try {
-      grip.setPointerCapture(e.pointerId);
-    } catch {
-      /* noop */
-    }
     const els = [...container.querySelectorAll<HTMLElement>(".column")];
     if (!els.length) return;
-    const rects = els.map((el) => {
+    const extents = els.map((el) => {
       const r = el.getBoundingClientRect();
-      return { left: r.left, right: r.right, width: r.width };
+      return { start: r.left, end: r.right };
     });
     const ids = columnIds(els);
-    const startX = e.clientX;
-    let drop: { index: number; side: "before" | "after" } | null = null;
+    let drop: DropTarget | null = null;
 
     const clearDrop = (): void => {
       for (const el of els) el.classList.remove("drop-before", "drop-after");
     };
-
-    const onMove = (ev: PointerEvent): void => {
-      col.style.transform = `translateX(${ev.clientX - startX}px)`;
-      const x = ev.clientX;
-      let index = -1;
-      let side: "before" | "after" = "before";
-      for (let i = 0; i < rects.length; i++) {
-        if (x >= rects[i].left && x <= rects[i].right) {
-          index = i;
-          side = x < rects[i].left + rects[i].width / 2 ? "before" : "after";
-          break;
-        }
-      }
-      if (index === -1) {
-        if (x < rects[0].left) {
-          index = 0;
-          side = "before";
-        } else {
-          index = rects.length - 1;
-          side = "after";
-        }
-      }
-      clearDrop();
-      els[index].classList.add(side === "before" ? "drop-before" : "drop-after");
-      drop = { index, side };
-    };
-
-    const teardown = (commit: boolean): void => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-      window.removeEventListener("keydown", onEsc, true);
-      if (activeDndCleanup === cleanup) activeDndCleanup = null;
+    const finish = (commit: boolean): void => {
       col.style.transform = "";
       col.classList.remove("dragging");
       clearDrop();
@@ -630,36 +556,25 @@ export function MultiColumns(): JSX.Element {
       const next = moveInOrder(ids, id, targetId, drop.side);
       if (next.some((v, i) => v !== ids[i])) saveColumnLayout(next, widths);
     };
-    const onUp = (): void => teardown(true);
-    const onCancel = (): void => teardown(false);
-    const onEsc = (ev: KeyboardEvent): void => {
-      if (ev.key === "Escape") {
-        ev.stopPropagation();
-        teardown(false);
-      }
-    };
-    const cleanup = (): void => teardown(false);
-
-    col.classList.add("dragging");
-    activeDndCleanup = cleanup;
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
-    window.addEventListener("keydown", onEsc, true);
+    activeDndCleanup = beginPointerDrag(e, {
+      onStart: () => col.classList.add("dragging"),
+      onMove: (ctx) => {
+        col.style.transform = `translateX(${ctx.delta.x}px)`;
+        drop = dropTarget(extents, ctx.event.clientX);
+        clearDrop();
+        if (drop) {
+          els[drop.index].classList.add(drop.side === "before" ? "drop-before" : "drop-after");
+        }
+      },
+      onCommit: () => finish(true),
+      onCancel: () => finish(false),
+    });
   };
 
   const startResize = (e: PointerEvent, id: string): void => {
-    if (e.button > 0) return;
     const handle = e.currentTarget as HTMLElement;
     const col = handle.closest(".column") as HTMLElement | null;
     if (!col) return;
-    e.preventDefault();
-    try {
-      handle.setPointerCapture(e.pointerId);
-    } catch {
-      /* noop */
-    }
-    const startX = e.clientX;
     const startW = col.getBoundingClientRect().width;
     const baseWidth = widths[id];
     let width = startW;
@@ -671,28 +586,17 @@ export function MultiColumns(): JSX.Element {
       handle.setAttribute("aria-valuenow", String(Math.round(w)));
     };
 
-    const restoreDom = (): void => {
-      if (baseWidth != null) {
-        col.style.setProperty("--col-w", `${baseWidth}px`);
-        handle.setAttribute("aria-valuenow", String(baseWidth));
-      } else {
-        col.style.removeProperty("--col-w");
-        col.classList.remove("with-width");
-        handle.setAttribute("aria-valuenow", String(Math.round(startW)));
-      }
-    };
-
-    const onMove = (ev: PointerEvent): void => apply(clampWidth(startW + (ev.clientX - startX)));
-
-    const teardown = (commit: boolean): void => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-      window.removeEventListener("keydown", onEsc, true);
-      if (activeDndCleanup === cleanup) activeDndCleanup = null;
+    const finish = (commit: boolean): void => {
       col.classList.remove("resizing");
       if (!commit) {
-        restoreDom();
+        if (baseWidth != null) {
+          col.style.setProperty("--col-w", `${baseWidth}px`);
+          handle.setAttribute("aria-valuenow", String(baseWidth));
+        } else {
+          col.style.removeProperty("--col-w");
+          col.classList.remove("with-width");
+          handle.setAttribute("aria-valuenow", String(Math.round(startW)));
+        }
         return;
       }
       if (Math.round(width) !== Math.round(startW) || baseWidth != null) {
@@ -702,21 +606,12 @@ export function MultiColumns(): JSX.Element {
         );
       }
     };
-    const onUp = (): void => teardown(true);
-    const onEsc = (ev: KeyboardEvent): void => {
-      if (ev.key === "Escape") {
-        ev.stopPropagation();
-        teardown(false);
-      }
-    };
-    const cleanup = (): void => teardown(false);
-
-    col.classList.add("resizing");
-    activeDndCleanup = cleanup;
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    window.addEventListener("keydown", onEsc, true);
+    activeDndCleanup = beginPointerDrag(e, {
+      onStart: () => col.classList.add("resizing"),
+      onMove: (ctx) => apply(clampWidth(startW + ctx.delta.x)),
+      onCommit: () => finish(true),
+      onCancel: () => finish(false),
+    });
   };
 
   return (
@@ -954,19 +849,11 @@ function navigateByShortcutIndex(index: number): void {
 
 let focusedIndex = -1;
 
-function visibleCards(): HTMLElement[] {
-  return [
-    ...document.querySelectorAll<HTMLElement>(
-      ".deck-body .status-card, .column .deck-body .status-card",
-    ),
-  ];
-}
-
 function setFocused(index: number): void {
-  const cards = visibleCards();
+  const cards = focusableCards();
   if (!cards.length) return;
   for (const card of cards) card.classList.remove("is-focused");
-  focusedIndex = Math.max(0, Math.min(index, cards.length - 1));
+  focusedIndex = nextFocusIndex(index, 0, cards.length);
   const card = cards[focusedIndex];
   card.classList.add("is-focused");
   card.scrollIntoView({ block: "nearest" });
@@ -978,11 +865,11 @@ function useFocusHotkeys(): void {
       j: () => setFocused(focusedIndex + 1),
       k: () => setFocused(focusedIndex - 1),
       o: () => {
-        const cards = visibleCards();
+        const cards = focusableCards();
         cards[focusedIndex]?.click();
       },
       enter: () => {
-        const cards = visibleCards();
+        const cards = focusableCards();
         cards[focusedIndex]?.click();
       },
     },

@@ -239,6 +239,7 @@ export function StatusCard({
     <>
       <article
         class={`status-card ${compact ? "compact" : ""} ${inThread ? "in-thread" : ""}`}
+        data-focusable
         onClick={openStatus}
         tabIndex={0}
         onKeyDown={(e) => {

@@ -1,6 +1,7 @@
 import type { ComponentChildren, JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../i18n/pt-BR";
+import { clamp, usePointerDrag } from "../../lib/pointer-drag";
 import { readJSON, writeJSON } from "../../lib/storage";
 import { Icon } from "./Icon";
 
@@ -29,10 +30,7 @@ interface SheetGeom {
 const MIN_W = 320;
 const MIN_H = 260;
 
-function clampRange(value: number, min: number, max: number): number {
-  if (min > max) return (min + max) / 2;
-  return Math.min(Math.max(value, min), max);
-}
+const DESKTOP = "(min-width: 48em)";
 
 export function Sheet({
   title,
@@ -52,6 +50,8 @@ export function Sheet({
   );
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
+  /** True while a pointer gesture is active; Escape cancels it before close. */
+  const gestureActive = useRef(false);
 
   const persist = (next: SheetGeom): void => {
     if (storageKey) writeJSON(storageKey, next);
@@ -60,6 +60,8 @@ export function Sheet({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // An active drag/resize consumes Escape (cancels the gesture).
+        if (gestureActive.current) return;
         // Escape first closes inner popups (e.g. mention suggestions)
         if (
           document.querySelector(".mention-menu, .emoji-picker, .translate-menu, .schedule-panel")
@@ -90,8 +92,8 @@ export function Sheet({
     const rect = sheet.getBoundingClientRect();
     const baseLeft = rect.left - geom.x;
     const baseTop = rect.top - geom.y;
-    const x = clampRange(geom.x, 8 - baseLeft, window.innerWidth - 8 - rect.width - baseLeft);
-    const y = clampRange(geom.y, 8 - baseTop, window.innerHeight - 8 - rect.height - baseTop);
+    const x = clamp(geom.x, 8 - baseLeft, window.innerWidth - 8 - rect.width - baseLeft);
+    const y = clamp(geom.y, 8 - baseTop, window.innerHeight - 8 - rect.height - baseTop);
     if (x !== geom.x || y !== geom.y || w !== geom.w || h !== geom.h) {
       const next: SheetGeom = { x, y, w: w ?? undefined, h: h ?? undefined };
       setGeom(next);
@@ -100,50 +102,55 @@ export function Sheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const dragBounds = useRef({ minX: 0, maxX: 0, minY: 0, maxY: 0 });
+  const dragPos = useRef<SheetGeom>({ x: 0, y: 0 });
+  const onDragHandleDown = usePointerDrag({
+    onStart: () => {
+      const sheet = ref.current;
+      if (!sheet) return;
+      gestureActive.current = true;
+      const rect = sheet.getBoundingClientRect();
+      const baseLeft = rect.left - geom.x;
+      const baseTop = rect.top - geom.y;
+      dragBounds.current = {
+        minX: 8 - baseLeft,
+        maxX: window.innerWidth - 8 - rect.width - baseLeft,
+        minY: 8 - baseTop,
+        maxY: window.innerHeight - 8 - rect.height - baseTop,
+      };
+      dragPos.current = { ...geom };
+      setDragging(true);
+    },
+    onMove: (ctx) => {
+      const sheet = ref.current;
+      if (!sheet) return;
+      const bounds = dragBounds.current;
+      const x = clamp(geom.x + ctx.delta.x, bounds.minX, bounds.maxX);
+      const y = clamp(geom.y + ctx.delta.y, bounds.minY, bounds.maxY);
+      dragPos.current = { ...geom, x, y };
+      sheet.style.setProperty("--sheet-dx", `${Math.round(x)}px`);
+      sheet.style.setProperty("--sheet-dy", `${Math.round(y)}px`);
+    },
+    onCommit: () => {
+      gestureActive.current = false;
+      setDragging(false);
+      setGeom(dragPos.current);
+      persist(dragPos.current);
+    },
+    onCancel: () => {
+      gestureActive.current = false;
+      setDragging(false);
+      const sheet = ref.current;
+      sheet?.style.setProperty("--sheet-dx", `${geom.x}px`);
+      sheet?.style.setProperty("--sheet-dy", `${geom.y}px`);
+    },
+  });
+
   const startDrag = (e: PointerEvent): void => {
     if (!draggable) return;
-    if (!window.matchMedia("(min-width: 48em)").matches) return;
-    const sheet = ref.current;
-    if (!sheet) return;
+    if (!window.matchMedia(DESKTOP).matches) return;
     if ((e.target as HTMLElement).closest("button, a")) return;
-    e.preventDefault();
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {
-      /* noop */
-    }
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const rect = sheet.getBoundingClientRect();
-    const baseLeft = rect.left - geom.x;
-    const baseTop = rect.top - geom.y;
-    const minX = 8 - baseLeft;
-    const maxX = window.innerWidth - 8 - rect.width - baseLeft;
-    const minY = 8 - baseTop;
-    const maxY = window.innerHeight - 8 - rect.height - baseTop;
-    let pos = { ...geom };
-
-    const onMove = (ev: PointerEvent): void => {
-      pos = {
-        x: clampRange(geom.x + (ev.clientX - startX), minX, maxX),
-        y: clampRange(geom.y + (ev.clientY - startY), minY, maxY),
-      };
-      sheet.style.setProperty("--sheet-dx", `${Math.round(pos.x)}px`);
-      sheet.style.setProperty("--sheet-dy", `${Math.round(pos.y)}px`);
-    };
-    const onUp = (): void => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-      setDragging(false);
-      setGeom(pos);
-      persist(pos);
-    };
-
-    setDragging(true);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
+    onDragHandleDown(e);
   };
 
   const resizeTo = (w: number, h: number): void => {
@@ -157,46 +164,60 @@ export function Sheet({
     persist(next);
   };
 
-  const startResize = (e: PointerEvent): void => {
-    if (!draggable) return;
-    if (!window.matchMedia("(min-width: 48em)").matches) return;
-    const sheet = ref.current;
-    if (!sheet) return;
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {
-      /* noop */
-    }
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const rect = sheet.getBoundingClientRect();
-    const maxW = window.innerWidth - 8 - rect.left;
-    const maxH = window.innerHeight - 8 - rect.top;
-    let w = rect.width;
-    let h = rect.height;
-
-    const onMove = (ev: PointerEvent): void => {
-      w = Math.min(Math.max(rect.width + (ev.clientX - startX), MIN_W), maxW);
-      h = Math.min(Math.max(rect.height + (ev.clientY - startY), MIN_H), maxH);
+  const resizeBase = useRef({ w: 0, h: 0, maxW: 0, maxH: 0 });
+  const resizeSize = useRef({ w: 0, h: 0 });
+  const onResizeHandleDown = usePointerDrag({
+    onStart: () => {
+      const sheet = ref.current;
+      if (!sheet) return;
+      gestureActive.current = true;
+      const rect = sheet.getBoundingClientRect();
+      resizeBase.current = {
+        w: rect.width,
+        h: rect.height,
+        maxW: window.innerWidth - 8 - rect.left,
+        maxH: window.innerHeight - 8 - rect.top,
+      };
+      resizeSize.current = { w: rect.width, h: rect.height };
+      setResizing(true);
+    },
+    onMove: (ctx) => {
+      const sheet = ref.current;
+      if (!sheet) return;
+      const base = resizeBase.current;
+      const w = Math.min(Math.max(base.w + ctx.delta.x, MIN_W), base.maxW);
+      const h = Math.min(Math.max(base.h + ctx.delta.y, MIN_H), base.maxH);
+      resizeSize.current = { w, h };
       sheet.style.setProperty("--sheet-w", `${Math.round(w)}px`);
       sheet.style.setProperty("--sheet-h", `${Math.round(h)}px`);
-    };
-    const onUp = (): void => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
+    },
+    onCommit: () => {
+      gestureActive.current = false;
       setResizing(false);
-      const next: SheetGeom = { ...geom, w: Math.round(w), h: Math.round(h) };
+      const next: SheetGeom = {
+        ...geom,
+        w: Math.round(resizeSize.current.w),
+        h: Math.round(resizeSize.current.h),
+      };
       setGeom(next);
       persist(next);
-    };
+    },
+    onCancel: () => {
+      gestureActive.current = false;
+      setResizing(false);
+      const sheet = ref.current;
+      if (geom.w != null) sheet?.style.setProperty("--sheet-w", `${geom.w}px`);
+      else sheet?.style.removeProperty("--sheet-w");
+      if (geom.h != null) sheet?.style.setProperty("--sheet-h", `${geom.h}px`);
+      else sheet?.style.removeProperty("--sheet-h");
+    },
+  });
 
-    setResizing(true);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
+  const startResize = (e: PointerEvent): void => {
+    if (!draggable) return;
+    if (!window.matchMedia(DESKTOP).matches) return;
+    e.stopPropagation();
+    onResizeHandleDown(e);
   };
 
   const styleParts = [`--sheet-dx:${geom.x}px`, `--sheet-dy:${geom.y}px`];
