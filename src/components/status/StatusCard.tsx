@@ -1,20 +1,12 @@
-import type { JSX } from "preact";
+import type { JSX, RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import type { Status, Translation } from "../../api/types";
+import type { Status } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
-import {
-  fullDate,
-  htmlToPlainText,
-  languageName,
-  plainTextToHtml,
-  shortNumber,
-  timeAgo,
-} from "../../lib/format";
-import { httpStatusOf } from "../../lib/errors";
+import { fullDate, languageName, timeAgo } from "../../lib/format";
 import { clientFor, hrefFor, localStatus, sourceInstanceFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
-import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
+import { TRANSLATE_TARGETS } from "../../lib/translate";
 import {
   currentAccount,
   putStatus,
@@ -32,12 +24,9 @@ import { EmojiText } from "./EmojiText";
 import { MediaGrid } from "./Media";
 import { PollView } from "./Poll";
 import { ReportSheet } from "./ReportSheet";
+import { StatusActionsBar, type ToggleKind } from "./StatusActionsBar";
+import { useStatusTranslation, type StatusTranslationState } from "./useStatusTranslation";
 import "./status.css";
-
-/** Account+instance pairs that refused native translation (no service
-    configured or target not permitted) — keyed per account so the capability
-    cache never crosses accounts on the same instance. */
-const nativeTranslateUnsupported = new Set<string>();
 
 interface StatusCardProps {
   statusKey: string;
@@ -45,6 +34,12 @@ interface StatusCardProps {
   inThread?: boolean;
   showActions?: boolean;
   hideHeader?: boolean;
+}
+
+interface ActionMenuPos {
+  top?: number;
+  bottom?: number;
+  right: number;
 }
 
 function hostOf(status: Status): string {
@@ -55,37 +50,197 @@ function hostOf(status: Status): string {
   }
 }
 
-export function StatusCard({
-  statusKey,
-  compact,
-  inThread,
-  showActions = true,
-  hideHeader,
-}: StatusCardProps): JSX.Element | null {
-  const outer = useStatus(statusKey);
-  const appState = useSnapshot(store);
-  const [cwOpen, setCwOpen] = useState(false);
-  const [translated, setTranslated] = useState<Translation | null>(null);
-  const [transLang, setTransLang] = useState("");
-  const [transMenuOpen, setTransMenuOpen] = useState(false);
-  const [translating, setTranslating] = useState(false);
-  const transRef = useRef<HTMLDivElement>(null);
-  const [menuPos, setMenuPos] = useState<{
-    top?: number;
-    bottom?: number;
-    right: number;
-  } | null>(null);
-  const [reportOpen, setReportOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+function ReblogLine({ booster }: { booster: Status }): JSX.Element {
+  return (
+    <div class="reblog-line">
+      <Icon name="repeat-line" size={14} />
+      <a
+        href={`#/${encodeURIComponent(hostOf(booster))}/a/@${encodeURIComponent(booster.account.acct.split("@")[0])}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {booster.account.displayName ? (
+          <EmojiText text={booster.account.displayName} emojis={booster.account.emojis} />
+        ) : (
+          booster.account.username
+        )}
+      </a>
+      <span class="faint">{t.boosted}</span>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    if (!transMenuOpen) return;
-    const onDown = (e: PointerEvent): void => {
-      if (!transRef.current?.contains(e.target as Node)) setTransMenuOpen(false);
-    };
-    window.addEventListener("pointerdown", onDown);
-    return () => window.removeEventListener("pointerdown", onDown);
-  }, [transMenuOpen]);
+function Byline({
+  target,
+  host,
+  compact,
+  openHref,
+  onAuthor,
+}: {
+  target: Status;
+  host: string;
+  compact: boolean;
+  openHref: string;
+  onAuthor: (e: MouseEvent) => void;
+}): JSX.Element {
+  return (
+    <div class="byline" onClick={onAuthor}>
+      <Avatar
+        src={target.account.avatar}
+        name={target.account.displayName || target.account.username}
+        size={compact ? 34 : 42}
+      />
+      <div class="byline-text">
+        <div class="display-name">
+          <EmojiText
+            text={target.account.displayName || target.account.username}
+            emojis={target.account.emojis}
+          />
+        </div>
+        <div class="handle">
+          @{target.account.acct}
+          {!target.account.acct.includes("@") && host !== (store.instance?.uri ?? "")
+            ? `@${host}`
+            : ""}
+        </div>
+      </div>
+      <time
+        class="timestamp"
+        dateTime={target.createdAt}
+        title={fullDate(target.createdAt)}
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(openHref);
+        }}
+      >
+        {timeAgo(target.createdAt)}
+      </time>
+    </div>
+  );
+}
+
+function SpoilerNotice({
+  text,
+  open,
+  onOpen,
+}: {
+  text: string;
+  open: boolean;
+  onOpen: () => void;
+}): JSX.Element {
+  return (
+    <div class="spoiler">
+      <div class="spoiler-label">
+        <Icon name="eye-close-line" size={14} />
+        {t.warningPrefix} {text}
+      </div>
+      {!open && (
+        <button
+          type="button"
+          class="cw-toggle"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+        >
+          {t.showMore}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function LinkCard({ card }: { card: NonNullable<Status["card"]> }): JSX.Element {
+  return (
+    <a
+      class="link-card"
+      href={card.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {card.image && (
+        <img
+          src={card.image}
+          alt=""
+          width={card.width ?? undefined}
+          height={card.height ?? undefined}
+          loading="lazy"
+        />
+      )}
+      <span class="title">{card.title}</span>
+      {card.description && <span class="desc clamp-2">{card.description}</span>}
+      <span class="provider">{card.providerName}</span>
+    </a>
+  );
+}
+
+function StatusTranslationBlock({
+  target,
+  canAct,
+  translation,
+}: {
+  target: Status;
+  canAct: boolean;
+  translation: StatusTranslationState;
+}): JSX.Element | null {
+  if (translation.translated) {
+    return (
+      <div class="translation muted" onClick={(e) => e.stopPropagation()}>
+        <span class="faint">
+          {t.translated} · {languageName(translation.transLang)}
+        </span>{" "}
+        <button
+          type="button"
+          class="cw-toggle"
+          onClick={(e) => {
+            e.stopPropagation();
+            translation.showOriginal();
+          }}
+        >
+          {t.showOriginal}
+        </button>
+      </div>
+    );
+  }
+  if (!canAct) return null;
+  return (
+    <div class="translation" onClick={(e) => e.stopPropagation()} ref={translation.containerRef}>
+      <button
+        type="button"
+        class="cw-toggle"
+        disabled={translation.translating}
+        aria-haspopup="listbox"
+        aria-expanded={translation.menuOpen}
+        onClick={() => translation.setMenuOpen(!translation.menuOpen)}
+      >
+        {translation.translating
+          ? t.loading
+          : `${t.translate}${target.language ? ` (${target.language})` : ""}`}
+      </button>
+      {translation.menuOpen && (
+        <div class="translate-menu status-translate-menu" role="listbox" aria-label={t.translateTo}>
+          {TRANSLATE_TARGETS.map((code) => (
+            <button
+              key={code}
+              type="button"
+              role="option"
+              class="translate-option"
+              onClick={() => void translation.translate(code)}
+            >
+              <span>{languageName(code)}</span>
+              <span class="faint">{code}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Report/block menu position, outside-click and anchoring. */
+function useActionMenu() {
+  const [menuPos, setMenuPos] = useState<ActionMenuPos | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!menuPos) return;
@@ -96,7 +251,73 @@ export function StatusCard({
     return () => window.removeEventListener("pointerdown", onDown);
   }, [menuPos]);
 
+  const open = (e: MouseEvent): void => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const right = Math.max(8, window.innerWidth - rect.right);
+    setMenuPos(
+      window.innerHeight - rect.bottom < 150
+        ? { bottom: window.innerHeight - rect.top + 6, right }
+        : { top: rect.bottom + 6, right },
+    );
+  };
+
+  const close = (): void => setMenuPos(null);
+
+  return { menuPos, menuRef, open, close };
+}
+
+function StatusActionMenu({
+  pos,
+  menuRef,
+  onReport,
+  onBlock,
+}: {
+  pos: ActionMenuPos;
+  menuRef: RefObject<HTMLDivElement | null>;
+  onReport: (e: MouseEvent) => void;
+  onBlock: (e: MouseEvent) => void;
+}): JSX.Element {
+  return (
+    <div
+      ref={menuRef}
+      class="action-menu"
+      role="menu"
+      style={{ top: pos.top, bottom: pos.bottom, right: pos.right }}
+    >
+      <button type="button" role="menuitem" class="action-menu-item" onClick={onReport}>
+        <Icon name="report-line" size={15} />
+        {t.reportPost}
+      </button>
+      <button type="button" role="menuitem" class="action-menu-item danger" onClick={onBlock}>
+        <Icon name="user-forbid-line" size={15} />
+        {t.blockUser}
+      </button>
+    </div>
+  );
+}
+
+export function StatusCard(props: StatusCardProps): JSX.Element | null {
+  const outer = useStatus(props.statusKey);
   if (!outer) return null;
+  return <StatusCardView outer={outer} {...props} />;
+}
+
+interface StatusCardViewProps extends StatusCardProps {
+  outer: Status;
+}
+
+function StatusCardView({
+  outer,
+  compact,
+  inThread,
+  showActions = true,
+  hideHeader,
+}: StatusCardViewProps): JSX.Element | null {
+  const appState = useSnapshot(store);
+  const [cwOpen, setCwOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const menu = useActionMenu();
 
   // Boost cards display the inner status through its own cache entry (like
   // Phanpy's recursive <Status>), so stream/refetch/action updates reflect.
@@ -130,20 +351,11 @@ export function StatusCard({
     return local.id;
   };
 
-  const openMenu = (e: MouseEvent): void => {
-    e.stopPropagation();
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const right = Math.max(8, window.innerWidth - rect.right);
-    setMenuPos(
-      window.innerHeight - rect.bottom < 150
-        ? { bottom: window.innerHeight - rect.top + 6, right }
-        : { top: rect.bottom + 6, right },
-    );
-  };
+  const translation = useStatusTranslation(target, account, resolveLocalId);
 
   const blockUser = async (): Promise<void> => {
     if (!account) return;
-    setMenuPos(null);
+    menu.close();
     if (!window.confirm(`${t.blockConfirm} @${target.account.acct}`)) return;
     await blockStatusAuthor(clientFor(account.instance), targetKey);
   };
@@ -169,7 +381,7 @@ export function StatusCard({
     navigate(hrefFor.account(target.account.acct, host));
   };
 
-  const act = (kind: "boost" | "fav" | "bookmark", e: MouseEvent): void => {
+  const act = (kind: ToggleKind, e: MouseEvent): void => {
     e.stopPropagation();
     if (!canAct || !account) return;
     void toggleStatusAction(clientFor(account.instance), targetKey, kind);
@@ -186,54 +398,8 @@ export function StatusCard({
     setCompose({ mode: "reply", statusId: id });
   };
 
-  const translateViaFallback = async (lang: string): Promise<Translation> => {
-    const result = await translateText(htmlToPlainText(target.content), lang);
-    return {
-      content: plainTextToHtml(result.text),
-      detectedLanguageSource: result.source ?? target.language ?? "",
-      provider: "google",
-    };
-  };
-
-  const translate = async (lang: string): Promise<void> => {
-    if (!account || translating) return;
-    setTransMenuOpen(false);
-    setTranslating(true);
-    const instance = account.instance;
-    const capabilityKey = `${account.id}@${instance}`;
-    try {
-      let result: Translation | null = null;
-      if (!nativeTranslateUnsupported.has(capabilityKey)) {
-        const id = await resolveLocalId();
-        if (id) {
-          try {
-            const client = clientFor(instance).client;
-            const instanceTranslation = (await client.v1.statuses
-              .$select(id)
-              .translate({ lang })) as unknown as Translation;
-            // The instance may reply 200 without content (e.g. target language
-            // unsupported by its backend); fall back to Google in that case.
-            if (instanceTranslation?.content) result = instanceTranslation;
-          } catch (err) {
-            console.warn("[oltn] instance translate failed; using fallback", err);
-            const status = httpStatusOf(err);
-            if (status === 403 || status === 404) nativeTranslateUnsupported.add(capabilityKey);
-          }
-        }
-      }
-      if (!result) result = await translateViaFallback(lang);
-      setTransLang(lang);
-      setTranslated(result);
-    } catch (err) {
-      console.warn("[oltn] translate failed", err);
-      toast(t.translateUnavailable, "error");
-    } finally {
-      setTranslating(false);
-    }
-  };
-
   const cwHidden = !!target.spoilerText && !cwOpen;
-  const displayContent = translated ? translated.content : target.content;
+  const displayContent = translation.translated ? translation.translated.content : target.content;
   const blockedAccount = appState.blockedAccounts.includes(target.account.acct);
 
   if (hidden || blockedAccount) return null;
@@ -249,77 +415,20 @@ export function StatusCard({
           if (e.key === "Enter") navigate(openHref);
         }}
       >
-        {booster && (
-          <div class="reblog-line">
-            <Icon name="repeat-line" size={14} />
-            <a
-              href={`#/${encodeURIComponent(hostOf(booster))}/a/@${encodeURIComponent(booster.account.acct.split("@")[0])}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {booster.account.displayName ? (
-                <EmojiText text={booster.account.displayName} emojis={booster.account.emojis} />
-              ) : (
-                booster.account.username
-              )}
-            </a>
-            <span class="faint">{t.boosted}</span>
-          </div>
-        )}
+        {booster && <ReblogLine booster={booster} />}
 
         {!hideHeader && (
-          <div class="byline" onClick={openAuthor}>
-            <Avatar
-              src={target.account.avatar}
-              name={target.account.displayName || target.account.username}
-              size={compact ? 34 : 42}
-            />
-            <div class="byline-text">
-              <div class="display-name">
-                <EmojiText
-                  text={target.account.displayName || target.account.username}
-                  emojis={target.account.emojis}
-                />
-              </div>
-              <div class="handle">
-                @{target.account.acct}
-                {!target.account.acct.includes("@") && host !== (store.instance?.uri ?? "")
-                  ? `@${host}`
-                  : ""}
-              </div>
-            </div>
-            <time
-              class="timestamp"
-              dateTime={target.createdAt}
-              title={fullDate(target.createdAt)}
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(openHref);
-              }}
-            >
-              {timeAgo(target.createdAt)}
-            </time>
-          </div>
+          <Byline
+            target={target}
+            host={host}
+            compact={!!compact}
+            openHref={openHref}
+            onAuthor={openAuthor}
+          />
         )}
 
         {target.spoilerText && (
-          <div class="spoiler">
-            <div class="spoiler-label">
-              <Icon name="eye-close-line" size={14} />
-              {t.warningPrefix} {target.spoilerText}
-            </div>
-            {!cwOpen && (
-              <button
-                type="button"
-                class="cw-toggle"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCwOpen(true);
-                }}
-              >
-                {t.showMore}
-              </button>
-            )}
-          </div>
+          <SpoilerNotice text={target.spoilerText} open={cwOpen} onOpen={() => setCwOpen(true)} />
         )}
 
         {!cwHidden && (
@@ -327,61 +436,9 @@ export function StatusCard({
             <Content
               html={displayContent}
               emojis={target.emojis}
-              class={translated ? "translated" : ""}
+              class={translation.translated ? "translated" : ""}
             />
-            {translated && (
-              <div class="translation muted" onClick={(e) => e.stopPropagation()}>
-                <span class="faint">
-                  {t.translated} · {languageName(transLang)}
-                </span>{" "}
-                <button
-                  type="button"
-                  class="cw-toggle"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTranslated(null);
-                  }}
-                >
-                  {t.showOriginal}
-                </button>
-              </div>
-            )}
-            {!translated && canAct && (
-              <div class="translation" onClick={(e) => e.stopPropagation()} ref={transRef}>
-                <button
-                  type="button"
-                  class="cw-toggle"
-                  disabled={translating}
-                  aria-haspopup="listbox"
-                  aria-expanded={transMenuOpen}
-                  onClick={() => setTransMenuOpen((v) => !v)}
-                >
-                  {translating
-                    ? t.loading
-                    : `${t.translate}${target.language ? ` (${target.language})` : ""}`}
-                </button>
-                {transMenuOpen && (
-                  <div
-                    class="translate-menu status-translate-menu"
-                    role="listbox"
-                    aria-label={t.translateTo}
-                  >
-                    {TRANSLATE_TARGETS.map((code) => (
-                      <button
-                        key={code}
-                        type="button"
-                        role="option"
-                        class="translate-option"
-                        onClick={() => void translate(code)}
-                      >
-                        <span>{languageName(code)}</span>
-                        <span class="faint">{code}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            <StatusTranslationBlock target={target} canAct={canAct} translation={translation} />
 
             <MediaGrid
               attachments={target.mediaAttachments}
@@ -397,30 +454,7 @@ export function StatusCard({
               />
             )}
 
-            {target.card && !target.mediaAttachments.length && (
-              <a
-                class="link-card"
-                href={target.card.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {target.card.image && (
-                  <img
-                    src={target.card.image}
-                    alt=""
-                    width={target.card.width ?? undefined}
-                    height={target.card.height ?? undefined}
-                    loading="lazy"
-                  />
-                )}
-                <span class="title">{target.card.title}</span>
-                {target.card.description && (
-                  <span class="desc clamp-2">{target.card.description}</span>
-                )}
-                <span class="provider">{target.card.providerName}</span>
-              </a>
-            )}
+            {target.card && !target.mediaAttachments.length && <LinkCard card={target.card} />}
           </>
         )}
 
@@ -432,134 +466,35 @@ export function StatusCard({
         )}
 
         {showActions && (
-          <div class="actions" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              class="status-action reply"
-              title={t.reply}
-              aria-label={target.repliesCount > 0 ? `${t.reply} (${target.repliesCount})` : t.reply}
-              onClick={reply}
-              disabled={!canAct}
-            >
-              <Icon name="share-forward-line" size={16} class="rot-180" />
-              {target.repliesCount > 0 && (
-                <span class="count">{shortNumber(target.repliesCount)}</span>
-              )}
-            </button>
-            <button
-              type="button"
-              class={`status-action boost ${target.reblogged ? "on" : ""}`}
-              title={t.boost}
-              aria-label={target.reblogsCount > 0 ? `${t.boost} (${target.reblogsCount})` : t.boost}
-              aria-pressed={!!target.reblogged}
-              onClick={(e) => void act("boost", e)}
-              disabled={!canAct}
-            >
-              <Icon name="repeat-line" size={16} />
-              {target.reblogsCount > 0 && (
-                <span class="count">{shortNumber(target.reblogsCount)}</span>
-              )}
-            </button>
-            <button
-              type="button"
-              class={`status-action fav ${target.favourited ? "on" : ""}`}
-              title={t.favourite}
-              aria-label={
-                target.favouritesCount > 0
-                  ? `${t.favourite} (${target.favouritesCount})`
-                  : t.favourite
-              }
-              aria-pressed={!!target.favourited}
-              onClick={(e) => void act("fav", e)}
-              disabled={!canAct}
-            >
-              <Icon name={target.favourited ? "heart-fill" : "heart-line"} size={16} />
-              {target.favouritesCount > 0 && (
-                <span class="count">{shortNumber(target.favouritesCount)}</span>
-              )}
-            </button>
-            <button
-              type="button"
-              class={`status-action bookmark ${target.bookmarked ? "on" : ""}`}
-              title={t.bookmark}
-              aria-label={t.bookmark}
-              aria-pressed={!!target.bookmarked}
-              onClick={(e) => void act("bookmark", e)}
-              disabled={!canAct}
-            >
-              <Icon name={target.bookmarked ? "bookmark-fill" : "bookmark-line"} size={16} />
-            </button>
-            {isSelf && canAct && sourceInstance === account?.instance && (
-              <button
-                type="button"
-                class="status-action edit"
-                title={t.editPost}
-                aria-label={t.editPost}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCompose({ mode: "edit", statusId: target.id });
-                }}
-              >
-                <Icon name="pencil-line" size={16} />
-              </button>
-            )}
-            {!isSelf && canAct && (
-              <div class="action-more">
-                <button
-                  type="button"
-                  class={`status-action more ${menuPos ? "on" : ""}`}
-                  title={t.moreOptions}
-                  aria-label={t.moreOptions}
-                  aria-haspopup="menu"
-                  aria-expanded={!!menuPos}
-                  onClick={openMenu}
-                >
-                  <Icon name="more-1-line" size={16} />
-                </button>
-              </div>
-            )}
-            <div class="spacer" />
-            {target.editedAt && (
-              <span class="edit-badge" title={fullDate(target.editedAt)}>
-                <Icon name="history-line" size={13} />
-                {t.edited}
-              </span>
-            )}
-          </div>
+          <StatusActionsBar
+            target={target}
+            canAct={canAct}
+            showEdit={isSelf && canAct && sourceInstance === account?.instance}
+            showMore={!isSelf && canAct}
+            menuOpen={!!menu.menuPos}
+            onReply={reply}
+            onAct={act}
+            onEdit={(e) => {
+              e.stopPropagation();
+              setCompose({ mode: "edit", statusId: target.id });
+            }}
+            onMore={menu.open}
+          />
         )}
-        {menuPos && (
-          <div
-            ref={menuRef}
-            class="action-menu"
-            role="menu"
-            style={{ top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right }}
-          >
-            <button
-              type="button"
-              role="menuitem"
-              class="action-menu-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuPos(null);
-                setReportOpen(true);
-              }}
-            >
-              <Icon name="report-line" size={15} />
-              {t.reportPost}
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              class="action-menu-item danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                void blockUser();
-              }}
-            >
-              <Icon name="user-forbid-line" size={15} />
-              {t.blockUser}
-            </button>
-          </div>
+        {menu.menuPos && (
+          <StatusActionMenu
+            pos={menu.menuPos}
+            menuRef={menu.menuRef}
+            onReport={(e) => {
+              e.stopPropagation();
+              menu.close();
+              setReportOpen(true);
+            }}
+            onBlock={(e) => {
+              e.stopPropagation();
+              void blockUser();
+            }}
+          />
         )}
       </article>
       {reportOpen && (
