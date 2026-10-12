@@ -7,6 +7,7 @@ import { codeBlockToImageFile, type CodeBlock } from "../lib/code-image";
 import {
   buildPublishExecution,
   type PublishExecution,
+  type PublishPart,
   type PublishPlan,
 } from "../lib/publish-plan";
 import { putStatus, store, toast } from "./store";
@@ -51,6 +52,82 @@ async function convertCodeBlocks(
   return { converted, mediaIds };
 }
 
+async function updateStatus(
+  ctx: PublishContext,
+  execution: PublishExecution,
+  statusId: string,
+): Promise<Status> {
+  const part = execution.parts[0];
+  const selected = ctx.client.v1.statuses.$select(statusId);
+  const status = part.mediaIds.length
+    ? await selected.update({
+        status: part.status,
+        spoilerText: part.spoilerText,
+        visibility: execution.visibility,
+        sensitive: execution.sensitive,
+        mediaIds: part.mediaIds,
+        mediaAttributes: part.mediaAttributes,
+      })
+    : await selected.update({
+        status: part.status,
+        spoilerText: part.spoilerText,
+        visibility: execution.visibility,
+        sensitive: execution.sensitive,
+        poll: part.poll,
+      });
+  store.ui.lastPostedKey = putStatus(status, ctx.instance);
+  return status;
+}
+
+async function scheduleStatus(ctx: PublishContext, execution: PublishExecution): Promise<void> {
+  const part = execution.parts[0];
+  const common = {
+    spoilerText: part.spoilerText,
+    visibility: execution.visibility,
+    sensitive: execution.sensitive,
+    inReplyToId: part.inReplyToId,
+    quotedStatusId: part.quotedStatusId,
+    scheduledAt: execution.scheduledAt,
+  };
+  if (part.mediaIds.length) {
+    await ctx.client.v1.statuses.create({
+      ...common,
+      status: part.status || undefined,
+      mediaIds: part.mediaIds,
+    });
+    return;
+  }
+  await ctx.client.v1.statuses.create({ ...common, status: part.status, poll: part.poll });
+}
+
+/** Publishes one thread part and caches it (quote/poll are first-part only). */
+async function createStatus(
+  ctx: PublishContext,
+  execution: PublishExecution,
+  part: PublishPart,
+  replyToId?: string,
+): Promise<Status> {
+  const status = part.mediaIds.length
+    ? await ctx.client.v1.statuses.create({
+        status: part.status || undefined,
+        spoilerText: part.spoilerText,
+        visibility: execution.visibility,
+        mediaIds: part.mediaIds,
+        inReplyToId: replyToId,
+        quotedStatusId: part.quotedStatusId,
+      })
+    : await ctx.client.v1.statuses.create({
+        status: part.status,
+        spoilerText: part.spoilerText,
+        visibility: execution.visibility,
+        poll: part.poll,
+        inReplyToId: replyToId,
+        quotedStatusId: part.quotedStatusId,
+      });
+  store.ui.lastPostedKey = putStatus(status, ctx.instance);
+  return status;
+}
+
 /** Runs the plan; never throws — failures become `ok: false` + `remaining`. */
 export async function executePublish(
   ctx: PublishContext,
@@ -62,76 +139,19 @@ export async function executePublish(
 
   try {
     if (execution.kind === "update" && execution.statusId) {
-      const part = execution.parts[0];
-      const status = part.mediaIds.length
-        ? await ctx.client.v1.statuses.$select(execution.statusId).update({
-            status: part.status,
-            spoilerText: part.spoilerText,
-            visibility: execution.visibility,
-            sensitive: execution.sensitive,
-            mediaIds: part.mediaIds,
-            mediaAttributes: part.mediaAttributes,
-          })
-        : await ctx.client.v1.statuses.$select(execution.statusId).update({
-            status: part.status,
-            spoilerText: part.spoilerText,
-            visibility: execution.visibility,
-            sensitive: execution.sensitive,
-            poll: part.poll,
-          });
-      store.ui.lastPostedKey = putStatus(status, ctx.instance);
-      posted.push(status);
+      posted.push(await updateStatus(ctx, execution, execution.statusId));
       return { ok: true, kind: "update", posted, remaining: [] };
     }
 
     if (execution.kind === "schedule") {
-      const part = execution.parts[0];
-      const common = {
-        spoilerText: part.spoilerText,
-        visibility: execution.visibility,
-        sensitive: execution.sensitive,
-        inReplyToId: part.inReplyToId,
-        quotedStatusId: part.quotedStatusId,
-        scheduledAt: execution.scheduledAt,
-      };
-      if (part.mediaIds.length) {
-        await ctx.client.v1.statuses.create({
-          ...common,
-          status: part.status || undefined,
-          mediaIds: part.mediaIds,
-        });
-      } else {
-        await ctx.client.v1.statuses.create({
-          ...common,
-          status: part.status,
-          poll: part.poll,
-        });
-      }
+      await scheduleStatus(ctx, execution);
       return { ok: true, kind: "schedule", posted, remaining: [] };
     }
 
     // create: chains thread parts as replies.
     let replyToId = execution.parts[0]?.inReplyToId;
-    for (const [index, part] of execution.parts.entries()) {
-      const first = index === 0;
-      const status = part.mediaIds.length
-        ? await ctx.client.v1.statuses.create({
-            status: part.status || undefined,
-            spoilerText: part.spoilerText,
-            visibility: execution.visibility,
-            mediaIds: part.mediaIds,
-            inReplyToId: replyToId,
-            quotedStatusId: first ? part.quotedStatusId : undefined,
-          })
-        : await ctx.client.v1.statuses.create({
-            status: part.status,
-            spoilerText: part.spoilerText,
-            visibility: execution.visibility,
-            poll: first ? part.poll : undefined,
-            inReplyToId: replyToId,
-            quotedStatusId: first ? part.quotedStatusId : undefined,
-          });
-      store.ui.lastPostedKey = putStatus(status, ctx.instance);
+    for (const part of execution.parts) {
+      const status = await createStatus(ctx, execution, part, replyToId);
       posted.push(status);
       replyToId = status.id;
     }
