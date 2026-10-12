@@ -88,6 +88,48 @@ export function FiltersPage(): JSX.Element {
     }
   };
 
+  let body: JSX.Element;
+  if (loading) {
+    body = (
+      <div class="center-state">
+        <span class="spinner" />
+      </div>
+    );
+  } else if (!filters.length) {
+    body = (
+      <div class="center-state">
+        <Icon name="filter-line" size={28} />
+        <h3>{t.emptyFilters}</h3>
+      </div>
+    );
+  } else {
+    body = (
+      <div class="account-list">
+        {filters.map((filter) => (
+          <div class="list-row" key={filter.id}>
+            <Icon name="filter-line" size={18} />
+            <div class="row-main">
+              <div class="row-title">{filter.title}</div>
+              <div class="row-sub">
+                {filter.keywords.map((k) => k.keyword).join(", ")} —{" "}
+                {filter.filterAction === "hide" ? t.filterHides : t.filterWarns}{" "}
+                {filter.context.map(contextLabel).join(", ")}
+              </div>
+            </div>
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label={t.delete}
+              onClick={() => void remove(filter.id)}
+            >
+              <Icon name="delete-line" size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <PageShell title={t.filters} showBack>
       <form class="filter-create" onSubmit={(e) => void create(e)}>
@@ -120,40 +162,7 @@ export function FiltersPage(): JSX.Element {
           {t.save}
         </button>
       </form>
-      {loading ? (
-        <div class="center-state">
-          <span class="spinner" />
-        </div>
-      ) : !filters.length ? (
-        <div class="center-state">
-          <Icon name="filter-line" size={28} />
-          <h3>{t.emptyFilters}</h3>
-        </div>
-      ) : (
-        <div class="account-list">
-          {filters.map((filter) => (
-            <div class="list-row" key={filter.id}>
-              <Icon name="filter-line" size={18} />
-              <div class="row-main">
-                <div class="row-title">{filter.title}</div>
-                <div class="row-sub">
-                  {filter.keywords.map((k) => k.keyword).join(", ")} —{" "}
-                  {filter.filterAction === "hide" ? t.filterHides : t.filterWarns}{" "}
-                  {filter.context.map(contextLabel).join(", ")}
-                </div>
-              </div>
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label={t.delete}
-                onClick={() => void remove(filter.id)}
-              >
-                <Icon name="delete-line" size={16} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      {body}
     </PageShell>
   );
 }

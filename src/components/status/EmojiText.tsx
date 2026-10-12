@@ -17,7 +17,7 @@ export function EmojiText({ text, emojis }: EmojiTextProps): JSX.Element {
   }
   if (!map.size) return <>{text}</>;
 
-  const re = /:([a-zA-Z0-9_]+):/g;
+  const re = /:(\w+):/g;
   const parts: (string | JSX.Element)[] = [];
   let last = 0;
   let key = 0;

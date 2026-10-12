@@ -16,6 +16,7 @@ export function TranslateMenu({ onPick }: TranslateMenuProps): JSX.Element {
           key={code}
           type="button"
           role="option"
+          aria-selected={false}
           class="translate-option"
           onClick={() => onPick(code)}
         >

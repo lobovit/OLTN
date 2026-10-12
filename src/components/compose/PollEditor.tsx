@@ -1,4 +1,5 @@
 import type { JSX } from "preact";
+import { useRef } from "preact/hooks";
 import { t } from "../../i18n/pt-BR";
 import type { PublishPoll } from "../../lib/publish-plan";
 import { Icon } from "../ui/Icon";
@@ -10,6 +11,14 @@ interface PollEditorProps {
 
 /** Poll options, expiry and multiple-choice toggle (controlled). */
 export function PollEditor({ value, onChange }: PollEditorProps): JSX.Element {
+  // The poll model is positional, so keys are stable per slot and only
+  // regenerated when the option count changes (typing keeps the inputs).
+  const idSeq = useRef(0);
+  const idsRef = useRef<string[]>([]);
+  if (idsRef.current.length !== value.options.length) {
+    idsRef.current = value.options.map(() => `poll-opt-${++idSeq.current}`);
+  }
+
   const setOption = (index: number, text: string): void => {
     onChange({ ...value, options: value.options.map((o, i) => (i === index ? text : o)) });
   };
@@ -21,7 +30,7 @@ export function PollEditor({ value, onChange }: PollEditorProps): JSX.Element {
   return (
     <div class="compose-poll">
       {value.options.map((option, index) => (
-        <div class="poll-option-row" key={index}>
+        <div class="poll-option-row" key={idsRef.current[index]}>
           <span class="muted">
             {t.pollOption} {index + 1}
           </span>

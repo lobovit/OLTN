@@ -91,7 +91,7 @@ export function normalizeEmojiUrl(url: string): string | null {
   return /^https:\/\//.test(raw) ? raw : null;
 }
 
-const SHORTCODE_ALT = /^:([a-zA-Z0-9_]+):$/;
+const SHORTCODE_ALT = /^:(\w+):$/;
 
 /**
  * Marks as `.emoji` the emoji images the server already sent in the HTML.
@@ -135,7 +135,7 @@ export function emojifyInPlace(
     if (node.nodeValue?.includes(":")) textNodes.push(node);
   }
 
-  const re = /:([a-zA-Z0-9_]+):/g;
+  const re = /:(\w+):/g;
   for (const node of textNodes) {
     const text = node.nodeValue ?? "";
     re.lastIndex = 0;

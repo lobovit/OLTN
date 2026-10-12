@@ -66,6 +66,63 @@ export function EmojiPanel({ instance, account, onInsert }: EmojiPanelProps): JS
   const pick = (item: EmojiItem): void => onInsert(preview(item));
   const pickCustom = (item: CustomEmoji): void => onInsert(`:${item.shortcode}: `);
 
+  let body: JSX.Element;
+  if (unicodeMatches) {
+    body = (
+      <section class="emoji-group">
+        <div class="emoji-grid">
+          {unicodeMatches.map((item) => (
+            <button
+              key={item.c}
+              type="button"
+              class="emoji-btn"
+              title={item.l}
+              aria-label={item.l}
+              onClick={() => pick(item)}
+            >
+              {preview(item)}
+            </button>
+          ))}
+        </div>
+        {!unicodeMatches.length && !customMatches.length && (
+          <p class="muted emoji-empty">{t.emojiEmpty}</p>
+        )}
+      </section>
+    );
+  } else if (data?.length) {
+    body = (
+      <>
+        {data.map((group) => (
+          <section class="emoji-group" key={group.id}>
+            <h4 class="emoji-group-title">{group.label}</h4>
+            <div class="emoji-grid">
+              {group.emojis.map((item) => (
+                <button
+                  key={item.c}
+                  type="button"
+                  class="emoji-btn"
+                  title={item.l}
+                  aria-label={item.l}
+                  onClick={() => pick(item)}
+                >
+                  {preview(item)}
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </>
+    );
+  } else if (data) {
+    body = <p class="muted emoji-empty">{t.emojiEmpty}</p>;
+  } else {
+    body = (
+      <div class="emoji-loading">
+        <span class="spinner" />
+      </div>
+    );
+  }
+
   return (
     <div class="emoji-picker" aria-label={t.emojiPicker}>
       <div class="emoji-picker-head">
@@ -125,53 +182,7 @@ export function EmojiPanel({ instance, account, onInsert }: EmojiPanelProps): JS
             </div>
           </section>
         )}
-        {unicodeMatches ? (
-          <section class="emoji-group">
-            <div class="emoji-grid">
-              {unicodeMatches.map((item) => (
-                <button
-                  key={item.c}
-                  type="button"
-                  class="emoji-btn"
-                  title={item.l}
-                  aria-label={item.l}
-                  onClick={() => pick(item)}
-                >
-                  {preview(item)}
-                </button>
-              ))}
-            </div>
-            {!unicodeMatches.length && !customMatches.length && (
-              <p class="muted emoji-empty">{t.emojiEmpty}</p>
-            )}
-          </section>
-        ) : data?.length ? (
-          data.map((group) => (
-            <section class="emoji-group" key={group.id}>
-              <h4 class="emoji-group-title">{group.label}</h4>
-              <div class="emoji-grid">
-                {group.emojis.map((item) => (
-                  <button
-                    key={item.c}
-                    type="button"
-                    class="emoji-btn"
-                    title={item.l}
-                    aria-label={item.l}
-                    onClick={() => pick(item)}
-                  >
-                    {preview(item)}
-                  </button>
-                ))}
-              </div>
-            </section>
-          ))
-        ) : data ? (
-          <p class="muted emoji-empty">{t.emojiEmpty}</p>
-        ) : (
-          <div class="emoji-loading">
-            <span class="spinner" />
-          </div>
-        )}
+        {body}
       </div>
     </div>
   );

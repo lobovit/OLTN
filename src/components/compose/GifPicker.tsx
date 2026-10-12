@@ -65,6 +65,67 @@ export function GifPicker({ apiKey, onSelect }: GifPickerProps): JSX.Element {
 
   useEffect(() => () => window.clearTimeout(debounce.current), []);
 
+  let body: JSX.Element;
+  if (failed) {
+    body = <p class="gif-state">{t.gifError}</p>;
+  } else if (!page) {
+    body = (
+      <p class="gif-state">
+        <span class="spinner" />
+      </p>
+    );
+  } else if (!page.items.length) {
+    body = <p class="gif-state">{t.gifNone}</p>;
+  } else {
+    body = (
+      <>
+        <div class="gif-grid">
+          {page.items.map((gif) => (
+            <button
+              key={gif.id}
+              type="button"
+              class="gif-item"
+              title={gif.alt}
+              onClick={() => onSelect(gif)}
+            >
+              <picture>
+                {gif.previewWebp && <source srcset={gif.previewWebp} type="image/webp" />}
+                <img
+                  src={gif.preview}
+                  width={gif.width}
+                  height={gif.height}
+                  loading="lazy"
+                  decoding="async"
+                  alt={gif.alt}
+                  referrerpolicy="no-referrer"
+                />
+              </picture>
+            </button>
+          ))}
+        </div>
+        <div class="gif-pager">
+          <button
+            type="button"
+            class="cw-toggle"
+            disabled={page.offset <= 0 || loading}
+            onClick={() => load(query, Math.max(0, page.offset - GIFS_PER_PAGE))}
+          >
+            {t.prev}
+          </button>
+          {loading && <span class="spinner" />}
+          <button
+            type="button"
+            class="cw-toggle"
+            disabled={loading || page.offset + page.count >= page.total}
+            onClick={() => load(query, page.offset + GIFS_PER_PAGE)}
+          >
+            {t.next}
+          </button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <div class="gif-picker" aria-label={t.gif}>
       <form
@@ -84,61 +145,7 @@ export function GifPicker({ apiKey, onSelect }: GifPickerProps): JSX.Element {
           onInput={(e) => onInput((e.target as HTMLInputElement).value)}
         />
       </form>
-      {failed ? (
-        <p class="gif-state">{t.gifError}</p>
-      ) : !page ? (
-        <p class="gif-state">
-          <span class="spinner" />
-        </p>
-      ) : page.items.length === 0 ? (
-        <p class="gif-state">{t.gifNone}</p>
-      ) : (
-        <>
-          <div class="gif-grid">
-            {page.items.map((gif) => (
-              <button
-                key={gif.id}
-                type="button"
-                class="gif-item"
-                title={gif.alt}
-                onClick={() => onSelect(gif)}
-              >
-                <picture>
-                  {gif.previewWebp && <source srcset={gif.previewWebp} type="image/webp" />}
-                  <img
-                    src={gif.preview}
-                    width={gif.width}
-                    height={gif.height}
-                    loading="lazy"
-                    decoding="async"
-                    alt={gif.alt}
-                    referrerpolicy="no-referrer"
-                  />
-                </picture>
-              </button>
-            ))}
-          </div>
-          <div class="gif-pager">
-            <button
-              type="button"
-              class="cw-toggle"
-              disabled={page.offset <= 0 || loading}
-              onClick={() => load(query, Math.max(0, page.offset - GIFS_PER_PAGE))}
-            >
-              {t.prev}
-            </button>
-            {loading && <span class="spinner" />}
-            <button
-              type="button"
-              class="cw-toggle"
-              disabled={loading || page.offset + page.count >= page.total}
-              onClick={() => load(query, page.offset + GIFS_PER_PAGE)}
-            >
-              {t.next}
-            </button>
-          </div>
-        </>
-      )}
+      {body}
       <a class="gif-attribution" href="https://giphy.com" target="_blank" rel="noopener noreferrer">
         Powered by GIPHY
       </a>

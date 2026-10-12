@@ -224,6 +224,7 @@ function StatusTranslationBlock({
               key={code}
               type="button"
               role="option"
+              aria-selected={false}
               class="translate-option"
               onClick={() => void translation.translate(code)}
             >
