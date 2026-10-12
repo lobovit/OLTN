@@ -1,36 +1,33 @@
 import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import { getCustomEmojis, getRest } from "../../api/client";
-import type {
-  ComposeIntent,
-  ComposeVisibility,
-  CustomEmoji,
-  MediaAttachment,
-} from "../../api/types";
-import type { Account } from "../../api/types";
+import { getRest } from "../../api/client";
+import type { Account, ComposeIntent, ComposeVisibility, MediaAttachment } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { extractCodeBlocks } from "../../lib/code-image";
-import { fullDate, htmlToPlainText, languageName, toLocalInputValue } from "../../lib/format";
+import { fullDate, htmlToPlainText, languageName } from "../../lib/format";
 import { userMessageForError } from "../../lib/errors";
-import { loadEmojiGroups, searchEmojis, type EmojiGroup, type EmojiItem } from "../../lib/emoji";
 import { GIPHY_PUBLIC_KEY, type GifResult } from "../../lib/giphy";
 import { clientFor } from "../../lib/identity";
-import { planPublish, type ComposeDraft } from "../../lib/publish-plan";
-import { splitThreadText } from "../../lib/thread";
-import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
+import { planPublish, type ComposeDraft, type PublishPoll } from "../../lib/publish-plan";
 import { readJSON, writeJSON } from "../../lib/storage";
-import { Sheet } from "../ui/Sheet";
-import { Icon } from "../ui/Icon";
-import { Avatar } from "../ui/Avatar";
-import { EmojiText } from "../status/EmojiText";
+import { splitThreadText } from "../../lib/thread";
+import { translateText } from "../../lib/translate";
 import { currentAccount, setCompose, store, toast } from "../../state/store";
 import { executePublish } from "../../state/publish";
+import { Sheet } from "../ui/Sheet";
+import { Icon } from "../ui/Icon";
+import { EmojiPanel } from "./EmojiPanel";
 import { GifPicker } from "./GifPicker";
+import { MediaAttachments } from "./MediaAttachments";
+import { MentionMenu } from "./MentionMenu";
+import { PollEditor } from "./PollEditor";
+import { SchedulePanel } from "./SchedulePanel";
+import { TranslateMenu } from "./TranslateMenu";
+import { VisibilityPicker } from "./VisibilityPicker";
 
 const CHAR_LIMIT = 500;
 const DRAFT_KEY = "compose-draft";
-const EMOJI_TONES = ["🏻", "🏼", "🏽", "🏾", "🏿"];
 /** Zero-config GIPHY search: public web key, VITE_GIPHY_API_KEY overrides. */
 const GIPHY_API_KEY =
   (import.meta.env.VITE_GIPHY_API_KEY as string | undefined) || GIPHY_PUBLIC_KEY;
@@ -39,6 +36,66 @@ interface Draft {
   text: string;
   spoiler: string;
   visibility: ComposeVisibility;
+}
+
+interface ComposeDraftInput {
+  text: string;
+  spoiler: string;
+  showCw: boolean;
+  visibility: ComposeVisibility;
+  sensitive: boolean;
+  poll: PublishPoll | null;
+  media: MediaAttachment[];
+  replyToId?: string;
+  quoteId?: string;
+  scheduledAt?: string;
+}
+
+function makePoll(): PublishPoll {
+  return { options: ["", ""], expiresIn: 86400, multiple: false };
+}
+
+function buildComposeDraft(input: ComposeDraftInput): ComposeDraft {
+  return {
+    text: input.text,
+    spoiler: input.spoiler,
+    showCw: input.showCw,
+    visibility: input.visibility,
+    sensitive: input.sensitive,
+    poll: input.poll
+      ? {
+          options: input.poll.options.filter((o) => o.trim()),
+          expiresIn: input.poll.expiresIn,
+          multiple: input.poll.multiple,
+        }
+      : undefined,
+    media: input.media,
+    replyToId: input.replyToId,
+    quoteId: input.quoteId,
+    scheduledAt: input.scheduledAt,
+  };
+}
+
+function composeTitle(mode: ComposeIntent["mode"]): string {
+  switch (mode) {
+    case "reply":
+      return t.composeReply;
+    case "quote":
+      return t.composeQuote;
+    case "edit":
+      return t.composeEdit;
+    default:
+      return t.composeTitle;
+  }
+}
+
+function submitLabel(state: { busy: boolean; isEdit: boolean; scheduled: boolean }): string {
+  if (state.busy) {
+    if (state.isEdit) return t.saving;
+    return state.scheduled ? t.scheduling : t.posting;
+  }
+  if (state.isEdit) return t.save;
+  return state.scheduled ? t.schedule : t.post;
 }
 
 export function ComposeSheet(): JSX.Element | null {
@@ -55,14 +112,10 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const [spoiler, setSpoiler] = useState("");
   const [showCw, setShowCw] = useState(false);
   const [visibility, setVisibility] = useState<ComposeVisibility>("public");
-  const [visOpen, setVisOpen] = useState(false);
   const [sensitive, setSensitive] = useState(false);
   const [media, setMedia] = useState<MediaAttachment[]>([]);
   const [uploading, setUploading] = useState(0);
-  const [pollOn, setPollOn] = useState(false);
-  const [pollOptions, setPollOptions] = useState(["", ""]);
-  const [pollExpires, setPollExpires] = useState(86400);
-  const [pollMultiple, setPollMultiple] = useState(false);
+  const [poll, setPoll] = useState<PublishPoll | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [charLimit, setCharLimit] = useState(CHAR_LIMIT);
@@ -75,10 +128,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const [mentionItems, setMentionItems] = useState<Account[]>([]);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [emojiQuery, setEmojiQuery] = useState("");
-  const [emojiTone, setEmojiTone] = useState(0);
-  const [emojiData, setEmojiData] = useState<EmojiGroup[] | null>(null);
-  const [customEmojis, setCustomEmojis] = useState<CustomEmoji[]>([]);
   const [gifOpen, setGifOpen] = useState(false);
   const [transOpen, setTransOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
@@ -89,7 +138,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const fileRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const cwRef = useRef<HTMLInputElement>(null);
-  const visPickerRef = useRef<HTMLDivElement>(null);
 
   /* instance character limit + local post support (Pleroma/Akkoma) */
   useEffect(() => {
@@ -112,51 +160,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
       cancelled = true;
     };
   }, [instance, account]);
-
-  /* closes the visibility menu when clicking outside */
-  useEffect(() => {
-    if (!visOpen) return;
-    const onDown = (e: PointerEvent): void => {
-      if (!visPickerRef.current?.contains(e.target as Node)) setVisOpen(false);
-    };
-    window.addEventListener("pointerdown", onDown);
-    return () => window.removeEventListener("pointerdown", onDown);
-  }, [visOpen]);
-
-  /* loads Unicode emojis (separate chunk) on first open */
-  useEffect(() => {
-    if (!emojiOpen || emojiData) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const groups = await loadEmojiGroups(store.settings.language);
-        if (!cancelled) setEmojiData(groups);
-      } catch (err) {
-        console.warn("[oltn] emoji data failed", err);
-        if (!cancelled) setEmojiData([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [emojiOpen, emojiData]);
-
-  /* loads the instance custom emojis on first open */
-  useEffect(() => {
-    if (!emojiOpen || !account) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const list = await getCustomEmojis(instance, account.accessToken);
-        if (!cancelled) setCustomEmojis(list.filter((e) => e.visibleInPicker));
-      } catch (err) {
-        console.warn("[oltn] custom emojis failed", err);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [emojiOpen, instance, account]);
 
   /* closes popovers (emoji/gif/translation/schedule) when clicking outside or pressing Escape */
   useEffect(() => {
@@ -265,13 +268,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     }
   };
 
-  const emojiPreview = (item: EmojiItem): string =>
-    (emojiTone > 0 && item.s?.[emojiTone - 1]) || item.c;
-
-  const pickEmoji = (item: EmojiItem): void => insertAtCursor(emojiPreview(item));
-
-  const pickCustomEmoji = (custom: CustomEmoji): void => insertAtCursor(`:${custom.shortcode}: `);
-
   const translateDraft = async (target: string): Promise<void> => {
     const source = text.trim();
     if (!source || translating) return;
@@ -294,29 +290,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     setText(translation.original);
     setTranslation(null);
   };
-
-  const visOptions: {
-    value: ComposeVisibility;
-    label: string;
-    hint: string;
-    icon: string;
-  }[] = [
-    { value: "public", label: t.visPublic, hint: t.visPublicHint, icon: "globe-line" },
-    ...(localSupported
-      ? [
-          {
-            value: "local" as ComposeVisibility,
-            label: t.visLocal,
-            hint: t.visLocalHint,
-            icon: "building-2-line",
-          },
-        ]
-      : []),
-    { value: "unlisted", label: t.visUnlisted, hint: t.visUnlistedHint, icon: "eye-line" },
-    { value: "private", label: t.visPrivate, hint: t.visPrivateHint, icon: "group-line" },
-    { value: "direct", label: t.visDirect, hint: t.visDirectHint, icon: "mail-line" },
-  ];
-  const currentVis = visOptions.find((o) => o.value === visibility) ?? visOptions[0];
 
   /* draft (new mode) */
   useEffect(() => {
@@ -365,15 +338,15 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           setVisibility(status.visibility);
           setSensitive(status.sensitive);
           setMedia(status.mediaAttachments);
-          const poll = status.poll;
-          if (poll) {
-            setPollOn(true);
-            setPollOptions(poll.options.map((o) => o.title));
-            setPollMultiple(poll.multiple);
-            if (poll.expiresAt) {
-              const remaining = Math.ceil((Date.parse(poll.expiresAt) - Date.now()) / 1000);
-              setPollExpires(Math.max(300, remaining));
-            }
+          const statusPoll = status.poll;
+          if (statusPoll) {
+            setPoll({
+              options: statusPoll.options.map((o) => o.title),
+              expiresIn: statusPoll.expiresAt
+                ? Math.max(300, Math.ceil((Date.parse(statusPoll.expiresAt) - Date.now()) / 1000))
+                : 86400,
+              multiple: statusPoll.multiple,
+            });
           }
         }
       } catch {
@@ -391,6 +364,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
 
   const remaining = charLimit - text.length;
   const canPoll = !media.length && !uploading;
+  const pollReady = !poll || poll.options.every((o) => o.trim());
   const threadParts =
     !isEdit && text.trim().length > charLimit ? splitThreadText(text.trim(), charLimit).length : 1;
   const scheduleDate = scheduledAt ? new Date(scheduledAt) : null;
@@ -401,16 +375,10 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     !uploading &&
     (text.trim().length > 0 || media.length > 0) &&
     (isEdit || remaining >= 0) &&
-    (!pollOn || pollOptions.every((o) => o.trim())) &&
+    pollReady &&
     (!scheduleDate || (scheduleValid && !scheduleBlocked));
 
-  const emojiNeedle = emojiQuery.trim().toLowerCase();
-  const customMatches = emojiNeedle
-    ? customEmojis.filter((e) => e.shortcode.toLowerCase().includes(emojiNeedle))
-    : customEmojis.slice(0, 120);
-  const unicodeMatches =
-    emojiData && emojiQuery.trim() ? searchEmojis(emojiData, emojiQuery) : null;
-  const codeBlocks = isEdit || pollOn ? [] : extractCodeBlocks(text);
+  const codeBlocks = isEdit || poll ? [] : extractCodeBlocks(text);
 
   const uploadFile = async (file: File, description?: string): Promise<void> => {
     if (!account) return;
@@ -440,7 +408,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
 
   /** Downloads the selected GIF and attaches it with its alt text. */
   const pickGif = async (gif: GifResult): Promise<void> => {
-    if (!account || media.length >= 4 || pollOn || uploading) return;
+    if (!account || media.length >= 4 || poll || uploading) return;
     setGifOpen(false);
     setUploading((n) => n + 1);
     try {
@@ -461,19 +429,13 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     if (!account || !canSubmit) return;
     setBusy(true);
     try {
-      const draft: ComposeDraft = {
+      const draft = buildComposeDraft({
         text,
         spoiler,
         showCw,
         visibility,
         sensitive,
-        poll: pollOn
-          ? {
-              options: pollOptions.filter((o) => o.trim()),
-              expiresIn: pollExpires,
-              multiple: pollMultiple,
-            }
-          : undefined,
+        poll,
         media,
         replyToId: replyTo?.id,
         quoteId: quoteId ?? undefined,
@@ -481,7 +443,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           scheduleDate && scheduleValid && !scheduleBlocked
             ? scheduleDate.toISOString()
             : undefined,
-      };
+      });
       const plan = planPublish(
         draft,
         { charLimit, maxMedia: 4 },
@@ -507,18 +469,9 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     }
   };
 
-  const title =
-    intent.mode === "reply"
-      ? t.composeReply
-      : intent.mode === "quote"
-        ? t.composeQuote
-        : intent.mode === "edit"
-          ? t.composeEdit
-          : t.composeTitle;
-
   return (
     <Sheet
-      title={title}
+      title={composeTitle(intent.mode)}
       onClose={() => setCompose(null)}
       draggable
       positionKey="compose"
@@ -550,20 +503,20 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             class="icon-btn"
             title={t.attachMedia}
             aria-label={t.attachMedia}
-            disabled={media.length >= 4 || pollOn}
+            disabled={media.length >= 4 || !!poll}
             onClick={() => fileRef.current?.click()}
           >
             <Icon name="attachment-line" size={20} />
           </button>
           <button
             type="button"
-            class={`icon-btn ${pollOn ? "active" : ""}`}
+            class={`icon-btn ${poll ? "active" : ""}`}
             title={t.addPoll}
             aria-label={t.addPoll}
             disabled={!canPoll}
             onClick={() => {
-              setPollOn((v) => !v);
-              if (!pollOn) setMedia([]);
+              setPoll(poll ? null : makePoll());
+              if (!poll) setMedia([]);
             }}
           >
             <Icon name="list-check-line" size={20} />
@@ -604,7 +557,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             title={t.gif}
             aria-label={t.gif}
             aria-expanded={gifOpen}
-            disabled={media.length >= 4 || pollOn}
+            disabled={media.length >= 4 || !!poll}
             onClick={() => {
               setGifOpen((v) => !v);
               setEmojiOpen(false);
@@ -653,17 +606,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             onClick={() => void submit()}
           >
             {busy && <span class="spinner" />}
-            {isEdit
-              ? busy
-                ? t.saving
-                : t.save
-              : busy
-                ? scheduleDate
-                  ? t.scheduling
-                  : t.posting
-                : scheduleDate
-                  ? t.schedule
-                  : t.post}
+            {submitLabel({ busy, isEdit, scheduled: !!scheduleDate })}
           </button>
         </>
       }
@@ -755,35 +698,12 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             if ((e.ctrlKey || e.metaKey) && e.key === "Enter") void submit();
           }}
         />
-        {mentionItems.length > 0 && (
-          <div class="mention-menu" role="listbox" aria-label={t.mentionSuggest}>
-            {mentionItems.map((candidate, index) => (
-              <button
-                key={candidate.id}
-                type="button"
-                role="option"
-                aria-selected={index === mentionIndex}
-                class={`mention-option ${index === mentionIndex ? "active" : ""}`}
-                onMouseDown={(e) => e.preventDefault()}
-                onMouseEnter={() => setMentionIndex(index)}
-                onClick={() => applyMention(candidate)}
-              >
-                <Avatar
-                  src={candidate.avatar}
-                  name={candidate.displayName || candidate.username}
-                  size={28}
-                />
-                <span class="mention-name">
-                  <EmojiText
-                    text={candidate.displayName || candidate.username}
-                    emojis={candidate.emojis}
-                  />
-                </span>
-                <span class="mention-acct">@{candidate.acct}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <MentionMenu
+          items={mentionItems}
+          index={mentionIndex}
+          onIndex={setMentionIndex}
+          onPick={applyMention}
+        />
         {translation && (
           <div class="compose-translation">
             <Icon name="translate-line" size={14} />
@@ -795,54 +715,16 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
             </button>
           </div>
         )}
-        {transOpen && (
-          <div class="translate-menu" role="listbox" aria-label={t.translateTo}>
-            {TRANSLATE_TARGETS.map((code) => (
-              <button
-                key={code}
-                type="button"
-                role="option"
-                class="translate-option"
-                onClick={() => void translateDraft(code)}
-              >
-                <span>{languageName(code)}</span>
-                <span class="faint">{code}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        {transOpen && <TranslateMenu onPick={(code) => void translateDraft(code)} />}
         {scheduleOpen && (
-          <div class="schedule-panel">
-            <label class="schedule-field">
-              <span>{t.scheduleAt}</span>
-              <input
-                type="datetime-local"
-                class="field"
-                min={toLocalInputValue(new Date(Date.now() + 5 * 60_000))}
-                value={scheduledAt}
-                onInput={(e) => setScheduledAt((e.target as HTMLInputElement).value)}
-              />
-            </label>
-            {scheduleDate && !scheduleValid && <p class="schedule-error">{t.scheduleTooSoon}</p>}
-            <div class="schedule-actions">
-              <button
-                type="button"
-                class="btn ghost sm"
-                disabled={!scheduledAt}
-                onClick={() => setScheduledAt("")}
-              >
-                {t.scheduleClear}
-              </button>
-              <button
-                type="button"
-                class="btn primary sm"
-                disabled={!scheduleDate || !scheduleValid}
-                onClick={() => setScheduleOpen(false)}
-              >
-                {t.confirm}
-              </button>
-            </div>
-          </div>
+          <SchedulePanel
+            value={scheduledAt}
+            date={scheduleDate}
+            valid={scheduleValid}
+            onInput={setScheduledAt}
+            onClear={() => setScheduledAt("")}
+            onConfirm={() => setScheduleOpen(false)}
+          />
         )}
         {scheduleDate && !scheduleOpen && (
           <div class={`compose-schedule pill ${scheduleValid ? "" : "invalid"}`}>
@@ -864,250 +746,26 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
         )}
         {gifOpen && <GifPicker apiKey={GIPHY_API_KEY} onSelect={(gif) => void pickGif(gif)} />}
         {emojiOpen && (
-          <div class="emoji-picker" aria-label={t.emojiPicker}>
-            <div class="emoji-picker-head">
-              <input
-                class="field emoji-search"
-                type="search"
-                placeholder={t.emojiSearch}
-                value={emojiQuery}
-                onInput={(e) => setEmojiQuery((e.target as HTMLInputElement).value)}
-              />
-              <div class="emoji-tones" role="radiogroup" aria-label={t.skinTone}>
-                <button
-                  type="button"
-                  class={`emoji-tone ${emojiTone === 0 ? "active" : ""}`}
-                  aria-pressed={emojiTone === 0}
-                  title={t.skinTone}
-                  onClick={() => setEmojiTone(0)}
-                >
-                  ✋
-                </button>
-                {EMOJI_TONES.map((tone, index) => (
-                  <button
-                    key={tone}
-                    type="button"
-                    class={`emoji-tone ${emojiTone === index + 1 ? "active" : ""}`}
-                    aria-pressed={emojiTone === index + 1}
-                    onClick={() => setEmojiTone(emojiTone === index + 1 ? 0 : index + 1)}
-                  >
-                    {`✋${tone}`}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div class="emoji-scroll">
-              {customMatches.length > 0 && (
-                <section class="emoji-group">
-                  <h4 class="emoji-group-title">{t.emojiCustom}</h4>
-                  <div class="emoji-grid">
-                    {customMatches.map((custom) => (
-                      <button
-                        key={custom.shortcode}
-                        type="button"
-                        class="emoji-btn emoji-custom"
-                        title={`:${custom.shortcode}:`}
-                        aria-label={`:${custom.shortcode}:`}
-                        onClick={() => pickCustomEmoji(custom)}
-                      >
-                        <img
-                          src={custom.staticUrl || custom.url}
-                          alt=""
-                          width={22}
-                          height={22}
-                          loading="lazy"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-              {unicodeMatches ? (
-                <section class="emoji-group">
-                  <div class="emoji-grid">
-                    {unicodeMatches.map((item) => (
-                      <button
-                        key={item.c}
-                        type="button"
-                        class="emoji-btn"
-                        title={item.l}
-                        aria-label={item.l}
-                        onClick={() => pickEmoji(item)}
-                      >
-                        {emojiPreview(item)}
-                      </button>
-                    ))}
-                  </div>
-                  {!unicodeMatches.length && !customMatches.length && (
-                    <p class="muted emoji-empty">{t.emojiEmpty}</p>
-                  )}
-                </section>
-              ) : emojiData?.length ? (
-                emojiData.map((group) => (
-                  <section class="emoji-group" key={group.id}>
-                    <h4 class="emoji-group-title">{group.label}</h4>
-                    <div class="emoji-grid">
-                      {group.emojis.map((item) => (
-                        <button
-                          key={item.c}
-                          type="button"
-                          class="emoji-btn"
-                          title={item.l}
-                          aria-label={item.l}
-                          onClick={() => pickEmoji(item)}
-                        >
-                          {emojiPreview(item)}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                ))
-              ) : emojiData ? (
-                <p class="muted emoji-empty">{t.emojiEmpty}</p>
-              ) : (
-                <div class="emoji-loading">
-                  <span class="spinner" />
-                </div>
-              )}
-            </div>
-          </div>
+          <EmojiPanel instance={instance} account={account} onInsert={insertAtCursor} />
         )}
-        {media.length > 0 && (
-          <div class="compose-media">
-            {media.map((item, index) => (
-              <div class="compose-media-item" key={item.id}>
-                <img src={item.previewUrl || item.url || undefined} alt="" />
-                <input
-                  class="field"
-                  placeholder={t.attachAlt}
-                  value={item.description ?? ""}
-                  onInput={(e) => {
-                    const value = (e.target as HTMLInputElement).value;
-                    setMedia((prev) =>
-                      prev.map((m, i) => (i === index ? { ...m, description: value } : m)),
-                    );
-                  }}
-                />
-                <button
-                  type="button"
-                  class="icon-btn"
-                  aria-label={t.delete}
-                  onClick={() => setMedia((prev) => prev.filter((_, i) => i !== index))}
-                >
-                  <Icon name="close-line" size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <MediaAttachments
+          media={media}
+          onDescription={(index, value) =>
+            setMedia((prev) => prev.map((m, i) => (i === index ? { ...m, description: value } : m)))
+          }
+          onRemove={(index) => setMedia((prev) => prev.filter((_, i) => i !== index))}
+        />
         {uploading > 0 && (
           <div class="compose-uploading">
             <span class="spinner" /> {t.loading}
           </div>
         )}
-        {pollOn && (
-          <div class="compose-poll">
-            {pollOptions.map((option, index) => (
-              <div class="poll-option-row" key={index}>
-                <span class="muted">
-                  {t.pollOption} {index + 1}
-                </span>
-                <input
-                  class="field"
-                  value={option}
-                  onInput={(e) => {
-                    const value = (e.target as HTMLInputElement).value;
-                    setPollOptions((prev) => prev.map((o, i) => (i === index ? value : o)));
-                  }}
-                />
-                {pollOptions.length > 2 && (
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    aria-label={t.pollRemove}
-                    onClick={() => setPollOptions((prev) => prev.filter((_, i) => i !== index))}
-                  >
-                    <Icon name="close-line" size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
-            {pollOptions.length < 4 && (
-              <button
-                type="button"
-                class="btn ghost sm"
-                onClick={() => setPollOptions((prev) => [...prev, ""])}
-              >
-                <Icon name="plus-line" size={14} />
-                {t.pollAddOption}
-              </button>
-            )}
-            <div class="poll-meta">
-              <label>
-                {t.pollExpires}
-                <select
-                  class="field"
-                  value={pollExpires}
-                  onChange={(e) => setPollExpires(Number((e.target as HTMLSelectElement).value))}
-                >
-                  <option value={300}>5 min</option>
-                  <option value={1800}>30 min</option>
-                  <option value={3600}>1 h</option>
-                  <option value={21600}>6 h</option>
-                  <option value={86400}>1 d</option>
-                  <option value={604800}>7 d</option>
-                </select>
-              </label>
-              <label class="check">
-                <input
-                  type="checkbox"
-                  checked={pollMultiple}
-                  onChange={(e) => setPollMultiple((e.target as HTMLInputElement).checked)}
-                />
-                {t.pollMultiple}
-              </label>
-            </div>
-          </div>
-        )}
-        <div class="vis-picker" ref={visPickerRef}>
-          <button
-            type="button"
-            class="btn ghost sm vis-btn"
-            aria-haspopup="listbox"
-            aria-expanded={visOpen}
-            onClick={() => setVisOpen((v) => !v)}
-          >
-            <Icon name={currentVis.icon} size={15} />
-            {currentVis.label}
-            <Icon name="dropdown-line" size={12} class="vis-caret" />
-          </button>
-          {visOpen && (
-            <div class="vis-menu" role="listbox" aria-label={t.visibility}>
-              {visOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="option"
-                  aria-selected={opt.value === visibility}
-                  class={`vis-option ${opt.value === visibility ? "active" : ""}`}
-                  onClick={() => {
-                    setVisibility(opt.value);
-                    setVisOpen(false);
-                  }}
-                >
-                  <Icon name={opt.icon} size={16} />
-                  <span class="vis-text">
-                    <span class="vis-name">{opt.label}</span>
-                    <span class="vis-hint">{opt.hint}</span>
-                  </span>
-                  {opt.value === visibility && (
-                    <Icon name="check-line" size={14} class="vis-check" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {poll && <PollEditor value={poll} onChange={setPoll} />}
+        <VisibilityPicker
+          value={visibility}
+          localSupported={localSupported}
+          onChange={setVisibility}
+        />
       </div>
     </Sheet>
   );
