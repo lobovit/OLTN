@@ -209,12 +209,14 @@ export function setMediaViewer(intent: MediaViewerIntent | null): void {
 
 function pomodoroMinutes(phase: TimerPhase): number {
   const cfg = store.settings.pomodoro;
-  const minutes =
-    phase === "focus"
-      ? cfg.focusMinutes
-      : phase === "shortBreak"
-        ? cfg.shortBreakMinutes
-        : cfg.longBreakMinutes;
+  let minutes: number;
+  if (phase === "focus") {
+    minutes = cfg.focusMinutes;
+  } else if (phase === "shortBreak") {
+    minutes = cfg.shortBreakMinutes;
+  } else {
+    minutes = cfg.longBreakMinutes;
+  }
   return Math.max(1, Math.round(minutes));
 }
 

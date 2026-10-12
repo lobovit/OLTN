@@ -63,8 +63,8 @@ interface Group {
 function groupNotifications(list: readonly Notification[]): Group[] {
   const groups: Group[] = [];
   for (const n of list) {
-    const last = groups[groups.length - 1];
-    if (last && last.type === n.type && last.accountId === n.account.id) {
+    const last = groups.at(-1);
+    if (last?.type === n.type && last.accountId === n.account.id) {
       last.items.push(n);
     } else {
       groups.push({

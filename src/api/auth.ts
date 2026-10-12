@@ -27,7 +27,7 @@ export function normalizeInstanceInput(input: string): {
 } | null {
   let value = input.trim().toLowerCase();
   if (!value) return null;
-  const mention = value.match(/^@?([^@\s]+)@([^@\s]+)$/);
+  const mention = /^@?([^@\s]+)@([^@\s]+)$/.exec(value);
   if (mention) {
     const host = cleanHost(mention[2]);
     return host ? { host, username: mention[1] } : null;
@@ -37,10 +37,7 @@ export function normalizeInstanceInput(input: string): {
 }
 
 function cleanHost(raw: string): string | null {
-  let host = raw
-    .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "")
-    .split("/")[0];
+  const host = raw.replace(/^https?:\/\//, "").split("/")[0];
   if (!host || (!host.includes(".") && !host.includes(":"))) return null;
   if (!/^[a-z0-9.-]+(:\d{2,5})?$/.test(host)) return null;
   return host;
@@ -120,8 +117,9 @@ export async function makeChallenge(verifier: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", data);
   const bytes = new Uint8Array(digest);
   let str = "";
-  for (const b of bytes) str += String.fromCharCode(b);
-  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  for (const b of bytes) str += String.fromCodePoint(b);
+  const b64 = btoa(str).replaceAll("+", "-").replaceAll("/", "_");
+  return b64.replace(/={1,2}$/, "");
 }
 
 export function buildAuthorizeUrl(opts: {
