@@ -34,8 +34,10 @@ import { PollView } from "./Poll";
 import { ReportSheet } from "./ReportSheet";
 import "./status.css";
 
-/** Instances that refused native translation (no service configured). */
-const instanceTranslateUnsupported = new Set<string>();
+/** Account+instance pairs that refused native translation (no service
+    configured or target not permitted) — keyed per account so the capability
+    cache never crosses accounts on the same instance. */
+const nativeTranslateUnsupported = new Set<string>();
 
 interface StatusCardProps {
   statusKey: string;
@@ -198,9 +200,10 @@ export function StatusCard({
     setTransMenuOpen(false);
     setTranslating(true);
     const instance = account.instance;
+    const capabilityKey = `${account.id}@${instance}`;
     try {
       let result: Translation | null = null;
-      if (!instanceTranslateUnsupported.has(instance)) {
+      if (!nativeTranslateUnsupported.has(capabilityKey)) {
         const id = await resolveLocalId();
         if (id) {
           try {
@@ -214,7 +217,7 @@ export function StatusCard({
           } catch (err) {
             console.warn("[oltn] instance translate failed; using fallback", err);
             const status = httpStatusOf(err);
-            if (status === 403 || status === 404) instanceTranslateUnsupported.add(instance);
+            if (status === 403 || status === 404) nativeTranslateUnsupported.add(capabilityKey);
           }
         }
       }
