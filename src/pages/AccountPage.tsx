@@ -1,8 +1,8 @@
 import type { JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import { getRest } from "../api/client";
 import type { Account, Relationship } from "../api/types";
 import { t } from "../i18n/pt-BR";
+import { clientFor, isOwnInstance } from "../lib/identity";
 import { navigate, back } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Content } from "../components/status/Content";
@@ -36,9 +36,7 @@ export function AccountPage({ params }: Props): JSX.Element {
     if (!instance) return;
     setLoading(true);
     setError(null);
-    const authed = currentAccount();
-    const token = authed?.instance === instance ? authed.accessToken : undefined;
-    const client = getRest(instance, token);
+    const { client, authed } = clientFor(instance);
     try {
       let acct = rawId.startsWith("@") ? rawId.slice(1) : rawId;
       let resolved: Account;
@@ -48,7 +46,7 @@ export function AccountPage({ params }: Props): JSX.Element {
         resolved = await client.v1.accounts.lookup({ acct });
       }
       setAccount(resolved);
-      if (token) {
+      if (authed) {
         const rel = await client.v1.accounts.relationships.fetch({ id: [resolved.id] });
         setRelationship(rel[0] ?? null);
       } else {
@@ -65,8 +63,7 @@ export function AccountPage({ params }: Props): JSX.Element {
     void load();
   }, [load]);
 
-  const isSelf =
-    !!me && !!account && me.id === account.id && currentAccount()?.instance === instance;
+  const isSelf = !!me && !!account && me.id === account.id && isOwnInstance(instance);
 
   const toggleFollow = async (): Promise<void> => {
     if (!account || !relationship) return;
@@ -75,7 +72,7 @@ export function AccountPage({ params }: Props): JSX.Element {
       navigate("/login");
       return;
     }
-    const client = getRest(authed.instance, authed.accessToken);
+    const client = clientFor(authed.instance).client;
     const rel =
       relationship.following || relationship.requested
         ? await client.v1.accounts.$select(account.id).unfollow()
@@ -236,11 +233,7 @@ function AccountList({ instance, kind, accountId }: AccountListProps): JSX.Eleme
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const authed = currentAccount();
-      const client = getRest(
-        instance,
-        authed && authed.instance === instance ? authed.accessToken : undefined,
-      );
+      const { client } = clientFor(instance);
       try {
         const page =
           kind === "followers"

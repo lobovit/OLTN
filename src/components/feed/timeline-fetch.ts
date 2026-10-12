@@ -1,5 +1,4 @@
-import { getRest } from "../../api/client";
-import type { Status } from "../../api/types";
+import type { RestClient, Status } from "../../api/types";
 import type { FeedPage } from "../../lib/paged-feed";
 
 export type TimelineKind =
@@ -18,8 +17,8 @@ export type TimelineKind =
   | { type: "trending" };
 
 export interface FetchCtx {
+  client: RestClient;
   instance: string;
-  accessToken?: string;
 }
 
 /** Status page + this endpoint's "has more pages" rule. */
@@ -29,7 +28,7 @@ export async function fetchStatusPage(
   maxId: string | null,
   ctx: FetchCtx,
 ): Promise<FeedPage<Status>> {
-  const client = getRest(ctx.instance, ctx.accessToken);
+  const client = ctx.client;
   const params = { limit, maxId: maxId ?? undefined };
   const paged = (list: Status[]): FeedPage<Status> => ({
     items: list,

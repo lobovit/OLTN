@@ -1,9 +1,9 @@
 import type { JSX } from "preact";
 import { useState } from "preact/hooks";
-import { getRest } from "../../api/client";
 import type { Poll } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { fullDate, fullNumber, shortDate } from "../../lib/format";
+import { clientFor } from "../../lib/identity";
 import { votePoll } from "../../state/status-actions";
 import { currentAccount } from "../../state/store";
 
@@ -24,11 +24,7 @@ export function PollView({ poll, statusKey, canVote }: PollViewProps): JSX.Eleme
     if (!canVote || busy || expired || !account) return;
     setBusy(true);
     try {
-      await votePoll(
-        { client: getRest(account.instance, account.accessToken), instance: account.instance },
-        statusKey,
-        index,
-      );
+      await votePoll(clientFor(account.instance), statusKey, index);
     } finally {
       setBusy(false);
     }

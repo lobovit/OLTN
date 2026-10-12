@@ -1,8 +1,8 @@
 import type { JSX } from "preact";
 import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
+import { clientFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
-import { getRest } from "../../api/client";
 import type { Notification, Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
 import { usePagedFeed } from "../../state/hooks";
@@ -103,8 +103,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
     enabled: !!account,
     adapter: {
       fetchPage: async (cursor) => {
-        const token = account && account.instance === instance ? account.accessToken : undefined;
-        const page = await getRest(instance, token).v1.notifications.list({
+        const page = await clientFor(instance).client.v1.notifications.list({
           limit: 20,
           maxId: cursor ?? undefined,
           types: mode === "mentions" ? ["mention"] : undefined,

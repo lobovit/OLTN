@@ -1,9 +1,9 @@
 import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import { getRest } from "../api/client";
 import type { Context, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
+import { clientFor } from "../lib/identity";
 import { back } from "../lib/router";
 import { StatusCard } from "../components/status/StatusCard";
 import { Icon } from "../components/ui/Icon";
@@ -121,12 +121,10 @@ export function StatusPage({ params }: Props): JSX.Element {
     let cancelled = false;
     void (async () => {
       setError(null);
-      const account = currentAccount();
       const attempt = async (
         source: string,
       ): Promise<{ status: Status; context: Context; source: string }> => {
-        const token = account && account.instance === source ? account.accessToken : undefined;
-        const client = getRest(source, token);
+        const { client } = clientFor(source);
         const [status, context] = await Promise.all([
           client.v1.statuses.$select(id).fetch(),
           client.v1.statuses.$select(id).context.fetch(),

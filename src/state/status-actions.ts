@@ -5,7 +5,7 @@
 import type { Poll, RestClient, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { userMessageForError } from "../lib/errors";
-import { localAccountId, localStatus } from "../lib/resolve";
+import { localAccountId, localStatus, sourceInstanceFor } from "../lib/identity";
 import { patchStatus, putStatus, store, toast } from "./store";
 
 export interface StatusActionsContext {
@@ -29,17 +29,6 @@ function begin(key: string, action: string): boolean {
 
 function end(key: string, action: string): void {
   inFlight.delete(`${key}:${action}`);
-}
-
-/** Instance that originated the status (the id is only valid there). */
-function sourceInstanceFor(key: string, status: Status): string {
-  const stored = store.statusSources[key];
-  if (stored) return stored;
-  try {
-    return new URL(status.uri).host;
-  } catch {
-    return store.instance?.uri ?? "";
-  }
 }
 
 /** Local status on the account instance (resolves when it came from another). */

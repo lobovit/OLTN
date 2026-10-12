@@ -1,27 +1,8 @@
+import { hrefFor } from "./identity";
 import { navigate } from "./router";
 
 /* Converts clicks on content links (mentions, hashtags, posts,
    external links) into internal navigation when possible. */
-
-function pathToInternal(host: string, pathname: string): string | null {
-  const clean = pathname.replace(/\/+$/, "");
-  // hashtag: /tags/foo | /tag/foo
-  const tag = clean.match(/^\/tags?\/([^/]+)$/);
-  if (tag) return `/${encodeURIComponent(host)}/t/${encodeURIComponent(tag[1])}`;
-
-  // status: /@user/123 | /users/user/statuses/123
-  const status =
-    clean.match(/^\/@[^/]+\/(\d+)$/) || clean.match(/^\/users\/[^/]+\/statuses\/(\d+)$/);
-  if (status) return `/${encodeURIComponent(host)}/s/${status[1]}`;
-
-  // account: /@user | /users/user
-  const account = clean.match(/^\/@([^/]+)$/) || clean.match(/^\/users\/([^/]+)$/);
-  if (account) {
-    const username = account[1];
-    return `/${encodeURIComponent(host)}/a/@${encodeURIComponent(username)}`;
-  }
-  return null;
-}
 
 export type LinkAction = "internal" | "external" | "ignore";
 
@@ -53,7 +34,7 @@ export function handleContentClick(event: MouseEvent): LinkAction {
     return "external";
   }
 
-  const internal = pathToInternal(url.host, url.pathname);
+  const internal = hrefFor.fromExternalUrl(url.host, url.pathname);
   if (internal) {
     navigate(internal);
     return "internal";

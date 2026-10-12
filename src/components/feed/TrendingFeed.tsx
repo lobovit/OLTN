@@ -1,8 +1,8 @@
 import type { JSX } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { getRest } from "../../api/client";
 import type { Tag } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
+import { clientFor, hrefFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
 import { currentAccount } from "../../state/store";
 import { Icon } from "../ui/Icon";
@@ -18,9 +18,8 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
     if (!target) return;
     let cancelled = false;
     void (async () => {
-      const token = account && account.instance === target ? account.accessToken : undefined;
       try {
-        const page = await getRest(target, token).v1.trends.tags.list({ limit: 10 });
+        const page = await clientFor(target).client.v1.trends.tags.list({ limit: 10 });
         if (!cancelled) setTags(page);
       } catch (err) {
         console.warn("[oltn] trending tags failed", err);
@@ -29,7 +28,7 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [target, account]);
+  }, [target]);
 
   return (
     <>
@@ -40,9 +39,7 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
               key={tag.name}
               type="button"
               class="trend-row"
-              onClick={() =>
-                navigate(`/${encodeURIComponent(target)}/t/${encodeURIComponent(tag.name)}`)
-              }
+              onClick={() => navigate(hrefFor.tag(tag.name, target))}
             >
               <Icon name="hashtag-line" size={16} />
               <span class="row-main">

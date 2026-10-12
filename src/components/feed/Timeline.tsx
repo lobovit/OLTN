@@ -2,6 +2,7 @@ import type { JSX } from "preact";
 import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
 import { userMessageForError } from "../../lib/errors";
+import { clientFor } from "../../lib/identity";
 import type { Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
 import { usePagedFeed } from "../../state/hooks";
@@ -31,7 +32,6 @@ export function Timeline({
   const kindKey = JSON.stringify(kind);
   const account = currentAccount();
   const targetInstance = instance ?? account?.instance ?? "";
-  const token = account?.instance === targetInstance ? account.accessToken : undefined;
   // Boost feeds also reload when a boost toggle succeeds; the column refresh
   // button bumps feedsRevision, reloading every mounted feed.
   const revision = `|${snap.ui.feedsRevision}${
@@ -49,10 +49,7 @@ export function Timeline({
     enabled: !!targetInstance,
     adapter: {
       fetchPage: async (cursor) => {
-        const page = await fetchStatusPage(kind, limit, cursor, {
-          instance: targetInstance,
-          accessToken: token,
-        });
+        const page = await fetchStatusPage(kind, limit, cursor, clientFor(targetInstance));
         putStatuses([...page.items], targetInstance);
         return page;
       },

@@ -1,7 +1,6 @@
 import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import { getRest } from "../../api/client";
 import type { Status, Translation } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import {
@@ -13,8 +12,8 @@ import {
   timeAgo,
 } from "../../lib/format";
 import { httpStatusOf } from "../../lib/errors";
+import { clientFor, hrefFor, localStatus, sourceInstanceFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
-import { localStatus } from "../../lib/resolve";
 import { TRANSLATE_TARGETS, translateText } from "../../lib/translate";
 import {
   currentAccount,
@@ -52,11 +51,6 @@ function hostOf(status: Status): string {
   } catch {
     return store.instance?.uri ?? "";
   }
-}
-
-function accountRoute(acct: string, fallbackHost: string): string {
-  const [name, host] = acct.split("@");
-  return `/${encodeURIComponent(host || fallbackHost)}/a/@${encodeURIComponent(name)}`;
 }
 
 export function StatusCard({
@@ -117,14 +111,14 @@ export function StatusCard({
   const targetKey = statusKeyOf(target);
   // The `id` is only valid on the instance that originated the status — for
   // remote/boosted posts this is not the author's host.
-  const sourceInstance = store.statusSources[targetKey] ?? host;
-  const openHref = `/${encodeURIComponent(sourceInstance)}/s/${target.id}`;
+  const sourceInstance = sourceInstanceFor(targetKey, target);
+  const openHref = hrefFor.status(target.id, sourceInstance);
 
   /** Status id on the account instance (resolves posts from other instances). */
   const resolveLocalId = async (): Promise<string | null> => {
     if (!account) return null;
     const local = await localStatus(
-      getRest(account.instance, account.accessToken),
+      clientFor(account.instance).client,
       account.instance,
       target,
       sourceInstance,
@@ -149,10 +143,7 @@ export function StatusCard({
     if (!account) return;
     setMenuPos(null);
     if (!window.confirm(`${t.blockConfirm} @${target.account.acct}`)) return;
-    await blockStatusAuthor(
-      { client: getRest(account.instance, account.accessToken), instance: account.instance },
-      targetKey,
-    );
+    await blockStatusAuthor(clientFor(account.instance), targetKey);
   };
 
   const filtered = (target.filtered ?? []).filter((f) => f.filter);
@@ -173,17 +164,13 @@ export function StatusCard({
 
   const openAuthor = (e: MouseEvent): void => {
     e.stopPropagation();
-    navigate(accountRoute(target.account.acct, host));
+    navigate(hrefFor.account(target.account.acct, host));
   };
 
   const act = (kind: "boost" | "fav" | "bookmark", e: MouseEvent): void => {
     e.stopPropagation();
     if (!canAct || !account) return;
-    void toggleStatusAction(
-      { client: getRest(account.instance, account.accessToken), instance: account.instance },
-      targetKey,
-      kind,
-    );
+    void toggleStatusAction(clientFor(account.instance), targetKey, kind);
   };
 
   const reply = async (e: MouseEvent): Promise<void> => {
@@ -217,7 +204,7 @@ export function StatusCard({
         const id = await resolveLocalId();
         if (id) {
           try {
-            const client = getRest(instance, account.accessToken);
+            const client = clientFor(instance).client;
             const instanceTranslation = (await client.v1.statuses
               .$select(id)
               .translate({ lang })) as unknown as Translation;
