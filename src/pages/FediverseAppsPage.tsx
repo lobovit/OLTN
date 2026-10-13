@@ -1,8 +1,10 @@
 import type { JSX } from "preact";
 import { useState } from "preact/hooks";
+import { useSnapshot } from "valtio";
 import { t } from "../i18n/pt-BR";
 import type { TKey } from "../i18n/pt-BR";
 import { FEDIVERSE_APPS, FEDIVERSE_CATEGORIES } from "../lib/fediverse-apps";
+import { store } from "../state/store";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
 import "./apps.css";
@@ -27,6 +29,7 @@ function categoryLabel(category: string): string {
 
 /** Fediverse platforms that interoperate with Mastodon (ActivityPub). */
 export function FediverseAppsPage(): JSX.Element {
+  const language = useSnapshot(store).settings.language;
   const [category, setCategory] = useState<string | null>(null);
   const apps = category
     ? FEDIVERSE_APPS.filter((app) => app.category === category)
@@ -64,7 +67,7 @@ export function FediverseAppsPage(): JSX.Element {
                 <h3>{app.name}</h3>
                 <span class="fediverse-cat">{categoryLabel(app.category)}</span>
               </div>
-              <p>{app.description}</p>
+              <p>{language === "pt-BR" ? app.descriptionPt || app.description : app.description}</p>
               <a href={app.website} target="_blank" rel="noopener noreferrer">
                 <Icon name="external-link-line" size={14} />
                 {t.fediverseAppsVisit}

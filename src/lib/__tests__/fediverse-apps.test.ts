@@ -11,6 +11,7 @@ describe("fediverse apps data", () => {
   it("every app has a description, a website and a known category", () => {
     for (const app of FEDIVERSE_APPS) {
       expect(app.description.length).toBeGreaterThan(10);
+      expect(app.descriptionPt.length).toBeGreaterThan(10);
       expect(app.website).toMatch(/^https?:\/\//);
       expect(FEDIVERSE_CATEGORIES).toContain(app.category);
     }
