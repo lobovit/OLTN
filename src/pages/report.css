@@ -1,0 +1,45 @@
+/* Report issues page: type picker, message, optional reply address. */
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4) var(--s4) var(--s6);
+}
+
+.report-types {
+  display: flex;
+  gap: var(--s2);
+}
+
+.report-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.report-type:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.report-type.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast, #08130d);
+}
+
+.report-message {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.report-send {
+  align-self: flex-start;
+}

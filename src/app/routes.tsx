@@ -10,6 +10,7 @@ import { BookmarksPage, BoostsPage, FavouritesPage } from "../pages/LibraryPages
 import { ListsPage, ListPage } from "../pages/ListsPage";
 import { FiltersPage } from "../pages/FiltersPage";
 import { FediverseAppsPage } from "../pages/FediverseAppsPage";
+import { ReportPage } from "../pages/ReportPage";
 import { ScheduledPage } from "../pages/ScheduledPage";
 import { TrendingPage } from "../pages/TrendingPage";
 import { SettingsPage } from "../pages/SettingsPage";
@@ -40,6 +41,7 @@ export const routes: AppRoute[] = [
   { pattern: "/l/:id", page: ListPage, auth: true },
   { pattern: "/ft", page: FiltersPage, auth: true },
   { pattern: "/apps", page: FediverseAppsPage },
+  { pattern: "/report", page: ReportPage },
   { pattern: "/trending", page: TrendingPage },
   { pattern: "/settings", page: SettingsPage, auth: true },
   { pattern: "/layouts", page: LayoutsPage, auth: true },
