@@ -105,6 +105,7 @@
   color: var(--text-2);
   font-size: 0.92rem;
   line-height: 1.45;
+  text-align: center;
 }
 
 .login-label {
@@ -113,6 +114,7 @@
   font-weight: 600;
   color: var(--text-2);
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .login-card form {
