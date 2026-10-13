@@ -1,10 +1,11 @@
 import type { Dispatch, StateUpdater } from "preact/hooks";
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import type { AccountMeta, MediaAttachment } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import type { GifResult } from "../../lib/giphy";
 import { clientFor } from "../../lib/identity";
 import { extractImageCaption } from "../../lib/image-caption";
+import { mediaCreateParams } from "../../lib/media-params";
 import type { PublishPoll } from "../../lib/publish-plan";
 import { toast } from "../../state/store";
 
@@ -29,6 +30,10 @@ export interface MediaUploadState {
   uploading: number;
   upload: (files: FileList | File[]) => Promise<void>;
   pickGif: (gif: GifResult) => Promise<void>;
+  /** Updates the local alt text and pushes it to the media endpoint. */
+  describe: (attachment: MediaAttachment, description: string) => void;
+  /** Awaits the pending alt-text updates (call before publishing). */
+  flushDescriptions: () => Promise<void>;
 }
 
 /** Uploads media attachments and GIFs for the composer (max 4 slots). */
@@ -40,12 +45,59 @@ export function useMediaUpload(input: {
   setMedia: Dispatch<StateUpdater<MediaAttachment[]>>;
   /** Boundary injection for tests; defaults to the instance client. */
   createMedia?: (file: File, description?: string) => Promise<MediaAttachment>;
+  /** Boundary injection for tests; defaults to the instance client. */
+  updateMedia?: (id: string, description: string) => Promise<void>;
 }): MediaUploadState {
   const [uploading, setUploading] = useState(0);
+  const pendingDescriptions = useRef(new Map<string, Promise<void>>());
+  const sentDescriptions = useRef(new Map<string, string>());
+  const describeTimers = useRef(new Map<string, number>());
+  const latestDescriptions = useRef(new Map<string, string>());
   const createMedia =
     input.createMedia ??
     ((file: File, description?: string) =>
-      clientFor(input.instance).client.v1.media.create({ file, description }));
+      clientFor(input.instance).client.v1.media.create(mediaCreateParams(file, description)));
+  const updateMedia =
+    input.updateMedia ??
+    ((id: string, description: string) =>
+      clientFor(input.instance)
+        .client.v1.media.$select(id)
+        .update({ description })
+        .then(() => {}));
+
+  const sendDescription = (id: string, description: string): void => {
+    const clean = description.trim();
+    if (sentDescriptions.current.get(id) === clean) return;
+    sentDescriptions.current.set(id, clean);
+    const tracked = updateMedia(id, clean)
+      .catch((err) => console.warn("[oltn] media description failed", err))
+      .finally(() => pendingDescriptions.current.delete(id));
+    pendingDescriptions.current.set(id, tracked);
+  };
+
+  const describe = (attachment: MediaAttachment, description: string): void => {
+    input.setMedia((prev) =>
+      prev.map((item) => (item.id === attachment.id ? { ...item, description } : item)),
+    );
+    latestDescriptions.current.set(attachment.id, description);
+    window.clearTimeout(describeTimers.current.get(attachment.id));
+    describeTimers.current.set(
+      attachment.id,
+      window.setTimeout(
+        () => sendDescription(attachment.id, latestDescriptions.current.get(attachment.id) ?? ""),
+        400,
+      ),
+    );
+  };
+
+  const flushDescriptions = async (): Promise<void> => {
+    for (const [id, timer] of describeTimers.current) {
+      window.clearTimeout(timer);
+      sendDescription(id, latestDescriptions.current.get(id) ?? "");
+    }
+    describeTimers.current.clear();
+    await Promise.all([...pendingDescriptions.current.values()]);
+  };
 
   const uploadFile = async (file: File, description?: string): Promise<void> => {
     if (!input.account) return;
@@ -83,5 +135,5 @@ export function useMediaUpload(input: {
     }
   };
 
-  return { uploading, upload, pickGif };
+  return { uploading, upload, pickGif, describe, flushDescriptions };
 }

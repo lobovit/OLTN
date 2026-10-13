@@ -4,6 +4,7 @@
 import type { RestClient, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { codeBlockToImageFile, type CodeBlock } from "../lib/code-image";
+import { mediaCreateParams } from "../lib/media-params";
 import {
   buildPublishExecution,
   type PublishExecution,
@@ -38,10 +39,7 @@ async function convertCodeBlocks(
     try {
       const file = await codeBlockToImageFile(block);
       if (!file) throw new Error("code_render_failed");
-      const attachment = await ctx.client.v1.media.create({
-        file,
-        description: block.code,
-      });
+      const attachment = await ctx.client.v1.media.create(mediaCreateParams(file, block.code));
       converted.push(block);
       mediaIds.push(attachment.id);
     } catch (err) {

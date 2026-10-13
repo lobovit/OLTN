@@ -343,6 +343,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     if (!account || !canSubmit) return;
     setBusy(true);
     try {
+      await uploader.flushDescriptions();
       const draft = buildComposeDraft({
         text,
         spoiler,
@@ -464,9 +465,10 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
         )}
         <MediaAttachments
           media={media}
-          onDescription={(index, value) =>
-            setMedia((prev) => prev.map((m, i) => (i === index ? { ...m, description: value } : m)))
-          }
+          onDescription={(index, value) => {
+            const item = media[index];
+            if (item) uploader.describe(item, value);
+          }}
           onRemove={(index) => setMedia((prev) => prev.filter((_, i) => i !== index))}
         />
         <ComposeUploading count={uploader.uploading} />

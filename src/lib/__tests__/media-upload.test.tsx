@@ -21,7 +21,12 @@ interface CreatedMedia {
   description?: string;
 }
 
-function renderUploader(created: CreatedMedia[]): MediaUploadState {
+interface UpdatedMedia {
+  id: string;
+  description: string;
+}
+
+function renderUploader(created: CreatedMedia[], updated: UpdatedMedia[] = []): MediaUploadState {
   let api: MediaUploadState | null = null;
   function Harness() {
     api = useMediaUpload({
@@ -33,6 +38,9 @@ function renderUploader(created: CreatedMedia[]): MediaUploadState {
       createMedia: async (file, description) => {
         created.push({ file, description });
         return { id: `m${created.length}` } as unknown as MediaAttachment;
+      },
+      updateMedia: async (id, description) => {
+        updated.push({ id, description });
       },
     });
     return null;
@@ -72,5 +80,16 @@ describe("useMediaUpload captions", () => {
     } as GifResult);
 
     expect(created[0]?.description).toBe("Cat on a keyboard");
+  });
+
+  it("sends the alt text to the media update endpoint before posting", async () => {
+    const created: CreatedMedia[] = [];
+    const updated: UpdatedMedia[] = [];
+    const uploader = renderUploader(created, updated);
+
+    uploader.describe({ id: "m1" } as MediaAttachment, "Sunset over the bay");
+    await uploader.flushDescriptions();
+
+    expect(updated[0]).toEqual({ id: "m1", description: "Sunset over the bay" });
   });
 });
