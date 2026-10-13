@@ -85,7 +85,6 @@ export const DEFAULT_SETTINGS: Settings = {
   accent: "green",
   language: "en",
   textSize: 16,
-  railExpanded: false,
   autoStream: true,
   autoplayGifs: true,
   pomodoro: {

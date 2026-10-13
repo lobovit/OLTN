@@ -486,16 +486,6 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
-  "layout-leftbar-close-line": {
-    body: '<path fill="currentColor" d="M14.793 14.828a1 1 0 1 0 1.414-1.414l-.707.707zM13.379 12l-.707-.707a1 1 0 0 0 0 1.414zm2.828-1.414a1 1 0 0 0-1.414-1.414l.707.707zM5 4v1h14V3H5zm15 1h-1v14h2V5zm-1 15v-1H5v2h14zM4 19h1V5H3v14zm11.5-4.879l.707-.707l-2.121-2.121l-.707.707l-.707.707l2.12 2.121zM13.379 12l.707.707l2.121-2.121l-.707-.707l-.707-.707l-2.121 2.12zM9 4H8v16h2V4zM5 20v-1H3a2 2 0 0 0 2 2zm15-1h-1v2a2 2 0 0 0 2-2zM19 4v1h2a2 2 0 0 0-2-2zM5 4V3a2 2 0 0 0-2 2h2z"/>',
-    width: 24,
-    height: 24,
-  },
-  "layout-leftbar-open-line": {
-    body: '<path fill="currentColor" d="M12.793 13.414a1 1 0 0 0 1.414 1.415l-.707-.708zM15.62 12l.707.707a1 1 0 0 0 0-1.414zm-1.414-2.828a1 1 0 0 0-1.414 1.414l.707-.707zM5 4v1h14V3H5zm15 1h-1v14h2V5zm-1 15v-1H5v2h14zM4 19h1V5H3v14zM9 4H8v16h2V4zm4.5 10.122l.707.707l2.121-2.122l-.707-.707l-.707-.707l-2.121 2.121zM15.621 12l.707-.707l-2.12-2.121l-.708.707l-.707.707l2.121 2.121zM5 20v-1H3a2 2 0 0 0 2 2zm15-1h-1v2a2 2 0 0 0 2-2zM19 4v1h2a2 2 0 0 0-2-2zM5 4V3a2 2 0 0 0-2 2h2z"/>',
-    width: 24,
-    height: 24,
-  },
   "building-2-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 20h18M5 20V6.36a.5.5 0 0 1 .342-.474l8-2.667a.5.5 0 0 1 .658.475V20m0-10l4.598.92a.5.5 0 0 1 .402.49V20"/>',
     width: 24,

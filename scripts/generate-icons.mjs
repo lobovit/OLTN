@@ -100,8 +100,6 @@ const wanted = [
   "group-line",
   "pin-line",
   "layout-grid-line",
-  "layout-leftbar-close-line",
-  "layout-leftbar-open-line",
   "building-2-line",
 ];
 

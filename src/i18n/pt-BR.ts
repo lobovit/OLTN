@@ -109,8 +109,6 @@ const pt: Record<TKey, string> = {
   prev: "Anterior",
   next: "Próximo",
   skipToContent: "Pular para o conteúdo",
-  collapseNav: "Recolher navegação",
-  expandNav: "Expandir navegação",
   resizePopup: "Redimensionar janela",
   pinHint: "Fixe timelines em Configurações, na seção Atalhos.",
   pageNotFound: "Página não encontrada",

@@ -31,9 +31,8 @@ export function Shell({ children }: { children?: ComponentChildren }): JSX.Eleme
   const state = useAppState();
   const authed = state.auth === "authenticated";
   const showRail = authed || !!currentAccount();
-  const expanded = state.settings.railExpanded;
   return (
-    <div class={`shell ${showRail ? "" : "shell-no-rail"} ${expanded ? "" : "rail-collapsed"}`}>
+    <div class={`shell ${showRail ? "rail-collapsed" : "shell-no-rail"}`}>
       <a
         class="skip-link"
         href="#main"
@@ -284,7 +283,6 @@ function Rail(): JSX.Element | null {
   const account = currentAccount();
   const shortcuts = useSnapshot(store).shortcuts;
   const railShortcuts = shortcuts.filter((s) => !NAV_COLUMN_TYPES.has(s.type));
-  const expanded = state.settings.railExpanded;
   const multi = route.path === "/";
 
   if (!account && state.auth !== "authenticated") return null;
@@ -314,29 +312,13 @@ function Rail(): JSX.Element | null {
   };
 
   return (
-    <nav class={`rail ${expanded ? "" : "collapsed"}`} aria-label={t.navHelp}>
+    <nav class="rail collapsed" aria-label={t.navHelp}>
       <Link href="/" class="rail-logo" title="OLTN">
         <svg viewBox="0 0 64 64" width="30" height="30" aria-hidden>
           <circle cx="32" cy="34" r="17" fill="none" stroke="currentColor" strokeWidth="7" />
           <circle cx="32" cy="17" r="8" fill="currentColor" />
         </svg>
       </Link>
-      <button
-        type="button"
-        class="rail-toggle"
-        aria-expanded={expanded}
-        aria-label={expanded ? t.collapseNav : t.expandNav}
-        title={expanded ? t.collapseNav : t.expandNav}
-        onClick={() => {
-          store.settings = { ...store.settings, railExpanded: !expanded };
-          saveSettings();
-        }}
-      >
-        <Icon
-          name={expanded ? "layout-leftbar-close-line" : "layout-leftbar-open-line"}
-          size={18}
-        />
-      </button>
       <div class="rail-main">
         {orderedNav.map((item) => {
           if (item.action) {

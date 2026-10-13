@@ -107,8 +107,6 @@ export const en = {
   prev: "Previous",
   next: "Next",
   skipToContent: "Skip to content",
-  collapseNav: "Collapse navigation",
-  expandNav: "Expand navigation",
   resizePopup: "Resize window",
   pinHint: "Pin timelines in Settings, under Shortcuts.",
   pageNotFound: "Page not found",

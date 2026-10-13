@@ -94,8 +94,6 @@ export interface Settings {
   accent: AccentSetting;
   language: LanguageSetting;
   textSize: number;
-  /** Expanded side rail (default: compact, icons only). */
-  railExpanded: boolean;
   /** Receives posts and notifications in real time. */
   autoStream: boolean;
   /** Animate GIFs in timelines (default: on). */
