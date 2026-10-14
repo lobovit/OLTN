@@ -20,7 +20,7 @@ import {
   moveInOrder,
   orderColumns,
 } from "../lib/layout";
-import { Link, matchRoutes, navigate, useRouter } from "../lib/router";
+import { backOrHome, Link, matchRoutes, navigate, useRouter } from "../lib/router";
 import { shortcutLabel, shortcutRoute } from "./shortcuts";
 import { routes } from "./routes";
 import { saveColumnLayout, saveSettings, saveShortcuts } from "../state/boot";
@@ -367,6 +367,12 @@ function Rail(): JSX.Element | null {
                   store.ui.searchOpen = true;
                   return;
                 }
+                // Clicking the button of the page you are on closes it.
+                if (item.href !== "/" && pathActive(item.href)) {
+                  e.preventDefault();
+                  backOrHome();
+                  return;
+                }
                 if (!multi || !item.column) return;
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                 e.preventDefault();
@@ -500,6 +506,12 @@ function TabBar(): JSX.Element {
             if (item.popup) {
               e.preventDefault();
               store.ui.searchOpen = true;
+              return;
+            }
+            // Clicking the button of the page you are on closes it.
+            if (item.href !== "/" && pathActive(item.href)) {
+              e.preventDefault();
+              backOrHome();
             }
           }}
         >

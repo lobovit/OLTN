@@ -74,6 +74,8 @@ export function matchRoutes<T extends { pattern: string }>(
 
 const listeners = new Set<() => void>();
 let current: ParsedHash = parseHash();
+/** How many times the app pushed an in-app history entry since load. */
+let internalNavigations = 0;
 
 function emit() {
   current = parseHash();
@@ -90,12 +92,20 @@ export function navigate(to: string, opts?: { replace?: boolean }): void {
     history.replaceState(null, "", target);
     emit();
   } else {
+    internalNavigations += 1;
     location.hash = path;
   }
 }
 
 export function back(): void {
   history.back();
+}
+
+/** Goes back when the app navigated itself; otherwise lands on the deck.
+    Used by the nav toggle (clicking the button of the current page). */
+export function backOrHome(): void {
+  if (internalNavigations > 0) history.back();
+  else navigate("/");
 }
 
 export interface RouterValue extends ParsedHash {

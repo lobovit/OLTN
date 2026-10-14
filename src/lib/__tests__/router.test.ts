@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { matchPath, matchRoutes, parseHash } from "../router";
 
 describe("parseHash", () => {
@@ -53,5 +53,36 @@ describe("matchRoutes", () => {
     expect(matchRoutes(routes, "/")?.def.id).toBe("home");
     expect(matchRoutes(routes, "/l/7")?.params).toEqual({ id: "7" });
     expect(matchRoutes(routes, "/foo/s/1")?.def.id).toBe("status");
+  });
+});
+
+describe("backOrHome", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it("falls back to the deck when there is no in-app history", async () => {
+    const { backOrHome } = await import("../router");
+    const back = vi.spyOn(history, "back").mockImplementation(() => {});
+    try {
+      backOrHome();
+      expect(back).not.toHaveBeenCalled();
+      expect(location.hash).toBe("#/");
+    } finally {
+      back.mockRestore();
+    }
+  });
+
+  it("goes back when the app navigated itself", async () => {
+    const { backOrHome, navigate } = await import("../router");
+    const back = vi.spyOn(history, "back").mockImplementation(() => {});
+    try {
+      location.hash = "/elsewhere";
+      navigate("/settings");
+      backOrHome();
+      expect(back).toHaveBeenCalledTimes(1);
+    } finally {
+      back.mockRestore();
+    }
   });
 });
