@@ -2,7 +2,7 @@ import type { JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import type { Account, Relationship } from "../api/types";
 import { t } from "../i18n/pt-BR";
-import { clientFor, isOwnInstance } from "../lib/identity";
+import { clientFor, isOwnInstance, localAccountId } from "../lib/identity";
 import { navigate, back } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Content } from "../components/status/Content";
@@ -23,6 +23,7 @@ interface Props {
 /** Loads the account, the viewer relationship and exposes the follow toggle. */
 function useAccountProfile(instance: string, rawId: string) {
   const [account, setAccount] = useState<Account | null>(null);
+  const [localId, setLocalId] = useState<string | null>(null);
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -31,7 +32,7 @@ function useAccountProfile(instance: string, rawId: string) {
     if (!instance) return;
     setLoading(true);
     setError(null);
-    const { client, authed } = clientFor(instance);
+    const { client } = clientFor(instance);
     try {
       const acct = rawId.startsWith("@") ? rawId.slice(1) : rawId;
       const resolved =
@@ -39,12 +40,23 @@ function useAccountProfile(instance: string, rawId: string) {
           ? await client.v1.accounts.$select(acct).fetch()
           : await client.v1.accounts.lookup({ acct });
       setAccount(resolved);
-      if (authed) {
-        const rel = await client.v1.accounts.relationships.fetch({ id: [resolved.id] });
-        setRelationship(rel[0] ?? null);
-      } else {
+      // The relationship lives on the account's instance; the profile may have
+      // been loaded from another one, so resolve the local id first.
+      const me = currentAccount();
+      if (!me) {
+        setLocalId(null);
         setRelationship(null);
+        return;
       }
+      const local = clientFor(me.instance).client;
+      const resolvedLocalId = await localAccountId(local, me.instance, resolved, instance);
+      setLocalId(resolvedLocalId);
+      if (!resolvedLocalId) {
+        setRelationship(null);
+        return;
+      }
+      const rel = await local.v1.accounts.relationships.fetch({ id: [resolvedLocalId] });
+      setRelationship(rel[0] ?? null);
     } catch (err) {
       setError(err);
     } finally {
@@ -57,14 +69,14 @@ function useAccountProfile(instance: string, rawId: string) {
   }, [load]);
 
   const toggleFollow = async (): Promise<void> => {
-    if (!account || !relationship) return;
+    if (!account || !relationship || !localId) return;
     const authed = currentAccount();
     if (!authed) {
       navigate("/login");
       return;
     }
     const client = clientFor(authed.instance).client;
-    const selected = client.v1.accounts.$select(account.id);
+    const selected = client.v1.accounts.$select(localId);
     const following = relationship.following || relationship.requested;
     setRelationship(following ? await selected.unfollow() : await selected.follow());
   };
