@@ -18,7 +18,12 @@ function isTyping(e: KeyboardEvent): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable === true;
 }
 
-function keyName(e: KeyboardEvent): string {
+/** Normalizes a keydown into "mod+alt+shift+key", or null when the event
+    carries no key (synthetic/IME events some keyboards dispatch keyless). */
+export function keyName(
+  e: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">,
+): string | null {
+  if (typeof e.key !== "string" || e.key === "") return null;
   let key = e.key.toLowerCase();
   if (key === " ") key = "space";
   if (key === "escape") key = "esc";
@@ -67,6 +72,7 @@ function clearPending() {
 
 function onKeydown(e: KeyboardEvent) {
   const kbd = keyName(e);
+  if (!kbd) return;
   const typing = isTyping(e);
   const isEsc = kbd === "esc";
   const hasMod = kbd.startsWith("mod+") || kbd.startsWith("alt+");
