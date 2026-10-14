@@ -179,7 +179,7 @@ export function StatusPage({ params }: Props): JSX.Element {
     <PageShell title={t.thread} showBack>
       <div class="thread">
         {ancestors.map((s) => (
-          <StatusCard key={statusKey(s)} statusKey={statusKey(s)} compact hideHeader />
+          <StatusCard key={statusKey(s)} statusKey={statusKey(s)} compact />
         ))}
         {focusKey ? (
           <div class="thread-focus" ref={focusRef}>
