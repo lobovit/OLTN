@@ -55,9 +55,16 @@ export async function getInstanceInfo(instance: string): Promise<InstanceInfo> {
         thumbnail: info.thumbnail ?? null,
         streamingApi: info.urls?.streamingApi ?? null,
         version: info.version,
+        rules: (info.rules ?? []).map((rule) => ({
+          id: rule.id,
+          text: rule.text,
+          translations: Object.fromEntries(
+            Object.entries(rule.translations ?? {}).map(([locale, value]) => [locale, value.text]),
+          ),
+        })),
       };
     } catch {
-      return { uri: instance, title: instance };
+      return { uri: instance, title: instance, rules: [] };
     }
   });
 }

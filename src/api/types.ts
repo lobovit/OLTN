@@ -1,4 +1,5 @@
 import type { mastodon } from "masto";
+import type { InstanceRule } from "../lib/instance-rules";
 
 export type Status = mastodon.v1.Status;
 export type StatusEdit = mastodon.v1.StatusEdit;
@@ -28,6 +29,7 @@ export type StatusVisibility = mastodon.v1.StatusVisibility;
 export type ComposeVisibility = StatusVisibility | "local";
 export type NotificationType = mastodon.v1.NotificationType;
 export type Translation = mastodon.v1.Translation;
+export type ReportCategory = mastodon.v1.ReportCategory;
 export type RestClient = mastodon.rest.Client;
 export type StreamingClient = mastodon.streaming.Client;
 
@@ -37,6 +39,7 @@ export interface InstanceInfo {
   thumbnail?: string | null;
   streamingApi?: string | null;
   version?: string;
+  rules: InstanceRule[];
 }
 
 export interface AccountMeta {

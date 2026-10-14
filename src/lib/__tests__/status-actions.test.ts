@@ -47,6 +47,7 @@ interface FakeClientOptions {
 
 function fakeClient(options: FakeClientOptions = {}) {
   const calls: string[] = [];
+  let reportParams: unknown;
   const maybeFail = async (label: string, result: unknown = {}): Promise<unknown> => {
     calls.push(label);
     if (options.failOn && label.startsWith(options.failOn)) throw new Error(`falha em ${label}`);
@@ -64,8 +65,18 @@ function fakeClient(options: FakeClientOptions = {}) {
           unbookmark: () => maybeFail(`unbookmark:${id}`),
         }),
       },
-      accounts: { $select: (id: string) => ({ block: () => maybeFail(`block:${id}`) }) },
-      reports: { create: () => maybeFail("report", { id: "r1" }) },
+      accounts: {
+        $select: (id: string) => ({
+          block: () => maybeFail(`block:${id}`),
+          mute: () => maybeFail(`mute:${id}`),
+        }),
+      },
+      reports: {
+        create: (params?: unknown) => {
+          reportParams = params;
+          return maybeFail("report", { id: "r1" });
+        },
+      },
       polls: {
         $select: (id: string) => ({
           votes: {
@@ -92,7 +103,7 @@ function fakeClient(options: FakeClientOptions = {}) {
       },
     },
   };
-  return { client: client as unknown as RestClient, calls };
+  return { client: client as unknown as RestClient, calls, reportParams: () => reportParams };
 }
 
 const ctx = (client: RestClient): StatusActionsContext => ({
@@ -236,10 +247,44 @@ describe("reportStatus", () => {
       makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
       "other.instance",
     );
-    const ok = await reportStatus(ctx(client), key, "  spam  ");
+    const ok = await reportStatus(ctx(client), key, { comment: "  spam  " });
     expect(ok).toBe(true);
     expect(calls).toEqual(["report"]);
     expect(lastToast()?.kind).toBe("ok");
+  });
+
+  it("sends category, rule ids and forward when given", async () => {
+    const { client, reportParams } = fakeClient({ remote: true });
+    const key = putStatus(
+      makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
+      "other.instance",
+    );
+    const ok = await reportStatus(ctx(client), key, {
+      category: "violation",
+      ruleIds: ["1", ""],
+      forward: true,
+      comment: " rules ",
+    });
+    expect(ok).toBe(true);
+    expect(reportParams()).toMatchObject({
+      category: "violation",
+      ruleIds: ["1"],
+      forward: true,
+      comment: "rules",
+    });
+  });
+
+  it("can mute and block together with the report", async () => {
+    const { client, calls } = fakeClient({ remote: true });
+    const key = putStatus(
+      makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
+      "other.instance",
+    );
+    expect(await reportStatus(ctx(client), key, { also: "mute" })).toBe(true);
+    expect(calls).toEqual(["report", "mute:a-local"]);
+    expect(await reportStatus(ctx(client), key, { also: "block" })).toBe(true);
+    expect(calls).toEqual(["report", "mute:a-local", "report", "block:a-local"]);
+    expect(store.blockedAccounts).toContain("u@remote.example");
   });
 
   it("fails without available resolvers", async () => {
@@ -248,7 +293,7 @@ describe("reportStatus", () => {
       makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
       "other.instance",
     );
-    const ok = await reportStatus(ctx(client), key, "");
+    const ok = await reportStatus(ctx(client), key, {});
     expect(ok).toBe(false);
     expect(lastToast()?.kind).toBe("error");
   });

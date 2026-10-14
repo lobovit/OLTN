@@ -479,10 +479,76 @@
 
 .report-preview {
   padding: var(--s2) var(--s3);
-  border: var(--hairline) solid var(--border);
+  border: 2px dashed var(--danger);
   border-radius: var(--r-md);
   background: var(--surface-2);
   color: var(--text-2);
+}
+
+.report-question {
+  margin: 0;
+  padding: 0;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.report-categories,
+.report-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.report-rules {
+  margin-inline-start: var(--s4);
+}
+
+.report-category,
+.report-rule,
+.report-forward {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.report-category input,
+.report-rule input {
+  margin: 3px 0 0;
+}
+
+.report-forward {
+  align-items: center;
+}
+
+.report-hint {
+  color: var(--text-3);
+  font-size: 0.8rem;
+}
+
+.report-comment-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.report-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.report-translation {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--text-3);
+  font-size: 0.8rem;
 }
 
 .status-card.filtered {

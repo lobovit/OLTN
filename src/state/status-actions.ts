@@ -2,7 +2,7 @@
    block, report, vote) behind an injected client — optimistic patch, local
    id resolution, call, rollback and toast in a single module. */
 
-import type { Poll, RestClient, Status } from "../api/types";
+import type { Poll, ReportCategory, RestClient, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { userMessageForError } from "../lib/errors";
 import { localAccountId, localStatus, sourceInstanceFor } from "../lib/identity";
@@ -124,6 +124,19 @@ export async function toggleStatusAction(
   }
 }
 
+/** Blocks the account on the instance and records the hiding invariant. */
+async function applyBlock(
+  ctx: StatusActionsContext,
+  accountId: string,
+  acct: string,
+): Promise<void> {
+  await ctx.client.v1.accounts.$select(accountId).block();
+  if (!store.blockedAccounts.includes(acct)) {
+    store.blockedAccounts = [...store.blockedAccounts, acct];
+  }
+  toast(t.blocked, "ok");
+}
+
 /** Blocks the status author and records the hiding invariant. */
 export async function blockStatusAuthor(ctx: StatusActionsContext, key: string): Promise<boolean> {
   const status = store.statuses[key];
@@ -133,12 +146,7 @@ export async function blockStatusAuthor(ctx: StatusActionsContext, key: string):
     const source = sourceInstanceFor(key, status);
     const accountId = await localAccountId(ctx.client, ctx.instance, status.account, source);
     if (!accountId) throw new Error("block_resolve_failed");
-    await ctx.client.v1.accounts.$select(accountId).block();
-    const acct = status.account.acct;
-    if (!store.blockedAccounts.includes(acct)) {
-      store.blockedAccounts = [...store.blockedAccounts, acct];
-    }
-    toast(t.blocked, "ok");
+    await applyBlock(ctx, accountId, status.account.acct);
     return true;
   } catch (err) {
     console.warn("[oltn] block failed", err);
@@ -149,11 +157,23 @@ export async function blockStatusAuthor(ctx: StatusActionsContext, key: string):
   }
 }
 
-/** Reports the status (with optional comment). */
+export interface ReportOptions {
+  comment?: string;
+  /** Mastodon report category (spam, legal, violation, other). */
+  category?: ReportCategory;
+  /** Instance rule ids cited as violated (implies the `violation` category). */
+  ruleIds?: readonly string[];
+  /** Forward the report to the account's remote instance. */
+  forward?: boolean;
+  /** Extra action applied together with the report. */
+  also?: "mute" | "block";
+}
+
+/** Reports the status with the selected options. */
 export async function reportStatus(
   ctx: StatusActionsContext,
   key: string,
-  comment: string,
+  options: ReportOptions = {},
 ): Promise<boolean> {
   const status = store.statuses[key];
   if (!status) return false;
@@ -165,11 +185,22 @@ export async function reportStatus(
       localAccountId(ctx.client, ctx.instance, status.account, source),
     ]);
     if (!local || !accountId) throw new Error("report_resolve_failed");
+    const ruleIds = (options.ruleIds ?? []).filter(Boolean);
     await ctx.client.v1.reports.create({
       accountId,
       statusIds: [local.id],
-      comment: comment.trim() || undefined,
+      comment: options.comment?.trim() || undefined,
+      category: options.category ?? undefined,
+      ruleIds: ruleIds.length ? ruleIds : undefined,
+      forward: options.forward || undefined,
     });
+    if (options.also === "mute") {
+      await ctx.client.v1.accounts.$select(accountId).mute();
+      toast(t.muted, "ok");
+    }
+    if (options.also === "block") {
+      await applyBlock(ctx, accountId, status.account.acct);
+    }
     toast(t.reportSent, "ok");
     return true;
   } catch (err) {
