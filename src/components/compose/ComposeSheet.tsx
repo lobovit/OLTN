@@ -390,7 +390,6 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
       title={composeTitle(intent.mode)}
       onClose={() => setCompose(null)}
       draggable
-      positionKey="compose"
       class="compose-sheet"
       headerActions={
         <span
