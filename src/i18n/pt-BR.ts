@@ -3,7 +3,7 @@ import { en, type TKey } from "./en";
 
 const pt: Record<TKey, string> = {
   appName: "OLTN",
-  tagline: "cliente web local para Mastodon",
+  tagline: "Outro cliente web de deck para Mastodon",
 
   // General
   home: "Início",
@@ -133,6 +133,7 @@ const pt: Record<TKey, string> = {
   loginNotFound: "Não consegui encontrar essa instância. Confira o endereço e tente de novo.",
   loginInstanceDown: "A instância não respondeu. Tente mais tarde.",
   landingDevelopedBy: "Developed by",
+  loginMastodonIntro: "New to Mastodon? Learn more and find an instance at",
   supportProject: "Apoie o projeto",
   supportText: "Se o OLTN é útil pra você, dá pra apoiar o desenvolvimento com qualquer valor.",
   supportLink: "Abrir o link de pagamento",

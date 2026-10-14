@@ -1,7 +1,7 @@
 /* Master dictionary: keys (TKey) derive from here; English is the default. */
 export const en = {
   appName: "OLTN",
-  tagline: "local web client for Mastodon",
+  tagline: "Another Mastodon Deck Web Client",
 
   // General
   home: "Home",
@@ -131,6 +131,7 @@ export const en = {
   loginNotFound: "Couldn't find that instance. Check the address and try again.",
   loginInstanceDown: "The instance didn't respond. Try again later.",
   landingDevelopedBy: "Developed by",
+  loginMastodonIntro: "New to Mastodon? Learn more and find an instance at",
   supportProject: "Support the project",
   supportText: "If OLTN is useful to you, you can support its development with any amount.",
   supportLink: "Open the payment link",

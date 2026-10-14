@@ -129,6 +129,24 @@
   margin: 0;
 }
 
+.login-note {
+  margin: 0;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.login-note a {
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.login-note a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .instance-preview {
   display: flex;
   flex-direction: column;

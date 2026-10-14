@@ -240,6 +240,12 @@ export function LoginPage(): JSX.Element {
                   {busy ? <span class="spinner" /> : <Icon name="arrow-right-line" size={16} />}
                   {busy ? t.loginLooking : t.loginButton}
                 </button>
+                <p class="login-note">
+                  {t.loginMastodonIntro}{" "}
+                  <a href="https://joinmastodon.org" target="_blank" rel="noopener noreferrer">
+                    joinmastodon.org
+                  </a>
+                </p>
               </form>
             ) : (
               <div class="instance-preview">
