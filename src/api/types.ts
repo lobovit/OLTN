@@ -97,6 +97,8 @@ export interface Settings {
   accent: AccentSetting;
   language: LanguageSetting;
   textSize: number;
+  /** Multi-column deck on the home route (off = single-column home). */
+  deckMode: boolean;
   /** Receives posts and notifications in real time. */
   autoStream: boolean;
   /** Animate GIFs in timelines (default: on). */
@@ -118,6 +120,14 @@ export interface SavedLayout {
   name: string;
   columns: readonly Shortcut[];
   widths?: Readonly<Record<string, number>>;
+}
+
+/** Position and size of a floating panel on the canvas (deck mode off). */
+export interface FloatRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export interface ToastItem {

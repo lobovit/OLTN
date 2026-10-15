@@ -33,6 +33,21 @@ export function orderColumns<T extends { id: string }>(
     .map((entry) => entry.item);
 }
 
+/** How the home route lays itself out: deck columns, floating panels or a plain page. */
+export type RouteMode = "deck" | "floats" | "page";
+
+/** Deck mode: columns. Deck off on desktop: floating panels. Everything else: page. */
+export function routeMode(
+  path: string,
+  authed: boolean,
+  deckEnabled: boolean,
+  desktop: boolean,
+): RouteMode {
+  if (!authed || path !== "/") return "page";
+  if (deckEnabled) return "deck";
+  return desktop ? "floats" : "page";
+}
+
 /** Moves `id` before/after `targetId` in a list of ids. */
 export function moveInOrder(
   ids: readonly string[],

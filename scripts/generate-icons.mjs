@@ -100,6 +100,7 @@ const wanted = [
   "group-line",
   "pin-line",
   "layout-grid-line",
+  "palette-line",
   "building-2-line",
 ];
 

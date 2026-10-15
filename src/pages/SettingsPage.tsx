@@ -153,6 +153,20 @@ export function SettingsPage(): JSX.Element {
               onChange={() => saveSettings()}
             />
           </div>
+          <div class="setting-row">
+            <span>{t.deckMode}</span>
+            <input
+              type="checkbox"
+              class="switch"
+              role="switch"
+              checked={settings.deckMode}
+              aria-label={t.deckMode}
+              onChange={(e) => {
+                update({ deckMode: (e.target as HTMLInputElement).checked });
+              }}
+            />
+          </div>
+          <p class="muted">{t.deckModeHint}</p>
           <p class="muted">{t.layoutHint}</p>
           <div class="btn-row">
             <button type="button" class="btn" onClick={() => navigate("/layouts")}>

@@ -486,6 +486,11 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "palette-line": {
+    body: '<path fill="currentColor" d="M8 12.5a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0m2-4a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0m5 0a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0"/><path fill="none" stroke="currentColor" stroke-width="2" d="M17.902 15.484c1.322.22 2.682-.458 2.936-1.773a9 9 0 1 0-8.469 7.282c1.292-.053 1.891-1.472 1.313-2.63a2.115 2.115 0 0 1 .396-2.44l.089-.09a2.29 2.29 0 0 1 1.995-.64z"/><path fill="none" stroke="currentColor" stroke-width="2" d="M8 12.5a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0Zm2-4a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0Zm5 0a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0Z"/>',
+    width: 24,
+    height: 24,
+  },
   "building-2-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 20h18M5 20V6.36a.5.5 0 0 1 .342-.474l8-2.667a.5.5 0 0 1 .658.475V20m0-10l4.598.92a.5.5 0 0 1 .402.49V20"/>',
     width: 24,

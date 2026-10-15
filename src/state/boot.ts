@@ -3,6 +3,7 @@ import { connectUserStream, getRest, getInstanceInfo } from "../api/client";
 import type {
   AccentSetting,
   AccountMeta,
+  FloatRect,
   SavedLayout,
   Settings,
   Shortcut,
@@ -10,6 +11,7 @@ import type {
 } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { setFormatLocale } from "../lib/format";
+import { updatePanelColor, type PanelColor } from "../lib/panel-colors";
 import { navigate, parseHash } from "../lib/router";
 import {
   migrateLegacyStorage,
@@ -123,10 +125,37 @@ export function saveColumnLayout(order: readonly string[], widths: Record<string
   const ns = accountNS(account);
   const prev = store.prefs[ns];
   store.prefs[ns] = {
-    shortcuts: prev?.shortcuts ?? [],
+    ...(prev ?? { shortcuts: [] }),
     columnOrder: [...order],
     columnWidths: { ...widths },
-    savedLayouts: prev?.savedLayouts,
+  };
+  savePrefs();
+}
+
+export function saveFloatLayout(
+  rects: Readonly<Record<string, FloatRect>>,
+  order: readonly string[],
+): void {
+  const account = currentAccount();
+  if (!account) return;
+  const ns = accountNS(account);
+  const prev = store.prefs[ns];
+  store.prefs[ns] = {
+    ...(prev ?? { shortcuts: [] }),
+    floats: { ...rects },
+    floatOrder: [...order],
+  };
+  savePrefs();
+}
+
+export function savePanelColor(id: string, color: PanelColor | ""): void {
+  const account = currentAccount();
+  if (!account) return;
+  const ns = accountNS(account);
+  const prev = store.prefs[ns];
+  store.prefs[ns] = {
+    ...(prev ?? { shortcuts: [] }),
+    colors: updatePanelColor(prev?.colors ?? {}, id, color),
   };
   savePrefs();
 }

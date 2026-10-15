@@ -1,15 +1,12 @@
 import type { ComponentChildren, JSX } from "preact";
 import { useEffect, useMemo } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import type { Shortcut, ShortcutType } from "../api/types";
-import { NotificationsFeed } from "../components/feed/NotificationsFeed";
-import { Timeline } from "../components/feed/Timeline";
-import { TrendingFeed } from "../components/feed/TrendingFeed";
-import { ConversationsFeed } from "../components/feed/ConversationsFeed";
+import type { ShortcutType } from "../api/types";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
 import { t, type TKey } from "../i18n/pt-BR";
 import { focusableCards, nextFocusIndex } from "../lib/deck-focus";
+import { bringToFront, stackOrder } from "../lib/floats";
 import { formatDuration } from "../lib/format";
 import { useHotkeys } from "../lib/hotkeys";
 import { beginPointerDrag, dropTarget, type DropTarget } from "../lib/pointer-drag";
@@ -19,13 +16,17 @@ import {
   ensureColumnVisible,
   moveInOrder,
   orderColumns,
+  routeMode,
 } from "../lib/layout";
 import { backOrHome, Link, matchRoutes, navigate, useRouter } from "../lib/router";
 import { shortcutLabel, shortcutRoute } from "./shortcuts";
 import { routes } from "./routes";
-import { saveColumnLayout, saveSettings, saveShortcuts } from "../state/boot";
+import { ColumnContent, iconForShortcut } from "./column-content";
+import { FloatCanvas } from "./floats";
+import { PanelColorButton } from "./panel-color";
+import { saveColumnLayout, saveFloatLayout, saveSettings, saveShortcuts } from "../state/boot";
 import { accountNS, currentAccount, setCompose, setMediaViewer, store } from "../state/store";
-import { useAppState } from "../state/hooks";
+import { useAppState, useIsDesktop } from "../state/hooks";
 
 export function Shell({ children }: { children?: ComponentChildren }): JSX.Element {
   const state = useAppState();
@@ -279,11 +280,17 @@ function Rail(): JSX.Element | null {
   const pathActive = usePathActive();
   const route = useRouter();
   const state = useAppState();
+  const desktop = useIsDesktop();
   const me = state.me;
   const account = currentAccount();
   const shortcuts = useSnapshot(store).shortcuts;
   const railShortcuts = shortcuts.filter((s) => !NAV_COLUMN_TYPES.has(s.type));
-  const multi = route.path === "/";
+  const mode = routeMode(
+    route.path,
+    state.auth === "authenticated",
+    state.settings.deckMode,
+    desktop,
+  );
 
   if (!account && state.auth !== "authenticated") return null;
 
@@ -305,8 +312,33 @@ function Rail(): JSX.Element | null {
     window.setTimeout(() => scrollToColumn(shortcut.id), changed ? 60 : 0);
   };
 
+  const openFloat = (item: (typeof NAV_ITEMS)[number]): void => {
+    const type = item.column;
+    if (!type || !account) return;
+    const existing = store.shortcuts.find((s) => s.type === type);
+    const shortcut = existing ?? { id: type, type, label: t[item.labelKey] };
+    const next = ensureColumnVisible(store.shortcuts, shortcut);
+    const changed =
+      next.length !== store.shortcuts.length ||
+      next.some((s, index) => s.id !== store.shortcuts[index]?.id);
+    if (changed) saveShortcuts(next);
+    bringShortcutFront(shortcut.id);
+  };
+
+  const bringShortcutFront = (id: string): void => {
+    if (!account) return;
+    const prev = store.prefs[accountNS(account)];
+    const ids = orderColumns(store.shortcuts.slice(0, COLUMN_LIMIT), prev?.columnOrder ?? []).map(
+      (s) => s.id,
+    );
+    const order = stackOrder(prev?.floatOrder ?? [], ids);
+    if (order[order.length - 1] !== id) {
+      saveFloatLayout(prev?.floats ?? {}, bringToFront(order, id));
+    }
+  };
+
   const navActive = (item: (typeof NAV_ITEMS)[number]): boolean => {
-    if (multi && item.column) return hasColumn(item.column);
+    if (mode !== "page" && item.column) return hasColumn(item.column);
     if (item.popup === "search") return pathActive(item.href) || state.ui.searchOpen;
     return pathActive(item.href);
   };
@@ -373,10 +405,11 @@ function Rail(): JSX.Element | null {
                   backOrHome();
                   return;
                 }
-                if (!multi || !item.column) return;
+                if (!item.column || mode === "page") return;
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                 e.preventDefault();
-                openColumn(item);
+                if (mode === "deck") openColumn(item);
+                else openFloat(item);
               }}
             >
               <span style={{ position: "relative", display: "grid" }}>
@@ -400,12 +433,13 @@ function Rail(): JSX.Element | null {
               title={shortcutLabel(shortcut)}
               ariaCurrent={pathActive(shortcutRoute(shortcut)) ? "page" : undefined}
               onClick={(e) => {
-                if (!multi) return;
+                if (mode === "page") return;
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                 const index = store.shortcuts.findIndex((s) => s.id === shortcut.id);
                 if (index >= 0 && index < 6) {
                   e.preventDefault();
-                  scrollToColumn(shortcut.id);
+                  if (mode === "deck") scrollToColumn(shortcut.id);
+                  else bringShortcutFront(shortcut.id);
                 }
               }}
             >
@@ -441,37 +475,6 @@ function Rail(): JSX.Element | null {
       )}
     </nav>
   );
-}
-
-function iconForShortcut(shortcut: Shortcut): string {
-  switch (shortcut.type) {
-    case "home":
-      return "home-3-line";
-    case "local":
-      return "globe-line";
-    case "federated":
-      return "rocket-line";
-    case "notifications":
-      return "notification-line";
-    case "mentions":
-      return "at-line";
-    case "direct":
-      return "mail-line";
-    case "bookmarks":
-      return "bookmark-line";
-    case "favourites":
-      return "heart-line";
-    case "boosts":
-      return "repeat-line";
-    case "trending":
-      return "trending-up-line";
-    case "list":
-      return "list-check-line";
-    case "hashtag":
-      return "hashtag-line";
-    default:
-      return "quill-pen-line";
-  }
 }
 
 function TabBar(): JSX.Element {
@@ -553,6 +556,7 @@ export function MultiColumns(): JSX.Element {
   const account = currentAccount();
   const layout = account ? snap.prefs[accountNS(account)] : undefined;
   const widths: Record<string, number> = layout?.columnWidths ?? {};
+  const colors: Record<string, string> = layout?.colors ?? {};
   const list = orderColumns(shortcuts.slice(0, COLUMN_LIMIT), layout?.columnOrder ?? []);
 
   useEffect(() => () => activeDndCleanup?.(), []);
@@ -647,6 +651,7 @@ export function MultiColumns(): JSX.Element {
             class={`column ${width ? "with-width" : ""}`}
             key={shortcut.id}
             data-shortcut-id={shortcut.id}
+            data-panel-color={colors[shortcut.id]}
             style={width ? `--col-w:${width}px` : undefined}
           >
             <header class="deck-header">
@@ -671,6 +676,11 @@ export function MultiColumns(): JSX.Element {
               >
                 <Icon name="refresh-2-line" size={15} />
               </button>
+              <PanelColorButton
+                id={shortcut.id}
+                color={colors[shortcut.id]}
+                label={shortcutLabel(shortcut)}
+              />
               <button
                 type="button"
                 class="icon-btn col-close"
@@ -722,43 +732,6 @@ export function MultiColumns(): JSX.Element {
   );
 }
 
-function ColumnContent({
-  shortcut,
-  instance,
-}: {
-  shortcut: Shortcut;
-  instance?: string;
-}): JSX.Element {
-  switch (shortcut.type) {
-    case "home":
-      return <Timeline kind={{ type: "home" }} instance={instance} listenQueue />;
-    case "local":
-      return <Timeline kind={{ type: "public", local: true }} instance={instance} />;
-    case "federated":
-      return <Timeline kind={{ type: "public" }} instance={instance} />;
-    case "notifications":
-      return instance ? <NotificationsFeed instance={instance} /> : <div />;
-    case "mentions":
-      return instance ? <NotificationsFeed instance={instance} mode="mentions" /> : <div />;
-    case "direct":
-      return instance ? <ConversationsFeed instance={instance} /> : <div />;
-    case "bookmarks":
-      return <Timeline kind={{ type: "bookmarks" }} instance={instance} />;
-    case "favourites":
-      return <Timeline kind={{ type: "favourites" }} instance={instance} />;
-    case "boosts":
-      return <Timeline kind={{ type: "boosts" }} instance={instance} emptyTitle={t.emptyBoosts} />;
-    case "trending":
-      return <TrendingFeed instance={instance} />;
-    case "list":
-      return <Timeline kind={{ type: "list", listId: shortcut.value ?? "" }} instance={instance} />;
-    case "hashtag":
-      return <Timeline kind={{ type: "tag", tag: shortcut.value ?? "" }} instance={instance} />;
-    default:
-      return <div />;
-  }
-}
-
 /* ---------------- routing + guard ---------------- */
 
 export function Routed(): JSX.Element {
@@ -788,7 +761,10 @@ export function Routed(): JSX.Element {
   useFocusHotkeys();
   useEscapeHotkeys();
 
-  const multi = authed && route.path === "/";
+  const desktop = useIsDesktop();
+  const mode = routeMode(route.path, authed, state.settings.deckMode, desktop);
+  // With the deck off, pages center themselves (login keeps its full layout).
+  const centerPage = mode === "page" && !state.settings.deckMode && route.path !== "/login";
 
   if (needAuth && !authed) {
     return (
@@ -802,11 +778,15 @@ export function Routed(): JSX.Element {
 
   return (
     <Shell>
-      {multi ? (
+      {mode === "deck" ? (
         <MultiColumns />
+      ) : mode === "floats" ? (
+        <FloatCanvas />
       ) : (
         <main
-          class={`deck ${route.path === "/login" ? "full" : ""} ${match?.def.centered ? "centered" : ""}`}
+          class={`deck ${route.path === "/login" ? "full" : ""} ${
+            match?.def.centered || centerPage ? "centered" : ""
+          }`}
           id="main"
           tabindex={-1}
         >

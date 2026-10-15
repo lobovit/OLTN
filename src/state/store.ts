@@ -3,6 +3,7 @@ import type {
   AccountMeta,
   ComposeIntent,
   CredentialAccount,
+  FloatRect,
   InstanceInfo,
   MediaViewerIntent,
   Notification,
@@ -39,6 +40,12 @@ export interface AccountPrefs {
   columnOrder?: string[];
   columnWidths?: Record<string, number>;
   savedLayouts?: SavedLayout[];
+  /** Floating panel rects by shortcut id (deck mode off). */
+  floats?: Record<string, FloatRect>;
+  /** Floating panel stacking order, back to front. */
+  floatOrder?: string[];
+  /** Panel colors by shortcut id (shared by deck columns and floating panels). */
+  colors?: Record<string, string>;
 }
 
 export interface AppState {
@@ -85,6 +92,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accent: "green",
   language: "en",
   textSize: 16,
+  deckMode: true,
   autoStream: true,
   autoplayGifs: true,
   pomodoro: {

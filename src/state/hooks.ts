@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from "preact/hooks";
+import { useCallback, useEffect, useReducer, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import type { Status } from "../api/types";
 import {
@@ -9,6 +9,21 @@ import {
   type FeedState,
 } from "../lib/paged-feed";
 import { store } from "./store";
+
+const DESKTOP_QUERY = "(min-width: 48em)";
+
+/** Reactive desktop breakpoint, matching the CSS layout breakpoints. */
+export function useIsDesktop(): boolean {
+  const [desktop, setDesktop] = useState(() => window.matchMedia(DESKTOP_QUERY).matches);
+  useEffect(() => {
+    const query = window.matchMedia(DESKTOP_QUERY);
+    const onChange = (): void => setDesktop(query.matches);
+    onChange();
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+  return desktop;
+}
 
 export function useStatus(key: string): Status | undefined {
   const snap = useSnapshot(store.statuses);

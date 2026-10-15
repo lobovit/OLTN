@@ -7,6 +7,7 @@ import {
   LAYOUT_PRESETS,
   moveInOrder,
   orderColumns,
+  routeMode,
   COLUMN_MAX,
   COLUMN_MIN,
 } from "../layout";
@@ -143,5 +144,25 @@ describe("buildLayoutShortcuts", () => {
       "home",
       "notifications",
     ]);
+  });
+});
+
+describe("routeMode", () => {
+  it("uses the deck on the authenticated home with deck mode on", () => {
+    expect(routeMode("/", true, true, true)).toBe("deck");
+    expect(routeMode("/", true, true, false)).toBe("deck");
+  });
+
+  it("uses floating panels on desktop when deck mode is off", () => {
+    expect(routeMode("/", true, false, true)).toBe("floats");
+  });
+
+  it("falls back to a plain page on mobile with deck mode off", () => {
+    expect(routeMode("/", true, false, false)).toBe("page");
+  });
+
+  it("is a plain page outside the home or when anonymous", () => {
+    expect(routeMode("/settings", true, true, true)).toBe("page");
+    expect(routeMode("/", false, true, true)).toBe("page");
   });
 });

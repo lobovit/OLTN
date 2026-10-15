@@ -68,6 +68,13 @@
   --accent-soft-2: color-mix(in srgb, var(--accent-base) 24%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent-base) 35%, transparent);
 
+  /* Panel colors (per deck column / floating panel) */
+  --panel-green: #3ddc97;
+  --panel-orange: #f59e0b;
+  --panel-purple: #a78bfa;
+  --panel-blue: #60a5fa;
+  --panel-pink: #f472b6;
+
   /* Semantics */
   --boost: #c084fc;
   --boost-soft: rgba(192, 132, 252, 0.14);
