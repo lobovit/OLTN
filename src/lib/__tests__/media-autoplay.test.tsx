@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "preact";
 import type { MediaAttachment } from "../../api/types";
 import { MediaGrid } from "../../components/status/Media";
@@ -48,5 +48,37 @@ describe("MediaGrid: GIF autoplay", () => {
   it("keeps regular images on the preview url", () => {
     const host = renderGrid(media({ type: "image", url: "https://cdn.example/photo.jpg" }));
     expect(host.querySelector("img")?.getAttribute("src")).toBe("https://cdn.example/preview.jpg");
+  });
+
+  it("pauses the gifv video while it is offscreen and resumes when visible", async () => {
+    type IOCallback = (entries: { target: Element; isIntersecting: boolean }[]) => void;
+    let callback: IOCallback | null = null;
+    class FakeObserver {
+      constructor(cb: IOCallback) {
+        callback = cb;
+      }
+      observe(): void {}
+      disconnect(): void {}
+    }
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+
+    const host = renderGrid(media({ type: "gifv", url: "https://cdn.example/clip.mp4" }));
+    await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+    const fire = callback as unknown as IOCallback | null;
+    expect(fire).not.toBe(null);
+    const video = host.querySelector("video") as HTMLVideoElement;
+    const pause = vi.fn();
+    const play = vi.fn(() => Promise.resolve());
+    video.pause = pause;
+    video.play = play;
+
+    fire?.([{ target: video, isIntersecting: false }]);
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(play).not.toHaveBeenCalled();
+
+    fire?.([{ target: video, isIntersecting: true }]);
+    expect(play).toHaveBeenCalledTimes(1);
+
+    vi.unstubAllGlobals();
   });
 });

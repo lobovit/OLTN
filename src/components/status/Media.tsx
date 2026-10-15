@@ -64,6 +64,7 @@ function MediaItem({
 }): JSX.Element {
   const [revealed, setRevealed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const autoplayGifs = useSnapshot(store).settings.autoplayGifs;
   const ratio = attachmentRatio(attachment);
   const blurred = sensitive && !revealed;
@@ -76,6 +77,21 @@ function MediaItem({
   // video element to animate; GIFs kept as `image` animate in the img itself.
   const animatedVideo = animated && attachment.type === "gifv";
 
+  // Offscreen autoplaying gifv videos keep decoding forever otherwise; pause
+  // them outside the viewport and resume when they scroll back in.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) void video.play().catch(() => {});
+        else video.pause();
+      }
+    });
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [animatedVideo]);
+
   return (
     <figure
       class={`media-item type-${attachment.type} ${total === 1 ? "single" : ""}`}
@@ -85,6 +101,7 @@ function MediaItem({
       {!blurred && attachment.blurhash && <BlurhashCanvas hash={attachment.blurhash} />}
       {!blurred && animatedVideo && (
         <video
+          ref={videoRef}
           src={full}
           poster={attachment.previewUrl}
           autoPlay
