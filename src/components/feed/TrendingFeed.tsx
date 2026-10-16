@@ -1,11 +1,12 @@
 import type { JSX } from "preact";
 import { useEffect, useState } from "preact/hooks";
+import { useSnapshot } from "valtio";
 import type { Tag } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { shortNumber } from "../../lib/format";
 import { clientFor, hrefFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
-import { currentAccount } from "../../state/store";
+import { currentAccount, store } from "../../state/store";
 import { Icon } from "../ui/Icon";
 import { Timeline } from "./Timeline";
 
@@ -48,6 +49,7 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
   const account = currentAccount();
   const target = instance ?? account?.instance ?? "";
   const [tags, setTags] = useState<Tag[]>([]);
+  const revision = useSnapshot(store).ui.feedsRevision;
 
   useEffect(() => {
     if (!target) return;
@@ -63,7 +65,7 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [target]);
+  }, [target, revision]);
 
   return (
     <>

@@ -99,7 +99,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
     .map((n) => n as unknown as Notification);
 
   const feed = usePagedFeed<Notification>({
-    key: `${instance}|${mode}`,
+    key: `${instance}|${mode}|${snap.ui.feedsRevision}`,
     enabled: !!account,
     adapter: {
       fetchPage: async (cursor) => {

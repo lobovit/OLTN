@@ -1,11 +1,12 @@
 import type { JSX } from "preact";
+import { useSnapshot } from "valtio";
 import type { Conversation } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { userMessageForError } from "../../lib/errors";
 import { htmlToPlainText, timeAgo } from "../../lib/format";
 import { clientFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
-import { currentAccount, putStatuses } from "../../state/store";
+import { currentAccount, putStatuses, store } from "../../state/store";
 import { usePagedFeed } from "../../state/hooks";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
@@ -22,9 +23,10 @@ function participantNames(conversation: Conversation): string {
 export function ConversationsFeed({ instance }: { instance?: string }): JSX.Element {
   const account = currentAccount();
   const target = instance ?? account?.instance ?? "";
+  const revision = useSnapshot(store).ui.feedsRevision;
 
   const feed = usePagedFeed<Conversation>({
-    key: target,
+    key: `${target}|${revision}`,
     enabled: !!account && !!target,
     adapter: {
       fetchPage: async (cursor) => {
