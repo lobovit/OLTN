@@ -143,6 +143,23 @@ function AccountProfile({
           <Content html={account.note} emojis={account.emojis} />
         </div>
       )}
+      {account.fields.length > 0 && (
+        <dl class="account-fields">
+          {account.fields.map((field, index) => (
+            <div class="account-field" key={`${field.name}-${index}`}>
+              <dt>{field.name}</dt>
+              <dd>
+                {field.verifiedAt && (
+                  <span class="field-verified" title={t.verified}>
+                    <Icon name="check-line" size={12} />
+                  </span>
+                )}
+                <Content html={field.value} emojis={account.emojis} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
       <div class="account-stats">
         <button type="button" class="stat" onClick={() => onTab("followers")}>
           <strong>{account.followersCount}</strong> {t.followers}

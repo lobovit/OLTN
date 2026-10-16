@@ -51,6 +51,7 @@ export const en = {
   lockedProfile: "Private profile",
   lockedHint: "Only followers you approve can see your posts.",
   profileFields: "Profile fields",
+  verified: "Verified",
   fieldName: "Label",
   fieldValue: "Value",
   addField: "Add field",

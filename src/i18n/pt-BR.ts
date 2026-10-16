@@ -53,6 +53,7 @@ const pt: Record<TKey, string> = {
   lockedProfile: "Perfil privado",
   lockedHint: "Só seguidores aprovados por você veem seus posts.",
   profileFields: "Campos do perfil",
+  verified: "Verificado",
   fieldName: "Rótulo",
   fieldValue: "Valor",
   addField: "Adicionar campo",

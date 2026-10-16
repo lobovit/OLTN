@@ -161,6 +161,42 @@
   line-height: 1.5;
 }
 
+.account-fields {
+  display: grid;
+  gap: var(--s1);
+  margin-top: var(--s3);
+}
+
+.account-field {
+  display: flex;
+  gap: var(--s2);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.account-field dt {
+  flex: 0 0 auto;
+  min-width: 88px;
+  color: var(--text-3);
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.account-field dd {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.account-field .field-verified {
+  display: inline-flex;
+  color: var(--success);
+}
+
 .account-stats {
   display: flex;
   gap: var(--s5);
