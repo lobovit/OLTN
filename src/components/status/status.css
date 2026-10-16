@@ -413,6 +413,12 @@
   background: var(--accent-soft);
 }
 
+.status-action.delete:hover,
+.status-action.delete:focus-visible {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
 .status-action.reply:hover {
   color: var(--reply);
   background: var(--reply-soft);

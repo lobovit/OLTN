@@ -98,6 +98,7 @@ export const en = {
   reportPost: "Report post",
   reportComment: "Add a comment (optional)",
   reportSent: "Report sent.",
+  postDeleted: "Post deleted.",
   blockUser: "Block user",
   blockConfirm: "Block this user?",
   blocked: "User blocked.",

@@ -5,7 +5,7 @@ import type { Status } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { fullDate, languageName, timeAgo } from "../../lib/format";
 import { clientFor, hrefFor, localStatus, sourceInstanceFor } from "../../lib/identity";
-import { navigate } from "../../lib/router";
+import { back, navigate } from "../../lib/router";
 import { TRANSLATE_TARGETS } from "../../lib/translate";
 import {
   currentAccount,
@@ -15,7 +15,7 @@ import {
   store,
   toast,
 } from "../../state/store";
-import { blockStatusAuthor, toggleStatusAction } from "../../state/status-actions";
+import { blockStatusAuthor, deleteStatus, toggleStatusAction } from "../../state/status-actions";
 import { useStatus } from "../../state/hooks";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
@@ -358,6 +358,16 @@ function StatusCardView({
     await blockStatusAuthor(clientFor(account.instance), targetKey);
   };
 
+  const removeStatus = async (e: MouseEvent): Promise<void> => {
+    e.stopPropagation();
+    if (!account) return;
+    if (!window.confirm(t.deleteConfirm)) return;
+    const removed = await deleteStatus(clientFor(account.instance), targetKey);
+    // The focused card of a thread page has nothing left to show after it is
+    // deleted; leave the now-empty page.
+    if (removed && inThread) back();
+  };
+
   const filtered = (target.filtered ?? []).filter((f) => f.filter);
   const hidden = filtered.some(
     (f) => f.filter.filterAction === "hide" && host !== (store.instance?.uri ?? ""),
@@ -476,6 +486,7 @@ function StatusCardView({
             target={target}
             canAct={canAct}
             showEdit={isSelf && canAct && sourceInstance === account?.instance}
+            showDelete={isSelf && canAct}
             showMore={!isSelf && canAct}
             menuOpen={!!menu.menuPos}
             onReply={reply}
@@ -484,6 +495,7 @@ function StatusCardView({
               e.stopPropagation();
               setCompose({ mode: "edit", statusId: target.id });
             }}
+            onDelete={(e) => void removeStatus(e)}
             onMore={menu.open}
           />
         )}

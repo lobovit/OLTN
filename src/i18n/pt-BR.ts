@@ -100,6 +100,7 @@ const pt: Record<TKey, string> = {
   reportPost: "Denunciar post",
   reportComment: "Adicione um comentário (opcional)",
   reportSent: "Denúncia enviada.",
+  postDeleted: "Post excluído.",
   blockUser: "Bloquear usuário",
   blockConfirm: "Bloquear este usuário?",
   blocked: "Usuário bloqueado.",

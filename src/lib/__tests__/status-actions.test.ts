@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Poll, RestClient, Status } from "../../api/types";
 import {
   blockStatusAuthor,
+  deleteStatus,
   reportStatus,
   toggleStatusAction,
   votePoll,
@@ -63,6 +64,7 @@ function fakeClient(options: FakeClientOptions = {}) {
           unreblog: () => maybeFail(`unboost:${id}`),
           bookmark: () => maybeFail(`bookmark:${id}`),
           unbookmark: () => maybeFail(`unbookmark:${id}`),
+          remove: () => maybeFail(`delete:${id}`),
         }),
       },
       accounts: {
@@ -216,6 +218,41 @@ describe("toggleStatusAction", () => {
     // the optimistic patch must survive it.
     expect(store.statuses[key]?.reblogged).toBe(true);
     expect(store.statuses[key]?.reblogsCount).toBe(1);
+  });
+});
+
+describe("deleteStatus", () => {
+  it("deletes the local status and drops it from the cache", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    const ok = await deleteStatus(ctx(client), key);
+    expect(ok).toBe(true);
+    expect(calls).toEqual(["delete:1"]);
+    expect(store.statuses[key]).toBeUndefined();
+    expect(store.statusSources[key]).toBeUndefined();
+    expect(lastToast()?.kind).toBe("ok");
+  });
+
+  it("keeps the status cached when the API fails", async () => {
+    const { client } = fakeClient({ failOn: "delete:" });
+    const key = putStatus(makeStatus("1"), "mock.instance");
+    const ok = await deleteStatus(ctx(client), key);
+    expect(ok).toBe(false);
+    expect(store.statuses[key]).toBeTruthy();
+    expect(lastToast()?.kind).toBe("error");
+  });
+
+  it("resolves the local copy first and removes every cached copy by uri", async () => {
+    const { client, calls } = fakeClient({ remote: true });
+    const key = putStatus(
+      makeStatus("77", { uri: "https://remote.example/users/u/statuses/77" }),
+      "other.instance",
+    );
+    const ok = await deleteStatus(ctx(client), key);
+    expect(ok).toBe(true);
+    expect(calls).toEqual(["delete:L9"]);
+    expect(store.statuses[key]).toBeUndefined();
+    expect(lastToast()?.kind).toBe("ok");
   });
 });
 

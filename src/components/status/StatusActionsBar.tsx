@@ -11,25 +11,30 @@ interface StatusActionsBarProps {
   canAct: boolean;
   /** Self-authored status shown from its own instance (edit button). */
   showEdit: boolean;
+  /** Self-authored status while authenticated (delete button). */
+  showDelete: boolean;
   /** Someone else's status while authenticated (more/⋯ menu). */
   showMore: boolean;
   menuOpen: boolean;
   onReply: (e: MouseEvent) => void;
   onAct: (kind: ToggleKind, e: MouseEvent) => void;
   onEdit: (e: MouseEvent) => void;
+  onDelete: (e: MouseEvent) => void;
   onMore: (e: MouseEvent) => void;
 }
 
-/** Reply / boost / fav / bookmark bar plus edit and more-menu triggers. */
+/** Reply / boost / fav / bookmark bar plus edit, delete and more-menu triggers. */
 export function StatusActionsBar({
   target,
   canAct,
   showEdit,
+  showDelete,
   showMore,
   menuOpen,
   onReply,
   onAct,
   onEdit,
+  onDelete,
   onMore,
 }: StatusActionsBarProps): JSX.Element {
   return (
@@ -93,6 +98,17 @@ export function StatusActionsBar({
           onClick={onEdit}
         >
           <Icon name="pencil-line" size={16} />
+        </button>
+      )}
+      {showDelete && (
+        <button
+          type="button"
+          class="status-action delete"
+          title={t.deletePost}
+          aria-label={t.deletePost}
+          onClick={onDelete}
+        >
+          <Icon name="delete-line" size={16} />
         </button>
       )}
       {showMore && (

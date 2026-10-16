@@ -6,7 +6,7 @@ import type { Poll, ReportCategory, RestClient, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { userMessageForError } from "../lib/errors";
 import { localAccountId, localStatus, sourceInstanceFor } from "../lib/identity";
-import { patchStatus, putStatus, store, toast } from "./store";
+import { patchStatus, putStatus, removeStatusById, store, toast } from "./store";
 
 export interface StatusActionsContext {
   /** REST client for the account instance (HTTP in production, fake in tests). */
@@ -121,6 +121,37 @@ export async function toggleStatusAction(
     return false;
   } finally {
     end(key, kind);
+  }
+}
+
+/** Deletes the status on the account instance (resolving the local copy first). */
+export async function deleteStatus(ctx: StatusActionsContext, key: string): Promise<boolean> {
+  const status = store.statuses[key];
+  if (!status) return false;
+  if (!begin(key, "delete")) return false;
+  try {
+    const { local } = await resolveLocal(ctx, key, status);
+    if (!local) throw new Error("delete_resolve_failed");
+    await ctx.client.v1.statuses.$select(local.id).remove();
+    removeStatusById(ctx.instance, local.id);
+    // Copies fetched from another instance are keyed by uri; drop them too so
+    // every rendered card of the deleted post disappears.
+    if (status.uri) {
+      for (const [cachedKey, cached] of Object.entries(store.statuses)) {
+        if (cached.uri === status.uri) {
+          delete store.statuses[cachedKey];
+          delete store.statusSources[cachedKey];
+        }
+      }
+    }
+    toast(t.postDeleted, "ok");
+    return true;
+  } catch (err) {
+    console.warn("[oltn] delete failed", err);
+    toast(userMessageForError(err, t.errorGeneric), "error");
+    return false;
+  } finally {
+    end(key, "delete");
   }
 }
 
