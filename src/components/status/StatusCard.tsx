@@ -50,14 +50,11 @@ function hostOf(status: Status): string {
   }
 }
 
-function ReblogLine({ booster }: { booster: Status }): JSX.Element {
+function ReblogLine({ booster, href }: { booster: Status; href: string }): JSX.Element {
   return (
     <div class="reblog-line">
       <Icon name="repeat-line" size={14} />
-      <a
-        href={`#/${encodeURIComponent(hostOf(booster))}/a/@${encodeURIComponent(booster.account.acct.split("@")[0])}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <a href={`#${href}`} onClick={(e) => e.stopPropagation()}>
         {booster.account.displayName ? (
           <EmojiText text={booster.account.displayName} emojis={booster.account.emojis} />
         ) : (
@@ -379,7 +376,7 @@ function StatusCardView({
 
   const openAuthor = (e: MouseEvent): void => {
     e.stopPropagation();
-    navigate(hrefFor.account(target.account.acct, host));
+    navigate(hrefFor.accountById(sourceInstance, target.account.id));
   };
 
   const act = (kind: ToggleKind, e: MouseEvent): void => {
@@ -416,7 +413,15 @@ function StatusCardView({
           if (e.key === "Enter") navigate(openHref);
         }}
       >
-        {booster && <ReblogLine booster={booster} />}
+        {booster && (
+          <ReblogLine
+            booster={booster}
+            href={hrefFor.accountById(
+              sourceInstanceFor(statusKeyOf(booster), booster),
+              booster.account.id,
+            )}
+          />
+        )}
 
         {!hideHeader && (
           <Byline

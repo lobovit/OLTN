@@ -1,7 +1,7 @@
 import type { JSX } from "preact";
 import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
-import { clientFor } from "../../lib/identity";
+import { clientFor, hrefFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
 import type { Notification, Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
@@ -77,13 +77,6 @@ function groupNotifications(list: readonly Notification[]): Group[] {
     }
   }
   return groups;
-}
-
-export function accountHref(acct: string, instance: string): string {
-  const [user, host] = acct.includes("@")
-    ? [acct.slice(0, acct.indexOf("@")), acct.slice(acct.indexOf("@") + 1)]
-    : [acct, instance];
-  return `/${encodeURIComponent(host || instance)}/a/${encodeURIComponent(user)}`;
 }
 
 interface NotificationsFeedProps {
@@ -165,7 +158,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
             <button
               type="button"
               class="notif-head"
-              onClick={() => navigate(accountHref(group.account.acct, instance))}
+              onClick={() => navigate(hrefFor.accountById(instance, group.account.id))}
             >
               <span class="notif-icon">
                 <Icon name={TYPE_ICON[group.type] ?? "notification-line"} size={14} />

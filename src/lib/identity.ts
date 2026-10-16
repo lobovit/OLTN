@@ -43,6 +43,12 @@ export const hrefFor = {
     const [name, host] = acct.split("@");
     return `/${encodeURIComponent(host || fallbackHost)}/a/@${encodeURIComponent(name)}`;
   },
+  /** Account page for an id that is valid on `instance` (always resolvable
+      through the API of the instance that produced the data — unlike the
+      acct-domain link, which needs that domain to expose the Mastodon API). */
+  accountById(instance: string, id: string): string {
+    return `/${encodeURIComponent(instance)}/a/${encodeURIComponent(id)}`;
+  },
   tag(tag: string, host: string): string {
     return `/${encodeURIComponent(host)}/t/${encodeURIComponent(tag)}`;
   },

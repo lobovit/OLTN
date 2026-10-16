@@ -66,6 +66,9 @@ describe("token and client scoping", () => {
 });
 
 describe("hrefFor", () => {
+  it("accountById points at the instance that owns the id", () => {
+    expect(hrefFor.accountById("my.instance", "2")).toBe("/my.instance/a/2");
+  });
   it("builds status, account and tag routes", () => {
     expect(hrefFor.status("123", "remote.example")).toBe("/remote.example/s/123");
     expect(hrefFor.account("user@remote.example", "fallback")).toBe("/remote.example/a/@user");
