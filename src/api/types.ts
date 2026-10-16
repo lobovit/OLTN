@@ -16,6 +16,7 @@ export type Relationship = mastodon.v1.Relationship;
 export type CustomEmoji = mastodon.v1.CustomEmoji;
 export type Instance = mastodon.v1.Instance;
 export type Tag = mastodon.v1.Tag;
+export type TrendLink = mastodon.v1.TrendLink;
 export type Conversation = mastodon.v1.Conversation;
 export type AccountField = mastodon.v1.AccountField;
 export type UpdateCredentialsParams = mastodon.rest.v1.UpdateCredentialsParams;

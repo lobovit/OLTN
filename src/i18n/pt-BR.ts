@@ -175,6 +175,9 @@ const pt: Record<TKey, string> = {
   emptySearch: "Busque por pessoas, hashtags ou posts.",
   emptyTrending: "Nada em alta agora.",
   trendUses: "publicações",
+  people: "Pessoas",
+  news: "Notícias",
+  trendingPosts: "posts em alta",
   fediverseApps: "Apps do Fediverso",
   fediverseAppsHint:
     "Todos os apps aqui falam ActivityPub — dá para seguir e interagir com eles usando sua conta Mastodon.",

@@ -173,6 +173,9 @@ export const en = {
   emptySearch: "Search for people, hashtags or posts.",
   emptyTrending: "Nothing trending right now.",
   trendUses: "posts",
+  people: "People",
+  news: "News",
+  trendingPosts: "trending posts",
   fediverseApps: "Fediverse Apps",
   fediverseAppsHint:
     "Every app here speaks ActivityPub, so you can follow and interact with them from your Mastodon account.",
