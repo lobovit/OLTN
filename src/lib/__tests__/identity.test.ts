@@ -6,6 +6,8 @@ import {
   isOwnInstance,
   localAccountId,
   localStatus,
+  resolveAccountHandle,
+  searchAccountsByUsername,
   sourceInstanceFor,
   tokenFor,
 } from "../identity";
@@ -103,6 +105,100 @@ describe("sourceInstanceFor", () => {
     expect(sourceInstanceFor("missing", remote)).toBe("remote.example");
     store.instance = { uri: "my.instance" } as never;
     expect(sourceInstanceFor("missing", status("2", "not a url"))).toBe("my.instance");
+  });
+});
+
+describe("resolveAccountHandle", () => {
+  const withSearch = (accounts: unknown[], fail = false) => {
+    const calls: string[] = [];
+    const client = {
+      v2: {
+        search: {
+          list: async (params: { q: string }) => {
+            calls.push(params.q);
+            if (fail) throw new Error("search failed");
+            return { accounts, hashtags: [], statuses: [] };
+          },
+        },
+      },
+    } as unknown as RestClient;
+    return { client, calls };
+  };
+
+  it("resolves the requested handle, ignoring the leading @ and case", async () => {
+    const { client, calls } = withSearch([
+      { id: "1", acct: "other@remote.example" },
+      { id: "7", acct: "newsbot@remote.example" },
+    ]);
+    const found = await resolveAccountHandle(client, " @NewsBot@Remote.Example ");
+    expect(found?.id).toBe("7");
+    expect(calls).toEqual(["newsbot@remote.example"]);
+  });
+
+  it("rejects fuzzy results that are not the requested handle", async () => {
+    const { client } = withSearch([{ id: "1", acct: "other@remote.example" }]);
+    expect(await resolveAccountHandle(client, "newsbot@remote.example")).toBeNull();
+  });
+
+  it("does not search without a full handle", async () => {
+    const { client, calls } = withSearch([]);
+    expect(await resolveAccountHandle(client, "newsbot")).toBeNull();
+    expect(calls).toEqual([]);
+  });
+
+  it("returns null when the search fails", async () => {
+    const { client } = withSearch([], true);
+    expect(await resolveAccountHandle(client, "newsbot@remote.example")).toBeNull();
+  });
+});
+
+describe("searchAccountsByUsername", () => {
+  const withSearch = (accounts: unknown[], fail = false) => {
+    const calls: string[] = [];
+    const client = {
+      v2: {
+        search: {
+          list: async (params: { q: string }) => {
+            calls.push(params.q);
+            if (fail) throw new Error("search failed");
+            return { accounts, hashtags: [], statuses: [] };
+          },
+        },
+      },
+    } as unknown as RestClient;
+    return { client, calls };
+  };
+
+  it("keeps only accounts whose username matches the bare handle", async () => {
+    const { client, calls } = withSearch([
+      { id: "1", username: "other", acct: "other@remote.example" },
+      { id: "7", username: "NewsBot", acct: "NewsBot@remote.example" },
+    ]);
+    const matches = await searchAccountsByUsername(client, " @newsbot ");
+    expect(matches.map((account) => account.id)).toEqual(["7"]);
+    expect(calls).toEqual(["newsbot"]);
+  });
+
+  it("does not search full handles (they resolve exactly)", async () => {
+    const { client, calls } = withSearch([]);
+    expect(await searchAccountsByUsername(client, "newsbot@remote.example")).toEqual([]);
+    expect(calls).toEqual([]);
+  });
+
+  it("caps the matches at five", async () => {
+    const { client } = withSearch(
+      Array.from({ length: 8 }, (_, index) => ({
+        id: String(index),
+        username: "newsbot",
+        acct: `newsbot@h${index}.example`,
+      })),
+    );
+    expect(await searchAccountsByUsername(client, "newsbot")).toHaveLength(5);
+  });
+
+  it("returns an empty list when the search fails", async () => {
+    const { client } = withSearch([], true);
+    expect(await searchAccountsByUsername(client, "newsbot")).toEqual([]);
   });
 });
 

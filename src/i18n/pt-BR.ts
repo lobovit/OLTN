@@ -166,6 +166,13 @@ const pt: Record<TKey, string> = {
   trendingPosts: "posts em alta",
   newsletter: "Newsletter",
   newsletterSubtitle: "O que o fediverso está lendo agora.",
+  newsletterSources: "Fontes de notícias",
+  newsletterSourcesHint:
+    "Adicione perfis do fediverso que divulgam notícias; digite @usuario@instancia, ou @usuario para escolher entre contas conhecidas.",
+  newsletterSourcePlaceholder: "@usuario@instancia",
+  newsletterSourceAdd: "Adicionar",
+  newsletterSourceNotFound: "Não encontrei esse perfil na sua instância.",
+  newsletterFromSources: "Últimas das suas fontes",
   fediverseApps: "Apps do Fediverso",
   fediverseAppsHint:
     "Todos os apps aqui falam ActivityPub — dá para seguir e interagir com eles usando sua conta Mastodon.",

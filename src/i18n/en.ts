@@ -164,6 +164,13 @@ export const en = {
   trendingPosts: "trending posts",
   newsletter: "Newsletter",
   newsletterSubtitle: "What the fediverse is reading right now.",
+  newsletterSources: "News sources",
+  newsletterSourcesHint:
+    "Add fediverse profiles that share news; type @user@instance, or @user to pick from known accounts.",
+  newsletterSourcePlaceholder: "@user@instance",
+  newsletterSourceAdd: "Add",
+  newsletterSourceNotFound: "Couldn't find that profile on your instance.",
+  newsletterFromSources: "Latest from your sources",
   fediverseApps: "Fediverse Apps",
   fediverseAppsHint:
     "Every app here speaks ActivityPub, so you can follow and interact with them from your Mastodon account.",

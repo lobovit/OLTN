@@ -157,3 +157,134 @@
   color: var(--text-3);
   font-size: 0.78rem;
 }
+
+.newsletter-sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.newsletter-sources h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.newsletter-source-form {
+  display: flex;
+  gap: var(--s2);
+}
+
+.newsletter-source-form .field {
+  flex: 1;
+}
+
+.newsletter-sources-hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+
+.newsletter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.newsletter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  font-size: 0.8rem;
+}
+
+.newsletter-chip-remove {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.newsletter-chip-remove:hover,
+.newsletter-chip-remove:focus-visible {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.newsletter-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.newsletter-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.newsletter-posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--s3);
+  align-items: start;
+}
+
+.newsletter-posts .status-card {
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.newsletter-suggestions {
+  display: flex;
+  flex-direction: column;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.newsletter-suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.newsletter-suggestion:hover,
+.newsletter-suggestion:focus-visible {
+  background: var(--hover);
+}
+
+.newsletter-suggestion + .newsletter-suggestion {
+  border-top: var(--hairline) solid var(--divider);
+}
+
+.newsletter-suggestion-name {
+  font-weight: 600;
+}
+
+.newsletter-suggestion-acct {
+  margin-inline-start: auto;
+  color: var(--text-3);
+  font-size: 0.82rem;
+}

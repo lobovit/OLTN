@@ -128,3 +128,49 @@ export async function localAccountId(
     return null;
   }
 }
+
+/** Resolves a full @user@host handle on the account instance (WebFinger via
+    search). Only exact acct matches are accepted — no fuzzy suggestions. */
+export async function resolveAccountHandle(
+  client: RestClient,
+  handle: string,
+): Promise<Account | null> {
+  const acct = handle.trim().replace(/^@/, "").toLowerCase();
+  if (!acct.includes("@")) return null;
+  try {
+    const result = await client.v2.search.list({
+      q: acct,
+      resolve: true,
+      type: "accounts",
+      limit: 5,
+    });
+    return result.accounts.find((account) => account.acct.toLowerCase() === acct) ?? null;
+  } catch (err) {
+    console.warn("[oltn] account handle lookup failed", err);
+    return null;
+  }
+}
+
+/** Known accounts on the instance whose username matches a bare @handle
+    (picks the source when the domain is not typed). */
+export async function searchAccountsByUsername(
+  client: RestClient,
+  handle: string,
+): Promise<Account[]> {
+  const username = handle.trim().replace(/^@/, "").toLowerCase();
+  if (!username || username.includes("@")) return [];
+  try {
+    const result = await client.v2.search.list({
+      q: username,
+      resolve: true,
+      type: "accounts",
+      limit: 10,
+    });
+    return result.accounts
+      .filter((account) => account.username.toLowerCase() === username)
+      .slice(0, 5);
+  } catch (err) {
+    console.warn("[oltn] account search failed", err);
+    return [];
+  }
+}

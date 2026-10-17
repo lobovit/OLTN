@@ -129,6 +129,14 @@ export interface FloatRect {
   h: number;
 }
 
+/** A news profile the reader aggregates from the Newsletter page. */
+export interface NewsletterSource {
+  /** Account id on the reader's instance (always resolvable there). */
+  id: string;
+  acct: string;
+  name: string;
+}
+
 export interface ToastItem {
   id: number;
   text: string;

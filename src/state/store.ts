@@ -6,6 +6,7 @@ import type {
   FloatRect,
   InstanceInfo,
   MediaViewerIntent,
+  NewsletterSource,
   Notification,
   SavedLayout,
   Settings,
@@ -46,6 +47,8 @@ export interface AccountPrefs {
   floatOrder?: string[];
   /** Panel colors by shortcut id (shared by deck columns and floating panels). */
   colors?: Record<string, string>;
+  /** News profiles aggregated by the Newsletter page. */
+  newsletterSources?: NewsletterSource[];
 }
 
 export interface AppState {

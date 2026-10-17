@@ -1,13 +1,18 @@
 import type { JSX } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import type { TrendLink } from "../api/types";
+import { useSnapshot } from "valtio";
+import type { Account, Status, TrendLink } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { shortNumber } from "../lib/format";
-import { clientFor } from "../lib/identity";
+import { clientFor, resolveAccountHandle, searchAccountsByUsername } from "../lib/identity";
+import { newestFirst } from "../lib/newsletter";
 import { trendTotalUses } from "../lib/trending";
-import { currentAccount } from "../state/store";
+import { accountNS, currentAccount, putStatuses, statusKey, store, toast } from "../state/store";
+import { saveNewsletterSources } from "../state/boot";
+import { Avatar } from "../components/ui/Avatar";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
+import { StatusCard } from "../components/status/StatusCard";
 import { TrendChart } from "../components/feed/trend-spark";
 import "./newsletter.css";
 
@@ -56,11 +61,18 @@ function NewsCard({ link }: { link: TrendLink }): JSX.Element {
   );
 }
 
-/** Trending news (from the trending links) as a reading page. */
+/** Trending news plus profiles the reader aggregates as sources. */
 export function NewsletterPage(): JSX.Element {
   const account = currentAccount();
   const target = account?.instance ?? "";
+  const snap = useSnapshot(store);
+  const sources = (account ? snap.prefs[accountNS(account)]?.newsletterSources : undefined) ?? [];
   const [links, setLinks] = useState<TrendLink[] | null>(null);
+  const [handle, setHandle] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [suggestions, setSuggestions] = useState<Account[]>([]);
+  const [sourcePosts, setSourcePosts] = useState<Status[] | null>(null);
+  const sourceKey = sources.map((source) => source.id).join(",");
 
   useEffect(() => {
     if (!target) return;
@@ -79,12 +91,165 @@ export function NewsletterPage(): JSX.Element {
     };
   }, [target]);
 
+  useEffect(() => {
+    if (!target || !sourceKey) {
+      setSourcePosts(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const client = clientFor(target).client;
+        const lists = await Promise.all(
+          sources.map((source) =>
+            client.v1.accounts.$select(source.id).statuses.list({
+              limit: 8,
+              excludeReplies: true,
+            }),
+          ),
+        );
+        const merged = newestFirst(lists);
+        putStatuses(merged, target);
+        if (!cancelled) setSourcePosts(merged);
+      } catch (err) {
+        console.warn("[oltn] newsletter sources failed", err);
+        if (!cancelled) setSourcePosts([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [target, sourceKey]);
+
+  const addAccountSource = (found: Account): void => {
+    if (!sources.some((source) => source.id === found.id)) {
+      saveNewsletterSources([
+        ...sources,
+        { id: found.id, acct: found.acct, name: found.displayName || found.username },
+      ]);
+    }
+    setHandle("");
+    setSuggestions([]);
+  };
+
+  const addSource = async (e: Event): Promise<void> => {
+    e.preventDefault();
+    if (!account || !handle.trim() || adding) return;
+    const input = handle.trim();
+    const bare = !input.replace(/^@/, "").includes("@");
+    setAdding(true);
+    try {
+      const client = clientFor(account.instance).client;
+      // A bare @user has no domain to resolve: offer the known accounts with
+      // that username (or add it directly when there is a single match).
+      if (bare) {
+        const matches = await searchAccountsByUsername(client, input);
+        if (matches.length === 1) addAccountSource(matches[0]);
+        else if (matches.length > 1) setSuggestions(matches);
+        else toast(t.newsletterSourceNotFound, "error");
+        return;
+      }
+      const found = await resolveAccountHandle(client, input);
+      if (!found) {
+        toast(t.newsletterSourceNotFound, "error");
+        return;
+      }
+      addAccountSource(found);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const removeSource = (id: string): void => {
+    saveNewsletterSources(sources.filter((source) => source.id !== id));
+  };
+
   const [hero, ...rest] = links ?? [];
 
   return (
     <PageShell title={t.newsletter} showBack>
       <div class="newsletter">
         <p class="newsletter-subtitle muted">{t.newsletterSubtitle}</p>
+
+        <section class="newsletter-sources">
+          <h2>{t.newsletterSources}</h2>
+          <form class="newsletter-source-form" onSubmit={(e) => void addSource(e)}>
+            <input
+              class="field"
+              placeholder={t.newsletterSourcePlaceholder}
+              value={handle}
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck={false}
+              onInput={(e) => {
+                setHandle((e.target as HTMLInputElement).value);
+                setSuggestions([]);
+              }}
+            />
+            <button type="submit" class="btn ghost" disabled={adding || !handle.trim()}>
+              {adding ? <span class="spinner" /> : <Icon name="plus-line" size={15} />}
+              {t.newsletterSourceAdd}
+            </button>
+          </form>
+          {suggestions.length > 0 && (
+            <div class="newsletter-suggestions" role="listbox" aria-label={t.newsletterSources}>
+              {suggestions.map((candidate) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  role="option"
+                  class="newsletter-suggestion"
+                  onClick={() => addAccountSource(candidate)}
+                >
+                  <Avatar
+                    src={candidate.avatarStatic || candidate.avatar}
+                    name={candidate.displayName || candidate.username}
+                    size={24}
+                  />
+                  <span class="newsletter-suggestion-name">
+                    {candidate.displayName || candidate.username}
+                  </span>
+                  <span class="newsletter-suggestion-acct">@{candidate.acct}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <p class="newsletter-sources-hint">{t.newsletterSourcesHint}</p>
+          {sources.length > 0 && (
+            <div class="newsletter-chips">
+              {sources.map((source) => (
+                <span class="newsletter-chip" key={source.id}>
+                  @{source.acct}
+                  <button
+                    type="button"
+                    class="newsletter-chip-remove"
+                    title={`${t.delete}: @${source.acct}`}
+                    aria-label={`${t.delete}: @${source.acct}`}
+                    onClick={() => removeSource(source.id)}
+                  >
+                    <Icon name="close-line" size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {sourcePosts && (
+          <section class="newsletter-feed">
+            <h2 class="newsletter-heading">{t.newsletterFromSources}</h2>
+            {sourcePosts.length > 0 ? (
+              <div class="newsletter-posts">
+                {sourcePosts.map((status) => (
+                  <StatusCard key={statusKey(status)} statusKey={statusKey(status)} />
+                ))}
+              </div>
+            ) : (
+              <p class="muted">{t.empty}</p>
+            )}
+          </section>
+        )}
+
         {!links ? (
           <div class="center-state">
             <span class="spinner" />

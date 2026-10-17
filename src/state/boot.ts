@@ -4,6 +4,7 @@ import type {
   AccentSetting,
   AccountMeta,
   FloatRect,
+  NewsletterSource,
   SavedLayout,
   Settings,
   Shortcut,
@@ -145,6 +146,10 @@ export function savePanelColor(id: string, color: PanelColor | ""): void {
 
 export function saveSavedLayouts(layouts: readonly SavedLayout[]): void {
   updatePrefs({ savedLayouts: [...layouts] });
+}
+
+export function saveNewsletterSources(sources: readonly NewsletterSource[]): void {
+  updatePrefs({ newsletterSources: [...sources] });
 }
 
 export function resetColumnLayout(): void {
