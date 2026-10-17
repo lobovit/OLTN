@@ -142,13 +142,6 @@ const NAV_ITEMS: {
     labelKey: "fediverseApps",
   },
   {
-    id: "/report",
-    href: "/report",
-    icon: "bug-line",
-    iconActive: "bug-fill",
-    labelKey: "reportIssues",
-  },
-  {
     id: "/l",
     href: "/l",
     icon: "list-check-line",

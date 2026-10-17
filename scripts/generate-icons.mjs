@@ -26,8 +26,6 @@ const wanted = [
   "trending-up-fill",
   "planet-line",
   "planet-fill",
-  "bug-line",
-  "bug-fill",
   "bulb-line",
   "bulb-fill",
   "filter-line",
@@ -101,6 +99,8 @@ const wanted = [
   "pin-line",
   "layout-grid-line",
   "palette-line",
+  "news-line",
+  "news-fill",
   "building-2-line",
 ];
 
