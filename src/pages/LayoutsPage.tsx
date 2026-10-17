@@ -21,7 +21,7 @@ function sameOrder(a: readonly string[], b: readonly string[]): boolean {
 }
 
 function tKey(key: string): string | undefined {
-  return (t as unknown as Record<string, string>)[key];
+  return (t as Record<string, string>)[key];
 }
 
 export function LayoutsPage(): JSX.Element {

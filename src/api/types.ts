@@ -20,7 +20,6 @@ export type TrendLink = mastodon.v1.TrendLink;
 export type Conversation = mastodon.v1.Conversation;
 export type AccountField = mastodon.v1.AccountField;
 export type UpdateCredentialsParams = mastodon.rest.v1.UpdateCredentialsParams;
-export type FilterV1 = mastodon.v1.Filter;
 export type Filter = mastodon.v2.Filter;
 export type FilterAction = mastodon.v2.FilterAction;
 export type FilterContext = mastodon.v2.FilterContext;
@@ -32,7 +31,6 @@ export type NotificationType = mastodon.v1.NotificationType;
 export type Translation = mastodon.v1.Translation;
 export type ReportCategory = mastodon.v1.ReportCategory;
 export type RestClient = mastodon.rest.Client;
-export type StreamingClient = mastodon.streaming.Client;
 
 export interface InstanceInfo {
   uri: string;

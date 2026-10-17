@@ -82,7 +82,7 @@ export function sanitizeContent(html: string): string {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOW_DATA_ATTR: false,
-  }) as unknown as string;
+  });
 }
 
 /** Normalizes a custom emoji URL (https or protocol-relative). */

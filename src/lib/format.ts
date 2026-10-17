@@ -105,10 +105,6 @@ export function fullNumber(n: number): string {
   return numberFormatter().format(n);
 }
 
-export function shortHandle(handle: string): string {
-  return handle.startsWith("@") ? handle.slice(1) : handle;
-}
-
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "?";

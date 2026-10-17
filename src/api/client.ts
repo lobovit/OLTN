@@ -19,10 +19,6 @@ export function getRest(instance: string, accessToken?: string): RestClient {
   return client;
 }
 
-export function dropRest(instance: string, accessToken?: string): void {
-  restCache.delete(`${instance}|${accessToken ?? ""}`);
-}
-
 const customEmojisCache = new Map<string, Promise<CustomEmoji[]>>();
 
 /** Instance custom emojis (cached per session/instance). */

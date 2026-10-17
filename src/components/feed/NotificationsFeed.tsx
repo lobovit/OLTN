@@ -3,6 +3,7 @@ import { useSnapshot } from "valtio";
 import { t } from "../../i18n/pt-BR";
 import { clientFor, hrefFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
+import { snapshotValue } from "../../lib/snapshot";
 import type { Notification, Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
 import { usePagedFeed } from "../../state/hooks";
@@ -89,7 +90,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
   const account = currentAccount();
   const queue = snap.notifQueue
     .filter((n) => mode === "all" || n.type === "mention")
-    .map((n) => n as unknown as Notification);
+    .map((n) => snapshotValue<Notification>(n));
 
   const feed = usePagedFeed<Notification>({
     key: `${instance}|${mode}|${snap.ui.feedsRevision}`,

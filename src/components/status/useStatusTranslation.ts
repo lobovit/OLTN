@@ -35,9 +35,7 @@ async function tryInstanceTranslation(
   if (!id) return null;
   try {
     const client = clientFor(instance).client;
-    const instanceTranslation = (await client.v1.statuses
-      .$select(id)
-      .translate({ lang })) as unknown as Translation;
+    const instanceTranslation = await client.v1.statuses.$select(id).translate({ lang });
     // The instance may reply 200 without content (e.g. target language
     // unsupported by its backend); fall back to Google in that case.
     return instanceTranslation?.content ? instanceTranslation : null;

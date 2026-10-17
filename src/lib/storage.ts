@@ -37,14 +37,6 @@ export function writeJSON(key: string, value: unknown): void {
   }
 }
 
-export function removeKey(key: string): void {
-  try {
-    localStorage.removeItem(PREFIX + key);
-  } catch {
-    /* noop */
-  }
-}
-
 export function sessionRead<T>(key: string, fallback: T): T {
   try {
     const raw = sessionStorage.getItem(PREFIX + key);

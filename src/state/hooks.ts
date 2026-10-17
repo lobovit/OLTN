@@ -8,6 +8,7 @@ import {
   type FeedEvent,
   type FeedState,
 } from "../lib/paged-feed";
+import { snapshotValue } from "../lib/snapshot";
 import { store } from "./store";
 
 const DESKTOP_QUERY = "(min-width: 48em)";
@@ -27,7 +28,7 @@ export function useIsDesktop(): boolean {
 
 export function useStatus(key: string): Status | undefined {
   const snap = useSnapshot(store.statuses);
-  return snap[key] as unknown as Status | undefined;
+  return snapshotValue<Status>(snap[key]) ?? undefined;
 }
 
 export function useAppState() {

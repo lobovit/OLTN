@@ -1,4 +1,4 @@
-import type { ComponentChildren, ComponentType } from "preact";
+import type { ComponentChildren } from "preact";
 import { createContext } from "preact";
 import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
@@ -174,8 +174,3 @@ export function Link({
     </a>
   );
 }
-
-export type PageComponent<P = Record<string, string>> = ComponentType<{
-  params: P;
-  query: URLSearchParams;
-}>;

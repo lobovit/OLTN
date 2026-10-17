@@ -30,6 +30,7 @@ import {
   putStatuses,
   removeStatusById,
   store,
+  type AccountPrefs,
   type AppState,
 } from "./store";
 
@@ -110,63 +111,40 @@ export function resolveShortcuts(): void {
     : defaultShortcuts().map((s) => ({ ...s }));
 }
 
-export function saveShortcuts(shortcuts: Shortcut[]): void {
+/** Single writer for the current account's prefs (one field per caller). */
+function updatePrefs(patch: Partial<AccountPrefs>): void {
   const account = currentAccount();
-  store.shortcuts = shortcuts;
   if (!account) return;
   const ns = accountNS(account);
-  store.prefs[ns] = { ...(store.prefs[ns] ?? { shortcuts: [] }), shortcuts };
+  store.prefs[ns] = { ...(store.prefs[ns] ?? { shortcuts: [] }), ...patch };
   savePrefs();
 }
 
+export function saveShortcuts(shortcuts: Shortcut[]): void {
+  store.shortcuts = shortcuts;
+  updatePrefs({ shortcuts });
+}
+
 export function saveColumnLayout(order: readonly string[], widths: Record<string, number>): void {
-  const account = currentAccount();
-  if (!account) return;
-  const ns = accountNS(account);
-  const prev = store.prefs[ns];
-  store.prefs[ns] = {
-    ...(prev ?? { shortcuts: [] }),
-    columnOrder: [...order],
-    columnWidths: { ...widths },
-  };
-  savePrefs();
+  updatePrefs({ columnOrder: [...order], columnWidths: { ...widths } });
 }
 
 export function saveFloatLayout(
   rects: Readonly<Record<string, FloatRect>>,
   order: readonly string[],
 ): void {
-  const account = currentAccount();
-  if (!account) return;
-  const ns = accountNS(account);
-  const prev = store.prefs[ns];
-  store.prefs[ns] = {
-    ...(prev ?? { shortcuts: [] }),
-    floats: { ...rects },
-    floatOrder: [...order],
-  };
-  savePrefs();
+  updatePrefs({ floats: { ...rects }, floatOrder: [...order] });
 }
 
 export function savePanelColor(id: string, color: PanelColor | ""): void {
   const account = currentAccount();
   if (!account) return;
-  const ns = accountNS(account);
-  const prev = store.prefs[ns];
-  store.prefs[ns] = {
-    ...(prev ?? { shortcuts: [] }),
-    colors: updatePanelColor(prev?.colors ?? {}, id, color),
-  };
-  savePrefs();
+  const prev = store.prefs[accountNS(account)];
+  updatePrefs({ colors: updatePanelColor(prev?.colors ?? {}, id, color) });
 }
 
 export function saveSavedLayouts(layouts: readonly SavedLayout[]): void {
-  const account = currentAccount();
-  if (!account) return;
-  const ns = accountNS(account);
-  const prev = store.prefs[ns];
-  store.prefs[ns] = { ...(prev ?? { shortcuts: [] }), savedLayouts: [...layouts] };
-  savePrefs();
+  updatePrefs({ savedLayouts: [...layouts] });
 }
 
 export function resetColumnLayout(): void {

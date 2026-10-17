@@ -2,7 +2,7 @@
    block, report, vote) behind an injected client — optimistic patch, local
    id resolution, call, rollback and toast in a single module. */
 
-import type { Poll, ReportCategory, RestClient, Status } from "../api/types";
+import type { ReportCategory, RestClient, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { userMessageForError } from "../lib/errors";
 import { localAccountId, localStatus, sourceInstanceFor } from "../lib/identity";
@@ -77,16 +77,19 @@ async function callToggle(
   kind: ToggleAction,
 ): Promise<Status | null> {
   const selected = statuses.$select(localId);
-  let updated: unknown;
-  if (kind === "boost") {
-    updated = status.reblogged ? await selected.unreblog() : await selected.reblog();
-  } else if (kind === "fav") {
-    updated = status.favourited ? await selected.unfavourite() : await selected.favourite();
-  } else {
-    updated = status.bookmarked ? await selected.unbookmark() : await selected.bookmark();
-  }
-  const result = updated as unknown as Status;
-  return result?.id ? result : null;
+  const updated =
+    kind === "boost"
+      ? status.reblogged
+        ? await selected.unreblog()
+        : await selected.reblog()
+      : kind === "fav"
+        ? status.favourited
+          ? await selected.unfavourite()
+          : await selected.favourite()
+        : status.bookmarked
+          ? await selected.unbookmark()
+          : await selected.bookmark();
+  return updated?.id ? updated : null;
 }
 
 /** Fav / boost / bookmark with optimistic update and rollback. */
@@ -255,7 +258,7 @@ export async function votePoll(
   if (!begin(key, "vote")) return false;
   try {
     const updated = await ctx.client.v1.polls.$select(poll.id).votes.create({ choices: [choice] });
-    patchStatus(key, { poll: updated as unknown as Poll });
+    patchStatus(key, { poll: updated });
     return true;
   } catch (err) {
     console.warn("[oltn] vote failed", err);

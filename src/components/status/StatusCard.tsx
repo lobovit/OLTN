@@ -6,6 +6,7 @@ import { t } from "../../i18n/pt-BR";
 import { fullDate, languageName, timeAgo } from "../../lib/format";
 import { clientFor, hrefFor, localStatus, sourceInstanceFor } from "../../lib/identity";
 import { back, navigate } from "../../lib/router";
+import { snapshotValue } from "../../lib/snapshot";
 import { TRANSLATE_TARGETS } from "../../lib/translate";
 import {
   currentAccount,
@@ -320,10 +321,8 @@ function StatusCardView({
   // Boost cards display the inner status through its own cache entry (like
   // Phanpy's recursive <Status>), so stream/refetch/action updates reflect.
   const innerKey = outer.reblog ? statusKeyOf(outer.reblog) : null;
-  const cachedInner = innerKey
-    ? (appState.statuses[innerKey] as unknown as Status | undefined)
-    : undefined;
-  const target: Status = (cachedInner ?? outer.reblog ?? outer) as Status;
+  const cachedInner = innerKey ? snapshotValue<Status>(appState.statuses[innerKey]) : undefined;
+  const target: Status = cachedInner ?? snapshotValue<Status>(outer.reblog) ?? outer;
   const booster = outer.reblog ? outer : null;
   const host = hostOf(target);
   const account = currentAccount();

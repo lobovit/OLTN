@@ -6,6 +6,7 @@ import { userMessageForError } from "../../lib/errors";
 import { clientFor } from "../../lib/identity";
 import type { FeedAdapter } from "../../lib/paged-feed";
 import { scrollFeedToTop } from "../../lib/scroll";
+import { snapshotValue } from "../../lib/snapshot";
 import type { Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
 import { usePagedFeed, type PagedFeed } from "../../state/hooks";
@@ -64,9 +65,8 @@ export function Timeline({
   }`;
   const queue: Status[] = listenQueue
     ? snap.homeQueue
-        .map((key) => snap.statuses[key])
-        .filter((status): status is NonNullable<typeof status> => !!status)
-        .map((status) => status as unknown as Status)
+        .map((key) => snapshotValue<Status>(snap.statuses[key]))
+        .filter((status): status is Status => !!status)
     : [];
 
   const feed = usePagedFeed<Status>({

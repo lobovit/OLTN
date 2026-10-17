@@ -159,28 +159,6 @@
     padding-top: var(--s3);
   }
 
-  .rail-toggle {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 30px;
-    margin-bottom: var(--s1);
-    border: none;
-    border-radius: var(--r-md);
-    background: transparent;
-    color: var(--text-3);
-    cursor: pointer;
-    transition:
-      background var(--dur-fast) var(--ease),
-      color var(--dur-fast) var(--ease);
-  }
-
-  .rail-toggle:hover,
-  .rail-toggle:focus-visible {
-    background: var(--hover);
-    color: var(--text);
-  }
-
   .rail.collapsed .rail-item > span:last-child {
     display: none;
   }
@@ -802,24 +780,6 @@ textarea.field {
   resize: vertical;
 }
 
-.search-field {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.search-field .icon {
-  position: absolute;
-  inset-inline-start: var(--s3);
-  color: var(--text-3);
-  pointer-events: none;
-}
-
-.search-field .field {
-  padding-inline-start: 40px;
-}
-
 /* ---------------- Segmented control ---------------- */
 
 .segmented {
@@ -1184,10 +1144,6 @@ textarea.field {
 }
 
 /* ---------------- Page layout utilities ---------------- */
-
-.page-pad {
-  padding: var(--s4);
-}
 
 .section-title {
   padding: var(--s4) var(--s4) var(--s2);

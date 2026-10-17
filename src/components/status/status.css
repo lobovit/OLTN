@@ -70,10 +70,6 @@
   border-radius: var(--r-sm);
 }
 
-.content .quote-inline {
-  display: none;
-}
-
 /* ---------- media ---------- */
 
 .media-grid {
@@ -656,46 +652,6 @@
   object-fit: cover;
 }
 
-.status-card .quote-card {
-  display: block;
-  margin-top: var(--s3);
-  padding: var(--s3);
-  border-radius: var(--r-md);
-  border: var(--hairline) solid var(--border);
-  background: var(--surface-2);
-}
-
-.status-card .quote-card .q-byline {
-  display: flex;
-  align-items: center;
-  gap: var(--s2);
-  font-size: 0.84rem;
-  margin-bottom: var(--s2);
-}
-
-.status-card .quote-card .q-byline .name {
-  font-weight: 650;
-}
-
-.status-card .quote-card .q-byline .handle {
-  color: var(--text-3);
-}
-
-.status-card .quote-card .content {
-  font-size: 0.9rem;
-}
-
-/* thread context: vertical line */
 .status-card.in-thread {
   cursor: default;
-}
-
-.thread-line {
-  position: absolute;
-  inset-inline-start: calc(var(--s4) + 19px);
-  top: 64px;
-  bottom: -8px;
-  width: 2px;
-  background: var(--border);
-  border-radius: 2px;
 }
