@@ -6,52 +6,16 @@ import { t } from "../../i18n/pt-BR";
 import { shortNumber } from "../../lib/format";
 import { clientFor, hrefFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
-import { rankTrendingAuthors, type TrendingAuthor } from "../../lib/trending";
+import { rankTrendingAuthors, trendTotalUses, type TrendingAuthor } from "../../lib/trending";
 import { currentAccount, store } from "../../state/store";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
 import { EmojiText } from "../status/EmojiText";
 import { Timeline } from "./Timeline";
+import { TrendChart } from "./trend-spark";
 import "./feed.css";
 
 type TrendTab = "posts" | "hashtags" | "people" | "news";
-
-interface TrendBucket {
-  day: string;
-  uses?: string | null;
-}
-
-/** Total posts that used the tag/link across the trend window. */
-function totalUses(history: readonly TrendBucket[]): number {
-  return history.reduce((total, entry) => total + Number(entry.uses || 0), 0);
-}
-
-/** Basic bar chart of the daily uses (sparkline). */
-function TrendChart({ history }: { history: readonly TrendBucket[] }): JSX.Element | null {
-  const values = history.map((entry) => Number(entry.uses || 0));
-  if (values.length < 2) return null;
-  const width = 72;
-  const height = 22;
-  const max = Math.max(...values, 1);
-  const step = width / values.length;
-  return (
-    <svg class="trend-chart" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-      {values.map((value, index) => {
-        const bar = Math.max(2, Math.round((value / max) * height));
-        return (
-          <rect
-            key={history[index].day}
-            x={index * step}
-            y={height - bar}
-            width={Math.max(1, step - 3)}
-            height={bar}
-            rx={1.5}
-          />
-        );
-      })}
-    </svg>
-  );
-}
 
 function TrendEmpty({ text }: { text: string }): JSX.Element {
   return (
@@ -160,7 +124,7 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
                 <span class="row-main">
                   <span class="row-title">{tag.name}</span>
                   <span class="row-sub">
-                    {shortNumber(totalUses(tag.history ?? []))} {t.trendUses}
+                    {shortNumber(trendTotalUses(tag.history ?? []))} {t.trendUses}
                   </span>
                 </span>
                 <TrendChart history={tag.history ?? []} />
@@ -219,7 +183,8 @@ export function TrendingFeed({ instance }: { instance?: string }): JSX.Element {
                 <span class="row-main">
                   <span class="row-title">{link.title}</span>
                   <span class="row-sub">
-                    {link.providerName} · {shortNumber(totalUses(link.history ?? []))} {t.trendUses}
+                    {link.providerName} · {shortNumber(trendTotalUses(link.history ?? []))}{" "}
+                    {t.trendUses}
                   </span>
                 </span>
                 <Icon name="external-link-line" size={14} />

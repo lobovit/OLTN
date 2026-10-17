@@ -7,6 +7,16 @@ export interface TrendingAuthor {
   count: number;
 }
 
+export interface TrendBucket {
+  day: string;
+  uses?: string | null;
+}
+
+/** Total posts that used the tag/link across the trend window. */
+export function trendTotalUses(history: readonly TrendBucket[]): number {
+  return history.reduce((total, entry) => total + Number(entry.uses || 0), 0);
+}
+
 /** Ranks the authors behind trending posts (boosts credit the boosted author). */
 export function rankTrendingAuthors(statuses: readonly Status[], limit = 12): TrendingAuthor[] {
   const byId = new Map<string, TrendingAuthor>();

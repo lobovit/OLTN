@@ -127,6 +127,13 @@ const NAV_ITEMS: {
     column: "trending",
   },
   {
+    id: "/newsletter",
+    href: "/newsletter",
+    icon: "news-line",
+    iconActive: "news-fill",
+    labelKey: "newsletter",
+  },
+  {
     id: "/boosts",
     href: "/boosts",
     icon: "repeat-line",
@@ -756,8 +763,10 @@ export function Routed(): JSX.Element {
 
   const desktop = useIsDesktop();
   const mode = routeMode(route.path, authed, state.settings.deckMode, desktop);
+  const wide = !!match?.def.wide;
   // With the deck off, pages center themselves (login keeps its full layout).
-  const centerPage = mode === "page" && !state.settings.deckMode && route.path !== "/login";
+  const centerPage =
+    !wide && mode === "page" && !state.settings.deckMode && route.path !== "/login";
 
   if (needAuth && !authed) {
     return (
@@ -778,8 +787,8 @@ export function Routed(): JSX.Element {
       ) : (
         <main
           class={`deck ${route.path === "/login" ? "full" : ""} ${
-            match?.def.centered || centerPage ? "centered" : ""
-          }`}
+            !wide && (match?.def.centered || centerPage) ? "centered" : ""
+          } ${wide ? "wide" : ""}`}
           id="main"
           tabindex={-1}
         >

@@ -178,6 +178,8 @@ const pt: Record<TKey, string> = {
   people: "Pessoas",
   news: "Notícias",
   trendingPosts: "posts em alta",
+  newsletter: "Newsletter",
+  newsletterSubtitle: "O que o fediverso está lendo agora.",
   fediverseApps: "Apps do Fediverso",
   fediverseAppsHint:
     "Todos os apps aqui falam ActivityPub — dá para seguir e interagir com eles usando sua conta Mastodon.",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Status } from "../../api/types";
-import { rankTrendingAuthors } from "../trending";
+import { rankTrendingAuthors, trendTotalUses } from "../trending";
 
 function account(id: string, acct: string, followers = 0) {
   return {
@@ -70,5 +70,20 @@ describe("rankTrendingAuthors", () => {
       status(String(index), account(String(index), `u${index}@mock.instance`, index)),
     );
     expect(rankTrendingAuthors(statuses, 5)).toHaveLength(5);
+  });
+});
+
+describe("trendTotalUses", () => {
+  it("sums the daily uses into one number", () => {
+    expect(
+      trendTotalUses([
+        { day: "1", uses: "3" },
+        { day: "2", uses: "7" },
+      ]),
+    ).toBe(10);
+  });
+
+  it("treats missing uses as zero", () => {
+    expect(trendTotalUses([{ day: "1" }, { day: "2", uses: null }])).toBe(0);
   });
 });

@@ -176,6 +176,8 @@ export const en = {
   people: "People",
   news: "News",
   trendingPosts: "trending posts",
+  newsletter: "Newsletter",
+  newsletterSubtitle: "What the fediverse is reading right now.",
   fediverseApps: "Fediverse Apps",
   fediverseAppsHint:
     "Every app here speaks ActivityPub, so you can follow and interact with them from your Mastodon account.",

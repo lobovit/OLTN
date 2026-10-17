@@ -12,6 +12,7 @@ import { FiltersPage } from "../pages/FiltersPage";
 import { FediverseAppsPage } from "../pages/FediverseAppsPage";
 import { ScheduledPage } from "../pages/ScheduledPage";
 import { TrendingPage } from "../pages/TrendingPage";
+import { NewsletterPage } from "../pages/NewsletterPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { LayoutsPage } from "../pages/LayoutsPage";
 import { MessagesPage } from "../pages/MessagesPage";
@@ -24,6 +25,8 @@ export interface AppRoute {
   auth?: boolean;
   /** Column centered on screen (reading views, e.g. the toot thread). */
   centered?: boolean;
+  /** Page uses the full arena width on desktop (its content centers itself). */
+  wide?: boolean;
 }
 
 export const routes: AppRoute[] = [
@@ -41,6 +44,7 @@ export const routes: AppRoute[] = [
   { pattern: "/ft", page: FiltersPage, auth: true },
   { pattern: "/apps", page: FediverseAppsPage },
   { pattern: "/trending", page: TrendingPage },
+  { pattern: "/newsletter", page: NewsletterPage, wide: true },
   { pattern: "/settings", page: SettingsPage, auth: true },
   { pattern: "/layouts", page: LayoutsPage, auth: true },
   { pattern: "/accounts", page: AccountsPage },

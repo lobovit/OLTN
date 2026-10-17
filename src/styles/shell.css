@@ -319,6 +319,12 @@
     max-width: none;
     border-inline-start: none;
   }
+
+  /* Full-arena pages (e.g. Newsletter): the page centers its own content. */
+  .deck.wide {
+    max-width: none;
+    border-inline-end: none;
+  }
 }
 
 .deck-header {
