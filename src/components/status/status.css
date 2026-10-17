@@ -138,6 +138,12 @@
 .media-item.single {
   aspect-ratio: auto;
   max-height: 480px;
+  /* Square/portrait media shrinks to the max-height; keep it centered instead
+     of pinned to the left edge of the column. */
+  justify-self: center;
+  /* Centered media sits away from the grid edges, so the grid's rounded clip
+     no longer reaches its corners; round the item itself. */
+  border-radius: var(--r-md);
 }
 
 .media-item.single img,

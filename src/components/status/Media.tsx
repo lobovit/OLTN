@@ -67,8 +67,16 @@ function MediaItem({
   const videoRef = useRef<HTMLVideoElement>(null);
   const autoplayGifs = useSnapshot(store).settings.autoplayGifs;
   const ratio = attachmentRatio(attachment);
+  const single = total === 1;
   const blurred = sensitive && !revealed;
-  const style = ratio ? { aspectRatio: String(ratio) } : undefined;
+  // Single media is centered in the column: give it a definite width derived
+  // from the aspect ratio, capped so the height stays within 480px.
+  const style = ratio
+    ? {
+        aspectRatio: String(ratio),
+        width: single ? `min(100%, ${Math.round(480 * ratio)}px)` : undefined,
+      }
+    : undefined;
   const description = attachment.description || t.media;
   const full = attachment.url ?? attachment.previewUrl;
   const isGif = attachment.type === "gifv" || isGifUrl(attachment.url);
