@@ -1,18 +1,21 @@
 # OLTN
 
-Another Mastodon WebClient.
+Another Mastodon Deck Web Client.
 
 ## Features
 
 - OAuth2 + PKCE sign-in on any Mastodon-compatible instance (popup or redirect)
 - Real-time home timeline with a "new posts" queue; grouped notifications and mentions
-- Threaded conversations and profiles (posts, replies, media, followers/following)
-- Composer with media, polls, CW, visibility, drafts, editing, emoji picker (Unicode + instance emojis), draft translation, post scheduling, and automatic code-to-image for fenced code blocks
+- Threaded conversations and profiles (posts, replies, media, followers/following, profile fields)
+- Composer with media, polls, CW, visibility, quote policies, drafts, editing, emoji picker (Unicode + instance emojis), draft translation, post scheduling, and automatic code-to-image for fenced code blocks
+- Edit and delete your own posts
 - Search (accounts, hashtags, posts), public hashtags, local/federated timelines
-- Lists, bookmarks, favourites, filters (v2), trending
-- Multi-column deck with pinned shortcuts, drag-to-reorder and resize
+- Lists, bookmarks, favourites, filters (v2)
+- Trending with posts, hashtags, people and news tabs
+- Newsletter with trending links and custom fediverse news sources (full handles, or a bare @user to pick from known accounts)
+- Multi-column deck with pinned shortcuts, drag-to-reorder and resize; with deck mode off the home turns into floating panels that snap magnetically and take per-panel colors
 - Keyboard shortcuts (`j/k`, `c`, `/`, `?`, `g h`, …), plus a Pomodoro/reminder timer in the nav
-- Dark/light/auto themes, multi-account support, pt-BR and English UI
+- Dark/light/auto themes, multi-account support, GIF autoplay setting, pt-BR and English UI
 
 ## Quick start
 
@@ -32,6 +35,8 @@ npm run typecheck  # tsc --noEmit
 npm run format     # oxfmt
 ```
 
+`make` wraps the common tasks (run `make help`). Maintainers publish the built app with `make publish`.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, conventions, and the
 icon/i18n workflows.
 
@@ -43,12 +48,12 @@ MingCute icons via Iconify (CC0).
 ## Support
 
 OLTN is free, open-source software maintained in my spare time. If it is useful
-to you, consider supporting its development with any amount — every contribution
-helps keep the project alive and improving.
+to you, consider supporting its development with any amount, and every
+contribution helps keep the project alive and improving.
 
 <p align="center">
   <a href="https://nubank.com.br/cobrar/1z437/6accfdbf-ea20-443b-878e-5618946fad4a">
-    <img src="src/assets/support-qr.png" alt="Support OLTN — payment QR code" width="220">
+    <img src="src/assets/support-qr.png" alt="Support OLTN payment QR code" width="220">
   </a>
 </p>
 
@@ -56,4 +61,4 @@ helps keep the project alive and improving.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

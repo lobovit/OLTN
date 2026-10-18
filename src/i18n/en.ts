@@ -402,22 +402,25 @@ export const en = {
   helpIntro: "A quick tour of the basics.",
   helpTimelinesTitle: "Timelines",
   helpTimelinesText:
-    "Home shows posts from people you follow, updated live. Local shows posts from your instance and Federated the wider fediverse.",
+    "Home shows posts from people you follow, updated live. Local shows posts from your instance and Federated reaches the wider fediverse. Notifications and Mentions collect interactions with you.",
   helpPostTitle: "Posting",
   helpPostText:
-    "Write with media, polls, content warnings, emoji and translation. Fenced code blocks become images automatically and posts can be scheduled.",
+    "Write with media, polls, content warnings, emoji and translation. Quote policies, scheduling and code blocks live in the composer too.",
   helpCodeTitle: "Code as image",
   helpCodeText:
-    "Wrap code in triple backticks — optionally with the language right after the opening fence — and it is posted as a rounded image, with the code saved as the media description.",
+    "Wrap code in triple backticks, optionally with the language right after the opening fence, and it is posted as a rounded image, with the code saved as the media description.",
   helpInteractTitle: "Interacting",
   helpInteractText:
-    "Reply, boost, like and bookmark. Use ⋯ on someone's post to report it or block the user.",
-  helpColumnsTitle: "Columns",
+    "Reply, boost, like and bookmark. Use ⋯ on a post to report it or block the user. Your own posts can be edited or deleted from their action row.",
+  helpColumnsTitle: "Columns and panels",
   helpColumnsText:
-    "On the home deck, click nav icons to open columns (up to 6), drag them to reorder and drag the right edge to resize.",
+    "On the home deck, click nav icons to open up to 6 columns, drag them to reorder, and drag the right edge to resize. With deck mode off in Settings, the same views become floating panels you can move, resize, recolor and magnetically snap.",
   helpDiscoverTitle: "Search & discover",
   helpDiscoverText:
-    "Search for accounts, hashtags and posts; Trending lists hashtags and posts that are hot right now.",
+    "Search accounts, hashtags and posts. Trending has tabs for posts, hashtags, people and news.",
+  helpNewsletterTitle: "Newsletter",
+  helpNewsletterText:
+    "Newsletter gathers trending links and lets you aggregate fediverse profiles that post news. Type a full @user@instance handle, or just @user to pick from known accounts.",
   helpLibraryTitle: "Library",
   helpLibraryText: "Bookmarks, likes, boosts and lists, plus your scheduled posts.",
   helpTimerTitle: "Pomodoro",
@@ -425,7 +428,7 @@ export const en = {
     "The clock in the nav opens a configurable focus/break timer that beeps when a phase ends.",
   helpSettingsTitle: "Settings",
   helpSettingsText:
-    "Theme, language, text size and real-time streaming. Press ? anytime for keyboard shortcuts.",
+    "Theme, language, text size, deck or floating panels, real-time streaming and GIF autoplay. Press ? anytime for keyboard shortcuts.",
   navHelp: "Navigation",
   generalHelp: "General",
   yourProfile: "Your profile",

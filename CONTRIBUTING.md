@@ -8,8 +8,8 @@ checks to run before submitting changes.
 A note on language: the app defaults to English and lets users switch to
 Brazilian Portuguese (`pt-BR`) in Settings. `src/i18n/en.ts` is the master
 dictionary (`TKey` derives from it); every UI string must exist in both
-dictionaries. Code comments are still in Brazilian Portuguese. Issues and pull
-requests are welcome in English or Portuguese.
+dictionaries. Code comments and test titles are written in English. Issues and
+pull requests are welcome in English or Portuguese.
 
 ## Prerequisites
 
@@ -57,6 +57,7 @@ src/lib/              router, storage, formatting, sanitization, retry, hotkeys
 src/i18n/             en.ts (master dictionary) + pt-BR.ts
 src/styles/           global tokens/base/shell/page CSS
 scripts/              icon generation and icon coverage check
+Makefile              task wrappers for dev, build, test and publish
 ```
 
 ## Commands
@@ -76,6 +77,10 @@ scripts/              icon generation and icon coverage check
 There is no ESLint in this repository (the `eslint-disable` comments are
 leftovers from other tooling). Do not expect or add a lint step.
 
+The Makefile mirrors the common tasks (`make help` lists them). `make publish`
+builds the app and pushes `dist/` to the GitHub Pages repository; it is intended
+for maintainers.
+
 ## Architecture notes
 
 - Flow: `src/main.tsx` → `src/app.tsx` → `boot()` in `src/state/boot.ts`
@@ -92,8 +97,10 @@ leftovers from other tooling). Do not expect or add a lint step.
   `instance|token`, and `connectUserStream` wraps the websocket. Prefer these
   wrappers over new raw `fetch` calls.
 - The authenticated home route (`/`) is a multi-column deck (up to 6 pinned
-  shortcuts; order and widths persisted per account in `store.prefs`). All
-  other routes render a page from `src/pages/`.
+  shortcuts; order and widths persisted per account in `store.prefs`). With
+  deck mode off, the home route renders the same shortcuts as floating panels
+  (position, size, stacking and color also persisted per account). All other
+  routes render a page from `src/pages/`.
 
 ## Coding conventions
 
@@ -112,7 +119,7 @@ leftovers from other tooling). Do not expect or add a lint step.
 
 ### CSS
 
-- Plain CSS only — no Tailwind, CSS-in-JS, or preprocessors.
+- Plain CSS only: no Tailwind, CSS-in-JS, or preprocessors.
 - Global tokens and layout live in `src/styles/`; feature styles are colocated
   and imported by the component that uses them (`status.css`, `feed.css`,
   `login.css`).
@@ -123,8 +130,9 @@ leftovers from other tooling). Do not expect or add a lint step.
 ### State
 
 - Mutate `store` directly; read via `useSnapshot`/`useAppState`.
-- Persist account-scoped preferences through the helpers in
-  `src/state/boot.ts` (they write to `store.prefs` and storage).
+- Account-scoped preferences are written through `updatePrefs(patch)` in
+  `src/state/boot.ts`: add the field to `AccountPrefs` and pass it as one patch,
+  so one writer cannot drop a field added by another.
 
 ### Internationalization
 
@@ -172,13 +180,14 @@ leftovers from other tooling). Do not expect or add a lint step.
 
 - Vitest with the happy-dom environment, configured in the `test` block of
   `vite.config.ts`.
-- Tests live in `src/lib/__tests__/*.test.ts(x)` and cover pure utilities:
-  router, formatting, sanitization, thread building, error mapping, layout
-  math, and emoji text rendering.
+- Tests live in `src/lib/__tests__/*.test.ts(x)` and cover pure utilities and
+  state helpers: router, formatting, sanitization, feed state, layout and
+  floating-panel math, identity resolution, status actions, and emoji text
+  rendering.
 - Run the full suite with `npm test`, or one file with
   `npx vitest run <path>`.
 - Add unit tests for new logic in `src/lib/`. Keep tests deterministic and
-  offline — no network or real instance required.
+  offline: no network or real instance required.
 
 ## Before opening a pull request
 
@@ -194,7 +203,8 @@ There is no CI yet, so these checks are on you.
 A few more notes:
 
 - Keep pull requests focused; describe the behavior change and the motivation.
-- No commit message convention is enforced; write clear, imperative messages.
+- Write imperative commit messages in English; the repository uses
+  `type(scope): summary` (`feat`, `fix`, `refactor`, `style`, `docs`, `chore`).
 - For UI changes, include a before/after screenshot and mention which theme(s)
   you tested.
 

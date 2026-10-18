@@ -404,22 +404,25 @@ const pt: Record<TKey, string> = {
   helpIntro: "Um passeio rápido pelo básico.",
   helpTimelinesTitle: "Timelines",
   helpTimelinesText:
-    "Home mostra posts de quem você segue, em tempo real. Local mostra posts da sua instância e Federação o fediverso.",
+    "A Home mostra posts de quem você segue, atualizados ao vivo. A Local mostra posts da sua instância e a Federated alcança o fediverso. Notificações e Menções reúnem as interações com você.",
   helpPostTitle: "Publicar",
   helpPostText:
-    "Escreva com mídia, enquetes, aviso de conteúdo, emojis e tradução. Blocos de código entre cercas viram imagem automaticamente e dá para agendar posts.",
+    "Escreva com mídia, enquetes, avisos de conteúdo, emojis e tradução. O compositor também cuida de políticas de citação, agendamento e blocos de código.",
   helpCodeTitle: "Código como imagem",
   helpCodeText:
-    "Envolva o código em três crases — opcionalmente com a linguagem logo após a abertura — e ele é publicado como imagem arredondada, com o código salvo na descrição da mídia.",
+    "Envolva o código em três crases, opcionalmente com a linguagem logo após a abertura, e ele é publicado como imagem arredondada, com o código salvo como descrição da mídia.",
   helpInteractTitle: "Interagir",
   helpInteractText:
-    "Responder, impulsionar, curtir e salvar. Use ⋯ no post de alguém para denunciar ou bloquear a pessoa.",
-  helpColumnsTitle: "Colunas",
+    "Responda, impulsione, curta e salve. Use ⋯ em um post para denunciá-lo ou bloquear a pessoa. Seus próprios posts podem ser editados ou excluídos pela barra de ações.",
+  helpColumnsTitle: "Colunas e painéis",
   helpColumnsText:
-    "No deck inicial, clique nos ícones do nav para abrir colunas (até 6), arraste para reordenar e arraste a borda direita para redimensionar.",
+    "No deck da home, clique nos ícones do menu para abrir até 6 colunas, arraste para reordenar e arraste a borda direita para redimensionar. Com o modo deck desligado nas Configurações, as mesmas telas viram painéis soltos: mova, redimensione, pinte e deixe os ímãs encaixarem nas bordas.",
   helpDiscoverTitle: "Busca e descoberta",
   helpDiscoverText:
-    "Busque contas, hashtags e posts; Em alta lista hashtags e posts que estão bombando agora.",
+    "Busque contas, hashtags e posts. O Trending tem abas de posts, hashtags, pessoas e notícias.",
+  helpNewsletterTitle: "Newsletter",
+  helpNewsletterText:
+    "A Newsletter reúne links em alta e deixa você agregar perfis do fediverso que publicam notícias. Digite o handle completo @usuario@instancia, ou só @usuario para escolher entre contas conhecidas.",
   helpLibraryTitle: "Biblioteca",
   helpLibraryText: "Salvos, curtidas, boosts e listas, além dos seus posts agendados.",
   helpTimerTitle: "Pomodoro",
@@ -427,7 +430,7 @@ const pt: Record<TKey, string> = {
     "O relógio no nav abre um timer de foco/pausa configurável que apita quando a fase termina.",
   helpSettingsTitle: "Ajustes",
   helpSettingsText:
-    "Tema, idioma, tamanho do texto e conexão em tempo real. Aperte ? para ver os atalhos de teclado.",
+    "Tema, idioma, tamanho do texto, deck ou painéis soltos, streaming em tempo real e autoplay de GIFs. Aperte ? para ver os atalhos de teclado.",
   navHelp: "Navegação",
   generalHelp: "Geral",
   yourProfile: "Seu perfil",

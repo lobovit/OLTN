@@ -25,6 +25,7 @@ export function HelpSheet(): JSX.Element | null {
     { title: t.helpInteractTitle, text: t.helpInteractText },
     { title: t.helpColumnsTitle, text: t.helpColumnsText },
     { title: t.helpDiscoverTitle, text: t.helpDiscoverText },
+    { title: t.helpNewsletterTitle, text: t.helpNewsletterText },
     { title: t.helpLibraryTitle, text: t.helpLibraryText },
     { title: t.helpTimerTitle, text: t.helpTimerText },
     { title: t.helpSettingsTitle, text: t.helpSettingsText },

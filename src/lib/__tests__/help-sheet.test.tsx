@@ -20,8 +20,9 @@ describe("HelpSheet", () => {
     render(<HelpSheet />, host);
     const sheet = host.querySelector(".help-sheet");
     expect(sheet).toBeTruthy();
-    expect(host.querySelectorAll(".help-sheet section").length).toBe(9);
+    expect(host.querySelectorAll(".help-sheet section").length).toBe(10);
     expect(host.textContent).toContain("Timelines");
+    expect(host.textContent).toContain("Newsletter");
     expect(host.querySelector(".help-code")?.textContent).toContain("```python");
   });
 });
