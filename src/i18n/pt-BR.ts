@@ -114,6 +114,8 @@ const pt: Record<TKey, string> = {
   reportPlusMute: "Denunciar + Silenciar",
   reportPlusBlock: "Denunciar + Bloquear",
   openOriginal: "Abrir no servidor",
+  share: "Compartilhar",
+  linkCopied: "Link copiado.",
   prev: "Anterior",
   next: "Próximo",
   skipToContent: "Pular para o conteúdo",

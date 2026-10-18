@@ -20,6 +20,7 @@ interface StatusActionsBarProps {
   onAct: (kind: ToggleKind, e: MouseEvent) => void;
   onEdit: (e: MouseEvent) => void;
   onDelete: (e: MouseEvent) => void;
+  onShare: (e: MouseEvent) => void;
   onMore: (e: MouseEvent) => void;
 }
 
@@ -35,6 +36,7 @@ export function StatusActionsBar({
   onAct,
   onEdit,
   onDelete,
+  onShare,
   onMore,
 }: StatusActionsBarProps): JSX.Element {
   return (
@@ -88,6 +90,15 @@ export function StatusActionsBar({
         disabled={!canAct}
       >
         <Icon name={target.bookmarked ? "bookmark-fill" : "bookmark-line"} size={16} />
+      </button>
+      <button
+        type="button"
+        class="status-action share"
+        title={t.share}
+        aria-label={t.share}
+        onClick={onShare}
+      >
+        <Icon name="share-2-line" size={16} />
       </button>
       {showEdit && (
         <button

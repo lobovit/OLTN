@@ -112,6 +112,8 @@ export const en = {
   reportPlusMute: "Report + Mute",
   reportPlusBlock: "Report + Block",
   openOriginal: "Open on server",
+  share: "Share",
+  linkCopied: "Link copied.",
   prev: "Previous",
   next: "Next",
   skipToContent: "Skip to content",

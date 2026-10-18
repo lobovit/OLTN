@@ -33,6 +33,7 @@ const wanted = [
   "hashtag-line",
   "hashtag-fill",
   "share-forward-line",
+  "share-2-line",
   "repeat-line",
   "repeat-fill",
   "close-line",

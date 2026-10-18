@@ -6,6 +6,7 @@ import { t } from "../../i18n/pt-BR";
 import { fullDate, languageName, timeAgo } from "../../lib/format";
 import { clientFor, hrefFor, localStatus, sourceInstanceFor } from "../../lib/identity";
 import { back, navigate } from "../../lib/router";
+import { statusShareLink } from "../../lib/share";
 import { snapshotValue } from "../../lib/snapshot";
 import { TRANSLATE_TARGETS } from "../../lib/translate";
 import {
@@ -367,6 +368,21 @@ function StatusCardView({
     if (removed && inThread) back();
   };
 
+  const shareStatus = async (e: MouseEvent): Promise<void> => {
+    e.stopPropagation();
+    const fallback = `${location.origin}${location.pathname}#${hrefFor.status(
+      target.id,
+      sourceInstance,
+    )}`;
+    try {
+      await navigator.clipboard.writeText(statusShareLink(target, fallback));
+      toast(t.linkCopied, "ok");
+    } catch (err) {
+      console.warn("[oltn] share failed", err);
+      toast(t.errorGeneric, "error");
+    }
+  };
+
   const filtered = (target.filtered ?? []).filter((f) => f.filter);
   const hidden = filtered.some(
     (f) => f.filter.filterAction === "hide" && host !== (store.instance?.uri ?? ""),
@@ -495,6 +511,7 @@ function StatusCardView({
               setCompose({ mode: "edit", statusId: target.id });
             }}
             onDelete={(e) => void removeStatus(e)}
+            onShare={(e) => void shareStatus(e)}
             onMore={menu.open}
           />
         )}

@@ -376,6 +376,7 @@
 
 .status-card .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s1);
   margin-top: var(--s3);
@@ -411,6 +412,12 @@
 }
 
 .status-action.edit:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.status-action.share:hover,
+.status-action.share:focus-visible {
   color: var(--accent);
   background: var(--accent-soft);
 }
