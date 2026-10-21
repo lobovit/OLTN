@@ -58,7 +58,9 @@ export function applyComposeContext(
       ? status.account.acct
       : `${status.account.acct}@${instance}`;
     set.setReplyTo({ id: status.id, acct });
-    set.setText((prev) => prev || `@${status.account.username} `);
+    // Remote accounts only become a mention with the full user@domain;
+    // a bare @username would be posted as plain text.
+    set.setText((prev) => prev || `@${status.account.acct} `);
     return;
   }
   if (mode === "quote") {
