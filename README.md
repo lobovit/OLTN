@@ -16,6 +16,7 @@ Another Mastodon Deck Web Client.
 - Multi-column deck with pinned shortcuts, drag-to-reorder and resize; with deck mode off the home turns into floating panels that snap magnetically and take per-panel colors
 - Keyboard shortcuts (`j/k`, `c`, `/`, `?`, `g h`, …), plus a Pomodoro/reminder timer in the nav
 - Dark/light/auto themes, multi-account support, GIF autoplay setting, pt-BR and English UI
+- Data export/import in Settings: OLTN setup plus follows, lists, filters, mutes and blocks for moving to another instance
 
 ## Quick start
 

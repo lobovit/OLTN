@@ -325,6 +325,24 @@ const pt: Record<TKey, string> = {
     "Arraste a alça do cabeçalho de cada coluna para reordenar e a borda direita para redimensionar. Abra novas colunas pelos ícones da navegação.",
   resetLayout: "Repor layout",
   layoutReset: "Layout redefinido.",
+  data: "Dados",
+  dataHint:
+    "Faça backup da sua configuração do OLTN e dos dados que podem acompanhar você, e restaure depois de trocar de instância.",
+  exportData: "Exportar dados",
+  exportDone: "Backup baixado.",
+  importData: "Importar dados",
+  importInvalid: "Este arquivo não é um backup válido do OLTN.",
+  importFrom: "Backup de",
+  importWarning:
+    "Isso substitui as configurações e o layout do OLTN nesta conta e recria quem você segue, listas, filtros, silenciados e bloqueados. Importar contas seguidas pode levar alguns minutos; mantenha esta aba aberta.",
+  importStart: "Importar agora",
+  importDone: "Importação concluída.",
+  importCancelled: "Importação cancelada.",
+  importSkipped: "ignorados",
+  settingsAndLayout: "configurações e layout",
+  mutes: "Silenciados",
+  blocks: "Bloqueados",
+  domainBlocks: "Domínios bloqueados",
   layouts: "Layouts",
   layoutsHint:
     "No multi-coluna, os ícones da navegação abrem novas colunas. Ajuste como quiser arrastando e redimensionando, aplique uma disposição pronta ou salve o seu arranjo.",
@@ -432,7 +450,7 @@ const pt: Record<TKey, string> = {
     "O relógio no nav abre um timer de foco/pausa configurável que apita quando a fase termina.",
   helpSettingsTitle: "Ajustes",
   helpSettingsText:
-    "Tema, idioma, tamanho do texto, deck ou painéis soltos, streaming em tempo real e autoplay de GIFs. Aperte ? para ver os atalhos de teclado.",
+    "Tema, idioma, tamanho do texto, deck ou painéis soltos, streaming em tempo real e autoplay de GIFs. A seção Dados exporta e importa sua configuração e os dados portáveis da conta. Aperte ? para ver os atalhos de teclado.",
   navHelp: "Navegação",
   generalHelp: "Geral",
   yourProfile: "Seu perfil",

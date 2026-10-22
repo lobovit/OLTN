@@ -323,6 +323,24 @@ export const en = {
     "Drag a column's header grip to reorder and its right edge to resize. Open new columns from the navigation icons.",
   resetLayout: "Reset layout",
   layoutReset: "Layout reset.",
+  data: "Data",
+  dataHint:
+    "Back up your OLTN setup and the data that can move with you, then restore it after switching instances.",
+  exportData: "Export data",
+  exportDone: "Backup downloaded.",
+  importData: "Import data",
+  importInvalid: "This file isn't a valid OLTN backup.",
+  importFrom: "Backup from",
+  importWarning:
+    "This overwrites your OLTN settings and layout on this account, then recreates follows, lists, filters, mutes and blocks. Importing follows can take a few minutes; keep this tab open.",
+  importStart: "Import now",
+  importDone: "Import finished.",
+  importCancelled: "Import cancelled.",
+  importSkipped: "skipped",
+  settingsAndLayout: "settings and layout",
+  mutes: "Mutes",
+  blocks: "Blocks",
+  domainBlocks: "Blocked domains",
   layouts: "Layouts",
   layoutsHint:
     "In multi-column mode, the navigation icons open new columns. Adjust them by dragging and resizing, apply a ready-made arrangement or save your own.",
@@ -430,7 +448,7 @@ export const en = {
     "The clock in the nav opens a configurable focus/break timer that beeps when a phase ends.",
   helpSettingsTitle: "Settings",
   helpSettingsText:
-    "Theme, language, text size, deck or floating panels, real-time streaming and GIF autoplay. Press ? anytime for keyboard shortcuts.",
+    "Theme, language, text size, deck or floating panels, real-time streaming and GIF autoplay. The Data section exports and imports your setup plus portable account data. Press ? anytime for keyboard shortcuts.",
   navHelp: "Navigation",
   generalHelp: "General",
   yourProfile: "Your profile",

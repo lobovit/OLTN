@@ -126,6 +126,15 @@ export function saveShortcuts(shortcuts: Shortcut[]): void {
   updatePrefs({ shortcuts });
 }
 
+/** Replaces the current account preferences (backup import). */
+export function replacePrefs(prefs: AccountPrefs): void {
+  const account = currentAccount();
+  if (!account) return;
+  store.prefs[accountNS(account)] = { ...prefs };
+  savePrefs();
+  resolveShortcuts();
+}
+
 export function saveColumnLayout(order: readonly string[], widths: Record<string, number>): void {
   updatePrefs({ columnOrder: [...order], columnWidths: { ...widths } });
 }

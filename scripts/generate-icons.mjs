@@ -103,6 +103,8 @@ const wanted = [
   "news-line",
   "news-fill",
   "building-2-line",
+  "file-export-line",
+  "file-import-line",
 ];
 
 const src = JSON.parse(
