@@ -8,7 +8,7 @@ Another Mastodon Deck Web Client.
 - Real-time home timeline with a "new posts" queue; grouped notifications and mentions
 - Threaded conversations and profiles (posts, replies, media, followers/following, profile fields)
 - Composer with media, polls, CW, visibility, quote policies, drafts, editing, emoji picker (Unicode + instance emojis), draft translation, post scheduling, and automatic code-to-image for fenced code blocks
-- Edit and delete your own posts
+- Edit, delete and pin your own posts to the top of your profile
 - Search (accounts, hashtags, posts), public hashtags, local/federated timelines
 - Lists, bookmarks, favourites, filters (v2)
 - Trending with posts, hashtags, people and news tabs

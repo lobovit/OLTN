@@ -87,6 +87,8 @@ export interface AppState {
     boostsRevision: number;
     /** Bumped by the column refresh button; reloads every mounted feed. */
     feedsRevision: number;
+    /** Bumped when a status is pinned/unpinned; reloads profile pinned posts. */
+    pinsRevision: number;
   };
 }
 
@@ -144,6 +146,7 @@ export const store = proxy<AppState>({
     lastPostedKey: null,
     boostsRevision: 0,
     feedsRevision: 0,
+    pinsRevision: 0,
   },
 });
 

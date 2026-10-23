@@ -5,6 +5,7 @@ import {
   deleteStatus,
   reportStatus,
   toggleStatusAction,
+  toggleStatusPin,
   votePoll,
   type StatusActionsContext,
 } from "../../state/status-actions";
@@ -64,6 +65,8 @@ function fakeClient(options: FakeClientOptions = {}) {
           unreblog: () => maybeFail(`unboost:${id}`),
           bookmark: () => maybeFail(`bookmark:${id}`),
           unbookmark: () => maybeFail(`unbookmark:${id}`),
+          pin: () => maybeFail(`pin:${id}`, makeStatus(id, { pinned: true })),
+          unpin: () => maybeFail(`unpin:${id}`, makeStatus(id, { pinned: false })),
           remove: () => maybeFail(`delete:${id}`),
         }),
       },
@@ -121,7 +124,36 @@ beforeEach(() => {
   store.blockedAccounts = [];
   store.ui.toasts = [];
   store.ui.boostsRevision = 0;
+  store.ui.pinsRevision = 0;
   store.instance = null;
+});
+
+describe("toggleStatusPin", () => {
+  it("pins and unpins the status, bumping the profile revision", async () => {
+    const { client, calls } = fakeClient();
+    const key = putStatus(makeStatus("1", { pinned: false }), "mock.instance");
+
+    expect(await toggleStatusPin(ctx(client), key)).toBe(true);
+    expect(store.statuses[key]?.pinned).toBe(true);
+    expect(store.ui.pinsRevision).toBe(1);
+    expect(lastToast()?.text).toBe("Pinned to profile.");
+
+    expect(await toggleStatusPin(ctx(client), key)).toBe(true);
+    expect(store.statuses[key]?.pinned).toBe(false);
+    expect(store.ui.pinsRevision).toBe(2);
+    expect(lastToast()?.text).toBe("Removed from profile.");
+    expect(calls).toEqual(["pin:1", "unpin:1"]);
+  });
+
+  it("shows the server error and keeps the state on failure", async () => {
+    const { client } = fakeClient({ failOn: "pin:" });
+    const key = putStatus(makeStatus("1", { pinned: false }), "mock.instance");
+
+    expect(await toggleStatusPin(ctx(client), key)).toBe(false);
+    expect(store.statuses[key]?.pinned).toBe(false);
+    expect(store.ui.pinsRevision).toBe(0);
+    expect(lastToast()?.text).toBe("That didn't work. Try again.");
+  });
 });
 
 describe("toggleStatusAction", () => {

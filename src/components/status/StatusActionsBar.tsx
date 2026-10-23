@@ -15,6 +15,9 @@ interface StatusActionsBarProps {
   showDelete: boolean;
   /** Someone else's status while authenticated (more/⋯ menu). */
   showMore: boolean;
+  /** Own pinnable status (pin button). */
+  showPin: boolean;
+  pinned: boolean;
   menuOpen: boolean;
   onReply: (e: MouseEvent) => void;
   onAct: (kind: ToggleKind, e: MouseEvent) => void;
@@ -22,6 +25,7 @@ interface StatusActionsBarProps {
   onDelete: (e: MouseEvent) => void;
   onShare: (e: MouseEvent) => void;
   onMore: (e: MouseEvent) => void;
+  onPin: (e: MouseEvent) => void;
 }
 
 /** Reply / boost / fav / bookmark bar plus edit, delete and more-menu triggers. */
@@ -31,6 +35,8 @@ export function StatusActionsBar({
   showEdit,
   showDelete,
   showMore,
+  showPin,
+  pinned,
   menuOpen,
   onReply,
   onAct,
@@ -38,6 +44,7 @@ export function StatusActionsBar({
   onDelete,
   onShare,
   onMore,
+  onPin,
 }: StatusActionsBarProps): JSX.Element {
   return (
     <div class="actions" onClick={(e) => e.stopPropagation()}>
@@ -100,6 +107,18 @@ export function StatusActionsBar({
       >
         <Icon name="share-2-line" size={16} />
       </button>
+      {showPin && (
+        <button
+          type="button"
+          class={`status-action pin ${pinned ? "on" : ""}`}
+          title={pinned ? t.unpinPost : t.pinPost}
+          aria-label={pinned ? t.unpinPost : t.pinPost}
+          aria-pressed={pinned}
+          onClick={onPin}
+        >
+          <Icon name={pinned ? "pin-fill" : "pin-line"} size={16} />
+        </button>
+      )}
       {showEdit && (
         <button
           type="button"

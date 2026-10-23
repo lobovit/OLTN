@@ -127,6 +127,30 @@ export async function toggleStatusAction(
   }
 }
 
+/** Pins or unpins the status at the top of the author's profile. */
+export async function toggleStatusPin(ctx: StatusActionsContext, key: string): Promise<boolean> {
+  const status = store.statuses[key];
+  if (!status) return false;
+  if (!begin(key, "pin")) return false;
+  try {
+    const { local } = await resolveLocal(ctx, key, status);
+    if (!local) throw new Error("pin_resolve_failed");
+    const pinned = local.pinned ?? status.pinned ?? false;
+    const selected = ctx.client.v1.statuses.$select(local.id);
+    const updated = pinned ? await selected.unpin() : await selected.pin();
+    putStatus(updated, ctx.instance);
+    store.ui.pinsRevision += 1;
+    toast(updated.pinned === true ? t.postPinned : t.postUnpinned, "ok");
+    return true;
+  } catch (err) {
+    console.warn("[oltn] pin failed", err);
+    toast(userMessageForError(err, t.errorGeneric), "error");
+    return false;
+  } finally {
+    end(key, "pin");
+  }
+}
+
 /** Deletes the status on the account instance (resolving the local copy first). */
 export async function deleteStatus(ctx: StatusActionsContext, key: string): Promise<boolean> {
   const status = store.statuses[key];

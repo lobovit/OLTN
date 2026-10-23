@@ -17,7 +17,12 @@ import {
   store,
   toast,
 } from "../../state/store";
-import { blockStatusAuthor, deleteStatus, toggleStatusAction } from "../../state/status-actions";
+import {
+  blockStatusAuthor,
+  deleteStatus,
+  toggleStatusAction,
+  toggleStatusPin,
+} from "../../state/status-actions";
 import { useStatus } from "../../state/hooks";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
@@ -368,6 +373,12 @@ function StatusCardView({
     if (removed && inThread) back();
   };
 
+  const pinStatus = async (e: MouseEvent): Promise<void> => {
+    e.stopPropagation();
+    if (!account) return;
+    await toggleStatusPin(clientFor(account.instance), targetKey);
+  };
+
   const shareStatus = async (e: MouseEvent): Promise<void> => {
     e.stopPropagation();
     const fallback = `${location.origin}${location.pathname}#${hrefFor.status(
@@ -503,9 +514,12 @@ function StatusCardView({
             showEdit={isSelf && canAct && sourceInstance === account?.instance}
             showDelete={isSelf && canAct}
             showMore={!isSelf && canAct}
+            showPin={isSelf && canAct && target.pinned != null}
+            pinned={target.pinned === true}
             menuOpen={!!menu.menuPos}
             onReply={reply}
             onAct={act}
+            onPin={(e) => void pinStatus(e)}
             onEdit={(e) => {
               e.stopPropagation();
               setCompose({ mode: "edit", statusId: target.id });

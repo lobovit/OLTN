@@ -1,17 +1,18 @@
 import type { JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import type { Account, Relationship } from "../api/types";
+import type { Account, Relationship, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { clientFor, isOwnInstance, localAccountId } from "../lib/identity";
 import { navigate, back } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Content } from "../components/status/Content";
+import { StatusCard } from "../components/status/StatusCard";
 import { Avatar } from "../components/ui/Avatar";
 import { EmojiText } from "../components/status/EmojiText";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
 import { ProfileEditor } from "../components/profile/ProfileEditor";
-import { currentAccount } from "../state/store";
+import { currentAccount, putStatuses, statusKey } from "../state/store";
 import { useAppState } from "../state/hooks";
 
 type Tab = "posts" | "replies" | "media" | "followers" | "following";
@@ -199,6 +200,62 @@ function AccountTabs({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }): J
   );
 }
 
+/** Posts tab: pinned statuses above the regular timeline (deduplicated). */
+function AccountPostsTab({
+  account,
+  instance,
+}: {
+  account: Account;
+  instance: string;
+}): JSX.Element {
+  const pinsRevision = useAppState().ui.pinsRevision;
+  const [pinned, setPinned] = useState<Status[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPinned([]);
+    void (async () => {
+      const { client } = clientFor(instance);
+      try {
+        const page = await client.v1.accounts
+          .$select(account.id)
+          .statuses.list({ pinned: true, limit: 5 });
+        putStatuses(page, instance);
+        if (!cancelled) setPinned(page);
+      } catch (err) {
+        console.warn("[oltn] pinned posts failed", err);
+        if (!cancelled) setPinned([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [instance, account.id, pinsRevision]);
+
+  const pinnedKeys = new Set(pinned.map(statusKey));
+  return (
+    <>
+      {pinned.length > 0 && (
+        <section class="pinned-posts">
+          <h3 class="pinned-title">
+            <Icon name="pin-fill" size={14} />
+            {t.pinned}
+          </h3>
+          {pinned.map((status) => (
+            <StatusCard key={statusKey(status)} statusKey={statusKey(status)} />
+          ))}
+        </section>
+      )}
+      <Timeline
+        kind={{ type: "account", accountId: account.id, tab: "posts" }}
+        instance={instance}
+        emptyTitle={t.emptyProfile}
+        excludeKeys={pinnedKeys}
+      />
+    </>
+  );
+}
+
 function AccountTabBody({
   tab,
   account,
@@ -220,13 +277,16 @@ function AccountTabBody({
   if (tab === "followers" || tab === "following") {
     return <AccountList instance={instance} kind={tab} accountId={account.id} />;
   }
+  if (tab === "posts") {
+    return <AccountPostsTab account={account} instance={instance} />;
+  }
   return (
     <Timeline
       key={tab}
       kind={{
         type: "account",
         accountId: account.id,
-        tab: tab as "posts" | "replies" | "media",
+        tab: tab as "replies" | "media",
       }}
       instance={instance}
       emptyTitle={t.emptyProfile}

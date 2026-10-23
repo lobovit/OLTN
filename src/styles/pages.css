@@ -130,6 +130,28 @@
   gap: var(--s2);
 }
 
+.pinned-posts {
+  border-bottom: var(--hairline) solid var(--divider);
+}
+
+.pinned-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: var(--s2) var(--s4);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pinned-title svg {
+  color: var(--accent);
+}
+
 .account-hero {
   position: relative;
   margin-bottom: var(--s3);

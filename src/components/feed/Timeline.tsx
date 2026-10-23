@@ -22,6 +22,8 @@ interface TimelineProps {
   emptyHint?: string;
   listenQueue?: boolean;
   limit?: number;
+  /** Cached keys hidden from the list (e.g. pinned posts shown above it). */
+  excludeKeys?: ReadonlySet<string>;
 }
 
 /** Adapter wiring the pure feed machine to the endpoint fetch and status cache. */
@@ -52,6 +54,7 @@ export function Timeline({
   emptyHint,
   listenQueue = false,
   limit = 20,
+  excludeKeys,
 }: TimelineProps): JSX.Element {
   const snap = useSnapshot(store);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -81,7 +84,12 @@ export function Timeline({
   return (
     <div class="timeline" ref={rootRef}>
       <UpdatesPill feed={feed} rootRef={rootRef} />
-      <TimelineBody feed={feed} emptyTitle={emptyTitle} emptyHint={emptyHint} />
+      <TimelineBody
+        feed={feed}
+        emptyTitle={emptyTitle}
+        emptyHint={emptyHint}
+        excludeKeys={excludeKeys}
+      />
     </div>
   );
 }
@@ -113,18 +121,24 @@ function TimelineBody({
   feed,
   emptyTitle,
   emptyHint,
+  excludeKeys,
 }: {
   feed: PagedFeed<Status>;
   emptyTitle?: string;
   emptyHint?: string;
+  excludeKeys?: ReadonlySet<string>;
 }): JSX.Element {
   if (feed.loading && !feed.items.length) return <TimelineSkeleton />;
   if (feed.error && !feed.items.length)
     return <TimelineErrorState error={feed.error} onRetry={feed.reload} />;
   if (!feed.items.length) return <TimelineEmptyState title={emptyTitle} hint={emptyHint} />;
+  const items =
+    excludeKeys && excludeKeys.size
+      ? feed.items.filter((status) => !excludeKeys.has(statusKey(status)))
+      : feed.items;
   return (
     <>
-      {feed.items.map((status) => (
+      {items.map((status) => (
         <StatusCard key={statusKey(status)} statusKey={statusKey(status)} />
       ))}
       <TimelinePager feed={feed} />
