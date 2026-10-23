@@ -36,7 +36,8 @@ export function orderColumns<T extends { id: string }>(
 /** How the home route lays itself out: deck columns, floating panels or a plain page. */
 export type RouteMode = "deck" | "floats" | "page";
 
-/** Deck mode: columns. Deck off on desktop: floating panels. Everything else: page. */
+/** Deck mode: desktop-only columns. Deck off on desktop: floating panels.
+    Phones always get a plain, single-column page. */
 export function routeMode(
   path: string,
   authed: boolean,
@@ -44,8 +45,8 @@ export function routeMode(
   desktop: boolean,
 ): RouteMode {
   if (!authed || path !== "/") return "page";
-  if (deckEnabled) return "deck";
-  return desktop ? "floats" : "page";
+  if (!desktop) return "page";
+  return deckEnabled ? "deck" : "floats";
 }
 
 /** Moves `id` before/after `targetId` in a list of ids. */

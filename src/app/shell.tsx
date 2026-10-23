@@ -1,9 +1,10 @@
 import type { ComponentChildren, JSX } from "preact";
-import { useEffect, useMemo } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import type { ShortcutType } from "../api/types";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
+import { Sheet } from "../components/ui/Sheet";
 import { t, type TKey } from "../i18n/pt-BR";
 import { focusableCards, nextFocusIndex } from "../lib/deck-focus";
 import { bringToFront, stackOrder } from "../lib/floats";
@@ -482,7 +483,15 @@ function TabBar(): JSX.Element {
   const state = useAppState();
   const me = state.me;
   const account = currentAccount();
-  const items = [
+  const [menuOpen, setMenuOpen] = useState(false);
+  const items: {
+    href: string;
+    icon: string;
+    label: string;
+    badge?: number;
+    popup?: boolean;
+    menu?: boolean;
+  }[] = [
     { href: "/", icon: "home-3-line", label: t.home },
     {
       href: "/notifications",
@@ -491,6 +500,7 @@ function TabBar(): JSX.Element {
       badge: state.notifBadge,
     },
     { href: "/search", icon: "search-2-line", label: t.search, popup: true },
+    { href: "/menu", icon: "menu-line", label: t.more, menu: true },
     {
       href: me && account ? `/${encodeURIComponent(account.instance)}/a/${me.id}` : "/login",
       icon: "user-3-line",
@@ -498,34 +508,106 @@ function TabBar(): JSX.Element {
     },
   ];
   return (
-    <nav class="tabbar" aria-label={t.navHelp}>
-      {items.map((item) => (
-        <Link
-          key={item.href + item.label}
-          href={item.href}
-          class={`tabbar-item ${pathActive(item.href) ? "active" : ""}`}
-          ariaCurrent={pathActive(item.href) ? "page" : undefined}
-          onClick={(e) => {
-            if (item.popup) {
-              e.preventDefault();
-              store.ui.searchOpen = true;
-              return;
-            }
-            // Clicking the button of the page you are on closes it.
-            if (item.href !== "/" && pathActive(item.href)) {
-              e.preventDefault();
-              backOrHome();
-            }
-          }}
-        >
-          <span style={{ position: "relative", display: "grid" }}>
-            <Icon name={item.icon} size={22} />
-            {!!item.badge && <span class="badge">{item.badge > 99 ? "99+" : item.badge}</span>}
-          </span>
-          <span>{item.label}</span>
-        </Link>
-      ))}
-    </nav>
+    <>
+      <nav class="tabbar" aria-label={t.navHelp}>
+        {items.map((item) => {
+          const active = item.menu ? menuOpen : pathActive(item.href);
+          return (
+            <Link
+              key={item.href + item.label}
+              href={item.href}
+              class={`tabbar-item ${active ? "active" : ""}`}
+              ariaCurrent={active && !item.menu ? "page" : undefined}
+              onClick={(e) => {
+                if (item.menu) {
+                  e.preventDefault();
+                  setMenuOpen(true);
+                  return;
+                }
+                if (item.popup) {
+                  e.preventDefault();
+                  store.ui.searchOpen = true;
+                  return;
+                }
+                // Clicking the button of the page you are on closes it.
+                if (item.href !== "/" && pathActive(item.href)) {
+                  e.preventDefault();
+                  backOrHome();
+                }
+              }}
+            >
+              <span style={{ position: "relative", display: "grid" }}>
+                <Icon name={item.icon} size={22} />
+                {!!item.badge && <span class="badge">{item.badge > 99 ? "99+" : item.badge}</span>}
+              </span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      {menuOpen && <MoreMenu onClose={() => setMenuOpen(false)} />}
+    </>
+  );
+}
+
+/** Mobile-only sheet with the pinned shortcuts and the remaining nav links. */
+function MoreMenu({ onClose }: { onClose: () => void }): JSX.Element {
+  const shortcuts = useSnapshot(store).shortcuts;
+  const pinned = shortcuts.filter(
+    (shortcut) => shortcut.type !== "home" && shortcut.type !== "notifications",
+  );
+  const pinnedTypes = new Set(pinned.map((shortcut) => shortcut.type));
+  const navItems = NAV_ITEMS.filter(
+    (item) =>
+      item.href !== "/" &&
+      item.href !== "/notifications" &&
+      !item.popup &&
+      !(item.column && pinnedTypes.has(item.column)),
+  );
+  return (
+    <Sheet title={t.more} onClose={onClose} class="mobile-menu">
+      {pinned.length > 0 && (
+        <section class="menu-section">
+          <h3 class="menu-title">{t.shortcuts}</h3>
+          {pinned.map((shortcut) => (
+            <Link
+              key={shortcut.id}
+              href={shortcutRoute(shortcut)}
+              class="menu-row"
+              onClick={onClose}
+            >
+              <Icon name={iconForShortcut(shortcut)} size={18} />
+              <span>{shortcutLabel(shortcut)}</span>
+            </Link>
+          ))}
+        </section>
+      )}
+      <section class="menu-section">
+        <h3 class="menu-title">{t.navigation}</h3>
+        {navItems.map((item) =>
+          item.action ? (
+            <button
+              key={item.id}
+              type="button"
+              class="menu-row"
+              onClick={() => {
+                if (item.action === "timer") store.ui.timerOpen = true;
+                else store.ui.helpOpen = true;
+                onClose();
+              }}
+            >
+              <Icon name={item.icon} size={18} />
+              <span>{t[item.labelKey]}</span>
+            </button>
+          ) : (
+            <Link key={item.id} href={item.href} class="menu-row" onClick={onClose}>
+              <Icon name={item.icon} size={18} />
+              <span>{t[item.labelKey]}</span>
+            </Link>
+          ),
+        )}
+      </section>
+    </Sheet>
   );
 }
 

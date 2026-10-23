@@ -105,6 +105,8 @@ const wanted = [
   "building-2-line",
   "file-export-line",
   "file-import-line",
+  "menu-line",
+  "pin-fill",
 ];
 
 const src = JSON.parse(

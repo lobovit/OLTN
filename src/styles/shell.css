@@ -228,6 +228,49 @@
   line-height: 15px;
 }
 
+/* Mobile "More" sheet */
+.mobile-menu .menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-menu .menu-title {
+  margin: var(--s2) 0 var(--s1);
+  padding-inline: var(--s3);
+  color: var(--text-3);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mobile-menu .menu-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  padding: var(--s3);
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mobile-menu .menu-row:hover {
+  background: var(--surface-2);
+}
+
+.mobile-menu .menu-row svg {
+  flex: none;
+  color: var(--text-2);
+}
+
 .fab {
   position: fixed;
   right: var(--s4);

@@ -511,4 +511,14 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "menu-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>',
+    width: 24,
+    height: 24,
+  },
+  "pin-fill": {
+    body: '<path fill="currentColor" fill-rule="evenodd" d="M14.242 2.529a2 2 0 0 1 2.614.186l4.43 4.43a2 2 0 0 1 .186 2.614l-2.185 2.914a9 9 0 0 0-1.71 4.127l-.175 1.227a1.89 1.89 0 0 1-.969 1.413a1.78 1.78 0 0 1-1.772-.06c-1-.607-2.592-1.749-4.776-3.85l-4.249 4.25a1 1 0 0 1-1.414-1.415l4.25-4.25C6.37 11.933 5.226 10.34 4.621 9.34a1.78 1.78 0 0 1-.062-1.772a1.89 1.89 0 0 1 1.414-.97L7.2 6.425a9 9 0 0 0 4.127-1.71z" clip-rule="evenodd"/>',
+    width: 24,
+    height: 24,
+  },
 };

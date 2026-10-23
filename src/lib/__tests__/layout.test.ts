@@ -148,17 +148,17 @@ describe("buildLayoutShortcuts", () => {
 });
 
 describe("routeMode", () => {
-  it("uses the deck on the authenticated home with deck mode on", () => {
+  it("uses the deck on the authenticated desktop home with deck mode on", () => {
     expect(routeMode("/", true, true, true)).toBe("deck");
-    expect(routeMode("/", true, true, false)).toBe("deck");
+  });
+
+  it("always uses a single-column page on phones", () => {
+    expect(routeMode("/", true, true, false)).toBe("page");
+    expect(routeMode("/", true, false, false)).toBe("page");
   });
 
   it("uses floating panels on desktop when deck mode is off", () => {
     expect(routeMode("/", true, false, true)).toBe("floats");
-  });
-
-  it("falls back to a plain page on mobile with deck mode off", () => {
-    expect(routeMode("/", true, false, false)).toBe("page");
   });
 
   it("is a plain page outside the home or when anonymous", () => {
