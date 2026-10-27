@@ -91,13 +91,16 @@ export interface PomodoroSettings {
   autoContinue: boolean;
 }
 
+/** Desktop home layout chosen in Settings. Phones always use a single column. */
+export type LayoutMode = "columns" | "floats" | "social";
+
 export interface Settings {
   theme: ThemeSetting;
   accent: AccentSetting;
   language: LanguageSetting;
   textSize: number;
-  /** Multi-column deck on the home route (off = single-column home). */
-  deckMode: boolean;
+  /** Desktop layout: deck columns, floating panels or an X-like social shell. */
+  layout: LayoutMode;
   /** Receives posts and notifications in real time. */
   autoStream: boolean;
   /** Animate GIFs in timelines (default: on). */

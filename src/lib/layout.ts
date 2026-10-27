@@ -1,6 +1,6 @@
 /* Pure column layout and positioning helpers. */
 
-import type { Shortcut, ShortcutType } from "../api/types";
+import type { LayoutMode, Shortcut, ShortcutType } from "../api/types";
 import type { TKey } from "../i18n/pt-BR";
 
 export const COLUMN_MIN = 240;
@@ -33,20 +33,31 @@ export function orderColumns<T extends { id: string }>(
     .map((entry) => entry.item);
 }
 
-/** How the home route lays itself out: deck columns, floating panels or a plain page. */
-export type RouteMode = "deck" | "floats" | "page";
+/** How the shell lays itself out. */
+export type RouteMode = "deck" | "floats" | "social" | "page";
 
-/** Deck mode: desktop-only columns. Deck off on desktop: floating panels.
-    Phones always get a plain, single-column page. */
+/** Reads the layout setting, migrating the old `deckMode` boolean. */
+export function layoutFromSettings(
+  raw: { layout?: unknown; deckMode?: unknown },
+  fallback: LayoutMode = "columns",
+): LayoutMode {
+  if (raw.layout === "columns" || raw.layout === "floats" || raw.layout === "social") {
+    return raw.layout;
+  }
+  return raw.deckMode === false ? "floats" : fallback;
+}
+
+/** Desktop keeps the chosen layout; phones always get a single-column page. */
 export function routeMode(
   path: string,
   authed: boolean,
-  deckEnabled: boolean,
+  layout: LayoutMode,
   desktop: boolean,
 ): RouteMode {
-  if (!authed || path !== "/") return "page";
-  if (!desktop) return "page";
-  return deckEnabled ? "deck" : "floats";
+  if (!authed || !desktop) return "page";
+  if (layout === "social") return "social";
+  if (path !== "/") return "page";
+  return layout === "columns" ? "deck" : "floats";
 }
 
 /** Moves `id` before/after `targetId` in a list of ids. */

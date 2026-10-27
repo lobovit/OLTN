@@ -12,6 +12,7 @@ import type {
 } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { setFormatLocale } from "../lib/format";
+import { layoutFromSettings } from "../lib/layout";
 import { updatePanelColor, type PanelColor } from "../lib/panel-colors";
 import { navigate, parseHash } from "../lib/router";
 import {
@@ -392,9 +393,14 @@ export async function boot(): Promise<void> {
   // 1. persisted state
   store.accounts = readJSON<AccountMeta[]>("accounts", []);
   store.currentAccountId = readJSON<string | null>("currentAccount", null);
+  const storedSettings = readJSON<Record<string, unknown>>("settings", {});
+  const layout = layoutFromSettings(storedSettings, DEFAULT_SETTINGS.layout);
+  delete storedSettings.deckMode;
+  delete storedSettings.layout;
   store.settings = {
     ...DEFAULT_SETTINGS,
-    ...readJSON<Partial<Settings>>("settings", {}),
+    ...(storedSettings as Partial<Settings>),
+    layout,
   };
   store.prefs = readJSON<AppState["prefs"]>("prefs", {});
   applyAppearance();

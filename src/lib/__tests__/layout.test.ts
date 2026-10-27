@@ -5,6 +5,7 @@ import {
   clampWidth,
   ensureColumnVisible,
   LAYOUT_PRESETS,
+  layoutFromSettings,
   moveInOrder,
   orderColumns,
   routeMode,
@@ -147,22 +148,36 @@ describe("buildLayoutShortcuts", () => {
   });
 });
 
+describe("layoutFromSettings", () => {
+  it("reads the new layout and migrates the old deckMode boolean", () => {
+    expect(layoutFromSettings({ layout: "social" })).toBe("social");
+    expect(layoutFromSettings({ layout: "floats" })).toBe("floats");
+    expect(layoutFromSettings({ deckMode: true })).toBe("columns");
+    expect(layoutFromSettings({ deckMode: false })).toBe("floats");
+    expect(layoutFromSettings({ layout: "bogus", deckMode: false })).toBe("floats");
+    expect(layoutFromSettings({})).toBe("columns");
+  });
+});
+
 describe("routeMode", () => {
-  it("uses the deck on the authenticated desktop home with deck mode on", () => {
-    expect(routeMode("/", true, true, true)).toBe("deck");
+  it("uses the chosen layout on the authenticated desktop", () => {
+    expect(routeMode("/", true, "columns", true)).toBe("deck");
+    expect(routeMode("/", true, "floats", true)).toBe("floats");
+  });
+
+  it("uses the social shell on every desktop route", () => {
+    expect(routeMode("/", true, "social", true)).toBe("social");
+    expect(routeMode("/settings", true, "social", true)).toBe("social");
   });
 
   it("always uses a single-column page on phones", () => {
-    expect(routeMode("/", true, true, false)).toBe("page");
-    expect(routeMode("/", true, false, false)).toBe("page");
+    expect(routeMode("/", true, "columns", false)).toBe("page");
+    expect(routeMode("/", true, "floats", false)).toBe("page");
+    expect(routeMode("/", true, "social", false)).toBe("page");
   });
 
-  it("uses floating panels on desktop when deck mode is off", () => {
-    expect(routeMode("/", true, false, true)).toBe("floats");
-  });
-
-  it("is a plain page outside the home or when anonymous", () => {
-    expect(routeMode("/settings", true, true, true)).toBe("page");
-    expect(routeMode("/", false, true, true)).toBe("page");
+  it("is a plain page outside the home in deck/float layouts or when anonymous", () => {
+    expect(routeMode("/settings", true, "columns", true)).toBe("page");
+    expect(routeMode("/", false, "columns", true)).toBe("page");
   });
 });

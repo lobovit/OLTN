@@ -13,7 +13,7 @@ Another Mastodon Deck Web Client.
 - Lists, bookmarks, favourites, filters (v2)
 - Trending with posts, hashtags, people and news tabs
 - Newsletter with trending links and custom fediverse news sources (full handles, or a bare @user to pick from known accounts)
-- Multi-column deck with pinned shortcuts, drag-to-reorder and resize; with deck mode off the home turns into floating panels that snap magnetically and take per-panel colors
+- Three desktop layouts: multi-column deck with pinned shortcuts (drag to reorder/resize), floating magnetic panels, or a social single-feed shell with navigation and trends; phones always use one column
 - Keyboard shortcuts (`j/k`, `c`, `/`, `?`, `g h`, …), plus a Pomodoro/reminder timer in the nav
 - Dark/light/auto themes, multi-account support, GIF autoplay setting, pt-BR and English UI
 - Data export/import in Settings: OLTN setup plus follows, lists, filters, mutes and blocks for moving to another instance

@@ -315,9 +315,13 @@ export const en = {
   accentBlue: "Blue",
   accentPink: "Pink",
   textSize: "Text size",
-  deckMode: "Deck (multi-column)",
-  deckModeHint:
-    "Desktop only: turn it off for floating panels you can place anywhere. Phones always use a single column.",
+  layoutMode: "Layout",
+  layoutColumns: "Columns",
+  layoutFloats: "Float",
+  layoutSocial: "Social",
+  layoutModeHint:
+    "Desktop only: Columns is the deck, Float frees the panels and Social shows one feed with the navigation rail and trends. Phones always use a single column.",
+  socialComposePrompt: "What's happening?",
   reorderColumn: "Reorder column",
   resizeColumn: "Resize column",
   movePanel: "Move panel",
@@ -440,7 +444,7 @@ export const en = {
     "Reply, boost, like and bookmark. Use ⋯ on a post to report it or block the user. Your own posts can be edited, deleted or pinned to your profile.",
   helpColumnsTitle: "Columns and panels",
   helpColumnsText:
-    "On the home deck, click nav icons to open up to 6 columns, drag them to reorder, and drag the right edge to resize. With deck mode off in Settings, the same views become floating panels you can move, resize, recolor and magnetically snap.",
+    "On the home deck, click nav icons to open up to 6 columns, drag them to reorder, and drag the right edge to resize. Choose Float in Settings to turn the same views into floating panels you can move, resize, recolor and magnetically snap. Choose Social for a single feed with a navigation rail and a trends sidebar.",
   helpDiscoverTitle: "Search & discover",
   helpDiscoverText:
     "Search accounts, hashtags and posts. Trending has tabs for posts, hashtags, people and news.",
@@ -454,7 +458,7 @@ export const en = {
     "The clock in the nav opens a configurable focus/break timer that beeps when a phase ends.",
   helpSettingsTitle: "Settings",
   helpSettingsText:
-    "Theme, language, text size, deck or floating panels, real-time streaming and GIF autoplay. The Data section exports and imports your setup plus portable account data. Phones always use a single column. Press ? anytime for keyboard shortcuts.",
+    "Theme, language, text size, desktop layout (Columns, Float or Social), real-time streaming and GIF autoplay. The Data section exports and imports your setup plus portable account data. Phones always use a single column. Press ? anytime for keyboard shortcuts.",
   navHelp: "Navigation",
   generalHelp: "General",
   yourProfile: "Your profile",

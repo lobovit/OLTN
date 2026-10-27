@@ -74,6 +74,12 @@ export function SettingsPage(): JSX.Element {
     ["pink", t.accentPink, "#f472b6"],
   ] as const;
 
+  const layoutOptions = [
+    ["columns", t.layoutColumns],
+    ["floats", t.layoutFloats],
+    ["social", t.layoutSocial],
+  ] as const;
+
   const shortcutTypes: [ShortcutType, string][] = [
     ["home", t.home],
     ["local", t.local],
@@ -266,20 +272,22 @@ export function SettingsPage(): JSX.Element {
             />
           </div>
           <div class="setting-row">
-            <span>{t.deckMode}</span>
-            <input
-              type="checkbox"
-              class="switch"
-              role="switch"
-              checked={settings.deckMode}
-              aria-label={t.deckMode}
-              onChange={(e) => {
-                update({ deckMode: (e.target as HTMLInputElement).checked });
-              }}
-            />
+            <span>{t.layoutMode}</span>
+            <div class="segmented">
+              {layoutOptions.map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  class={`seg ${settings.layout === value ? "active" : ""}`}
+                  onClick={() => update({ layout: value })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-          <p class="muted">{t.deckModeHint}</p>
-          <p class="muted">{t.layoutHint}</p>
+          <p class="muted">{t.layoutModeHint}</p>
+          {settings.layout !== "social" && <p class="muted">{t.layoutHint}</p>}
           <div class="btn-row">
             <button type="button" class="btn" onClick={() => navigate("/layouts")}>
               <Icon name="layout-grid-line" size={16} />

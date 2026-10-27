@@ -317,9 +317,13 @@ const pt: Record<TKey, string> = {
   accentBlue: "Azul",
   accentPink: "Rosa",
   textSize: "Tamanho do texto",
-  deckMode: "Deck (multi-colunas)",
-  deckModeHint:
-    "Só no desktop: desligue para painéis soltos que você posiciona onde quiser. Celulares usam sempre uma coluna.",
+  layoutMode: "Layout",
+  layoutColumns: "Colunas",
+  layoutFloats: "Flutuante",
+  layoutSocial: "Social",
+  layoutModeHint:
+    "Só no desktop: Colunas é o deck, Flutuante libera os painéis e Social mostra um feed único com navegação e tendências. Celulares usam sempre uma coluna.",
+  socialComposePrompt: "O que está acontecendo?",
   reorderColumn: "Reordenar coluna",
   resizeColumn: "Redimensionar coluna",
   movePanel: "Mover painel",
@@ -442,7 +446,7 @@ const pt: Record<TKey, string> = {
     "Responda, impulsione, curta e salve. Use ⋯ em um post para denunciá-lo ou bloquear a pessoa. Seus próprios posts podem ser editados, excluídos ou fixados no perfil.",
   helpColumnsTitle: "Colunas e painéis",
   helpColumnsText:
-    "No deck da home, clique nos ícones do menu para abrir até 6 colunas, arraste para reordenar e arraste a borda direita para redimensionar. Com o modo deck desligado nas Configurações, as mesmas telas viram painéis soltos: mova, redimensione, pinte e deixe os ímãs encaixarem nas bordas.",
+    "No deck da home, clique nos ícones do menu para abrir até 6 colunas, arraste para reordenar e arraste a borda direita para redimensionar. Escolha Flutuante nas Configurações para as mesmas telas virarem painéis soltos: mova, redimensione, pinte e deixe os ímãs encaixarem nas bordas. Escolha Social para um feed único com navegação lateral e uma barra de tendências.",
   helpDiscoverTitle: "Busca e descoberta",
   helpDiscoverText:
     "Busque contas, hashtags e posts. O Trending tem abas de posts, hashtags, pessoas e notícias.",
@@ -456,7 +460,7 @@ const pt: Record<TKey, string> = {
     "O relógio no nav abre um timer de foco/pausa configurável que apita quando a fase termina.",
   helpSettingsTitle: "Ajustes",
   helpSettingsText:
-    "Tema, idioma, tamanho do texto, deck ou painéis soltos, streaming em tempo real e autoplay de GIFs. A seção Dados exporta e importa sua configuração e os dados portáveis da conta. Celulares usam sempre uma coluna. Aperte ? para ver os atalhos de teclado.",
+    "Tema, idioma, tamanho do texto, layout do desktop (Colunas, Flutuante ou Social), streaming em tempo real e autoplay de GIFs. A seção Dados exporta e importa sua configuração e os dados portáveis da conta. Celulares usam sempre uma coluna. Aperte ? para ver os atalhos de teclado.",
   navHelp: "Navegação",
   generalHelp: "Geral",
   yourProfile: "Seu perfil",

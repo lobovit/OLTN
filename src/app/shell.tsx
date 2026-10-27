@@ -23,18 +23,25 @@ import { backOrHome, Link, matchRoutes, navigate, useRouter } from "../lib/route
 import { shortcutLabel, shortcutRoute } from "./shortcuts";
 import { routes } from "./routes";
 import { ColumnContent, iconForShortcut } from "./column-content";
+import { SocialHome, SocialNav, SocialSidebar } from "./social";
 import { FloatCanvas } from "./floats";
 import { PanelColorButton } from "./panel-color";
 import { saveColumnLayout, saveFloatLayout, saveSettings, saveShortcuts } from "../state/boot";
 import { accountNS, currentAccount, setCompose, setMediaViewer, store } from "../state/store";
 import { useAppState, useIsDesktop } from "../state/hooks";
 
-export function Shell({ children }: { children?: ComponentChildren }): JSX.Element {
+export function Shell({
+  children,
+  social = false,
+}: {
+  children?: ComponentChildren;
+  social?: boolean;
+}): JSX.Element {
   const state = useAppState();
   const authed = state.auth === "authenticated";
   const showRail = authed || !!currentAccount();
   return (
-    <div class={`shell ${showRail ? "rail-collapsed" : "shell-no-rail"}`}>
+    <div class={`shell ${showRail ? "rail-collapsed" : "shell-no-rail"} ${social ? "social" : ""}`}>
       <a
         class="skip-link"
         href="#main"
@@ -45,7 +52,7 @@ export function Shell({ children }: { children?: ComponentChildren }): JSX.Eleme
       >
         {t.skipToContent}
       </a>
-      <Rail />
+      {!social && <Rail />}
       {children}
       {authed && (
         <>
@@ -289,7 +296,7 @@ function Rail(): JSX.Element | null {
   const mode = routeMode(
     route.path,
     state.auth === "authenticated",
-    state.settings.deckMode,
+    state.settings.layout,
     desktop,
   );
 
@@ -844,11 +851,11 @@ export function Routed(): JSX.Element {
   useEscapeHotkeys();
 
   const desktop = useIsDesktop();
-  const mode = routeMode(route.path, authed, state.settings.deckMode, desktop);
+  const mode = routeMode(route.path, authed, state.settings.layout, desktop);
   const wide = !!match?.def.wide;
-  // With the deck off, pages center themselves (login keeps its full layout).
+  // With the float layout, pages center themselves (login keeps its full layout).
   const centerPage =
-    !wide && mode === "page" && !state.settings.deckMode && route.path !== "/login";
+    !wide && mode === "page" && state.settings.layout === "floats" && route.path !== "/login";
 
   if (needAuth && !authed) {
     return (
@@ -860,9 +867,34 @@ export function Routed(): JSX.Element {
     );
   }
 
+  const content =
+    Page && match ? (
+      <Page params={match.params} query={route.query} />
+    ) : (
+      <>
+        <header class="deck-header">
+          <h1>{t.pageNotFound}</h1>
+        </header>
+        <div class="center-state">
+          <Icon name="question-line" size={28} />
+          <button type="button" class="btn ghost" onClick={() => navigate("/")}>
+            {t.goHome}
+          </button>
+        </div>
+      </>
+    );
+
   return (
-    <Shell>
-      {mode === "deck" ? (
+    <Shell social={mode === "social"}>
+      {mode === "social" ? (
+        <div class="social-shell">
+          <SocialNav />
+          <main class="deck social-deck" id="main" tabindex={-1}>
+            {route.path === "/" ? <SocialHome /> : content}
+          </main>
+          <SocialSidebar />
+        </div>
+      ) : mode === "deck" ? (
         <MultiColumns />
       ) : mode === "floats" ? (
         <FloatCanvas />
@@ -874,21 +906,7 @@ export function Routed(): JSX.Element {
           id="main"
           tabindex={-1}
         >
-          {Page && match ? (
-            <Page params={match.params} query={route.query} />
-          ) : (
-            <>
-              <header class="deck-header">
-                <h1>{t.pageNotFound}</h1>
-              </header>
-              <div class="center-state">
-                <Icon name="question-line" size={28} />
-                <button type="button" class="btn ghost" onClick={() => navigate("/")}>
-                  {t.goHome}
-                </button>
-              </div>
-            </>
-          )}
+          {content}
         </main>
       )}
     </Shell>

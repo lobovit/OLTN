@@ -97,7 +97,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accent: "green",
   language: "en",
   textSize: 16,
-  deckMode: true,
+  layout: "columns",
   autoStream: true,
   autoplayGifs: true,
   pomodoro: {

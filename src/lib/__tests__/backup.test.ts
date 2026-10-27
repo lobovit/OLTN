@@ -97,6 +97,12 @@ describe("parseBackup", () => {
     expect(backup.settings.textSize).toBe(20);
     expect(backup.settings.pomodoro.cycles).toBe(1);
   });
+
+  it("migrates the legacy deckMode field from old backups", () => {
+    expect(parsed({ settings: { deckMode: false } }).settings.layout).toBe("floats");
+    expect(parsed({ settings: { deckMode: true } }).settings.layout).toBe("columns");
+    expect(parsed({ settings: { layout: "social" } }).settings.layout).toBe("social");
+  });
 });
 
 describe("sanitizeSettings", () => {
@@ -106,7 +112,7 @@ describe("sanitizeSettings", () => {
       accent: "purple",
       language: "pt-BR",
       textSize: 15,
-      deckMode: false,
+      layout: "floats",
       autoStream: false,
       autoplayGifs: false,
       navOrder: ["/", "/settings", 3],
@@ -116,7 +122,7 @@ describe("sanitizeSettings", () => {
     expect(settings.accent).toBe("purple");
     expect(settings.language).toBe("pt-BR");
     expect(settings.textSize).toBe(15);
-    expect(settings.deckMode).toBe(false);
+    expect(settings.layout).toBe("floats");
     expect(settings.navOrder).toEqual(["/", "/settings"]);
     expect(settings.pomodoro.focusMinutes).toBe(30);
     expect(settings.pomodoro.cycles).toBe(6);

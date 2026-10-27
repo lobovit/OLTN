@@ -11,6 +11,7 @@ import type {
   ShortcutType,
 } from "../api/types";
 import { PANEL_COLORS } from "./panel-colors";
+import { layoutFromSettings } from "./layout";
 import { DEFAULT_SETTINGS, type AccountPrefs } from "../state/store";
 
 export const BACKUP_FORMAT = "oltn-backup";
@@ -168,7 +169,7 @@ export function sanitizeSettings(value: unknown): Settings {
       ? (value.language as Settings["language"])
       : base.language,
     textSize: clampInt(value.textSize, 13, 20, base.textSize),
-    deckMode: typeof value.deckMode === "boolean" ? value.deckMode : base.deckMode,
+    layout: layoutFromSettings(value, base.layout),
     autoStream: typeof value.autoStream === "boolean" ? value.autoStream : base.autoStream,
     autoplayGifs: typeof value.autoplayGifs === "boolean" ? value.autoplayGifs : base.autoplayGifs,
     navOrder,

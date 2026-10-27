@@ -1260,3 +1260,238 @@ textarea.field {
 .conversation-list .load-more {
   margin: var(--s3) 0;
 }
+
+/* ---------------- Social layout (desktop) ---------------- */
+
+.social-shell {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.social-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: 240px;
+  flex: none;
+  height: 100%;
+  padding: var(--s4) var(--s3);
+  border-inline-end: var(--hairline) solid var(--divider);
+  background: var(--bg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.social-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 0 var(--s2);
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.social-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.social-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.social-nav-item:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+
+.social-nav-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.social-nav-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.social-nav-icon .badge {
+  position: absolute;
+  transform: translate(12px, -6px);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.social-post {
+  justify-content: center;
+  width: 100%;
+  margin-top: var(--s1);
+}
+
+.social-nav-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.social-deck {
+  flex: 1 1 600px;
+  max-width: 640px;
+  min-width: 0;
+  border-inline: var(--hairline) solid var(--divider);
+}
+
+.social-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: 320px;
+  flex: none;
+  height: 100%;
+  padding: var(--s4) var(--s3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.social-search {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  height: 44px;
+  padding: 0 var(--s4);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-1);
+  color: var(--text-3);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.social-search:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.social-side-card {
+  overflow: hidden;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+}
+
+.social-side-card h3 {
+  margin: 0;
+  padding: var(--s3) var(--s4);
+  border-bottom: var(--hairline) solid var(--divider);
+  font-size: 1rem;
+}
+
+.social-side-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s2) var(--s4);
+  color: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.social-side-row:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+
+.social-side-meta {
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+
+.social-composer {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  padding: var(--s4);
+  border: 0;
+  border-bottom: var(--hairline) solid var(--divider);
+  background: none;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 1rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.social-composer:hover {
+  background: var(--surface-2);
+}
+
+.social-tabs {
+  background: var(--glass-bg);
+}
+
+@media (max-width: 74.99em) {
+  .social-sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99em) {
+  .social-nav {
+    width: 76px;
+    padding-inline: var(--s2);
+    align-items: center;
+  }
+
+  .social-logo span,
+  .social-nav-label,
+  .social-post span {
+    display: none;
+  }
+
+  .social-nav-item {
+    justify-content: center;
+    padding: var(--s2);
+  }
+
+  .social-post {
+    width: 48px;
+    height: 48px;
+    margin-top: var(--s1);
+    padding: 0;
+    border-radius: 50%;
+  }
+}
