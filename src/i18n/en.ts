@@ -301,6 +301,8 @@ export const en = {
   quotePolicyNobody: "Nobody",
   quotePolicyNobodyHint: "Only you can quote this post.",
   visDirectHint: "Only the people you mention.",
+  editVisibilityLocked:
+    "Visibility can't be changed when editing. Delete the post and publish it again to change it.",
 
   // Settings
   appearance: "Appearance",

@@ -8,6 +8,9 @@ interface VisibilityPickerProps {
   /** Pleroma/Akkoma instances support the "local" visibility. */
   localSupported: boolean;
   onChange: (value: ComposeVisibility) => void;
+  /** Mastodon ignores visibility changes when editing an existing status. */
+  disabled?: boolean;
+  disabledHint?: string;
 }
 
 /** Visibility dropdown for the composer (public/local/quiet/followers/direct). */
@@ -15,6 +18,8 @@ export function VisibilityPicker({
   value,
   localSupported,
   onChange,
+  disabled,
+  disabledHint,
 }: VisibilityPickerProps): JSX.Element {
   const options: PickerOption<ComposeVisibility>[] = [
     { value: "public", label: t.visPublic, hint: t.visPublicHint, icon: "globe-line" },
@@ -40,6 +45,8 @@ export function VisibilityPicker({
       value={value}
       options={options}
       onChange={onChange}
+      disabled={disabled}
+      disabledHint={disabledHint}
     />
   );
 }

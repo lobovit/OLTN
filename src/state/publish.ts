@@ -61,7 +61,6 @@ async function updateStatus(
     ? await selected.update({
         status: part.status,
         spoilerText: part.spoilerText,
-        visibility: execution.visibility,
         sensitive: execution.sensitive,
         mediaIds: part.mediaIds,
         mediaAttributes: part.mediaAttributes,
@@ -70,7 +69,6 @@ async function updateStatus(
     : await selected.update({
         status: part.status,
         spoilerText: part.spoilerText,
-        visibility: execution.visibility,
         sensitive: execution.sensitive,
         poll: part.poll,
         quoteApprovalPolicy: part.quoteApprovalPolicy,

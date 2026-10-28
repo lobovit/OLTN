@@ -20,7 +20,11 @@ import { translateText } from "../../lib/translate";
 import { currentAccount, setCompose, store, toast } from "../../state/store";
 import { executePublish } from "../../state/publish";
 import { Sheet } from "../ui/Sheet";
-import { applyComposeContext, normalizeQuotePolicy } from "./compose-context";
+import {
+  applyComposeContext,
+  defaultComposeVisibility,
+  normalizeQuotePolicy,
+} from "./compose-context";
 import { ComposeDropZone } from "./ComposeDropZone";
 import { ComposeInput } from "./ComposeInput";
 import {
@@ -294,18 +298,24 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
       try {
         const status = await client.v1.statuses.$select(statusId).fetch();
         if (cancelled) return;
-        applyComposeContext(status, intent.mode, instance, {
-          setReplyTo,
-          setQuoteId,
-          setText,
-          setSpoiler,
-          setShowCw,
-          setVisibility,
-          setSensitive,
-          setMedia,
-          setPoll,
-          setQuotePolicy,
-        });
+        applyComposeContext(
+          status,
+          intent.mode,
+          instance,
+          {
+            setReplyTo,
+            setQuoteId,
+            setText,
+            setSpoiler,
+            setShowCw,
+            setVisibility,
+            setSensitive,
+            setMedia,
+            setPoll,
+            setQuotePolicy,
+          },
+          { defaultVisibility: defaultComposeVisibility(store.me?.source?.privacy) },
+        );
       } catch {
         toast(t.errorLoad, "error");
       }
@@ -476,7 +486,10 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           value={visibility}
           localSupported={localSupported}
           onChange={setVisibility}
+          disabled={isEdit}
+          disabledHint={t.editVisibilityLocked}
         />
+        {isEdit && <p class="muted compose-edit-hint">{t.editVisibilityLocked}</p>}
         <QuotePolicyPicker value={quotePolicy} onChange={setQuotePolicy} />
       </ComposeDropZone>
     </Sheet>

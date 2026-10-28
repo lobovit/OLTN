@@ -27,6 +27,26 @@ export function normalizeQuotePolicy(value: string | null | undefined): QuotePol
   return value === "public" || value === "followers" || value === "nobody" ? value : "public";
 }
 
+const PRIVACY_ORDER: ComposeVisibility[] = ["public", "unlisted", "private", "direct"];
+
+/** Most restrictive of the parent visibility and the user's default privacy
+    (same rule as Mastodon's composer, so direct replies stay direct). */
+export function replyVisibility(
+  parent: string | null | undefined,
+  userDefault: ComposeVisibility = "public",
+): ComposeVisibility {
+  const rank = (value: string | null | undefined): number => {
+    const index = value ? PRIVACY_ORDER.indexOf(value as ComposeVisibility) : -1;
+    return index >= 0 ? index : 0;
+  };
+  return PRIVACY_ORDER[Math.max(rank(parent), rank(userDefault))] ?? "public";
+}
+
+/** Normalizes the account's default post privacy (`source.privacy`). */
+export function defaultComposeVisibility(value: string | null | undefined): ComposeVisibility {
+  return value === "unlisted" || value === "private" || value === "direct" ? value : "public";
+}
+
 /** Reads the quote policy back from a status' quote approval summary. */
 function quotePolicyFrom(automatic: readonly string[]): QuotePolicy {
   if (automatic.includes("public")) return "public";
@@ -52,12 +72,14 @@ export function applyComposeContext(
   mode: ComposeIntent["mode"],
   instance: string,
   set: ComposeContextSetters,
+  options: { defaultVisibility?: ComposeVisibility } = {},
 ): void {
   if (mode === "reply") {
     const acct = status.account.acct.includes("@")
       ? status.account.acct
       : `${status.account.acct}@${instance}`;
     set.setReplyTo({ id: status.id, acct });
+    set.setVisibility(replyVisibility(status.visibility, options.defaultVisibility));
     // Remote accounts only become a mention with the full user@domain;
     // a bare @username would be posted as plain text.
     set.setText((prev) => prev || `@${status.account.acct} `);

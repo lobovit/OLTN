@@ -16,12 +16,16 @@ export function PickerMenu<T extends string>({
   value,
   options,
   onChange,
+  disabled = false,
+  disabledHint,
 }: {
   title: string;
   buttonIcon: IconName;
   value: T;
   options: readonly PickerOption<T>[];
   onChange: (value: T) => void;
+  disabled?: boolean;
+  disabledHint?: string;
 }): JSX.Element {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,10 +46,14 @@ export function PickerMenu<T extends string>({
       <button
         type="button"
         class="btn ghost sm vis-btn"
-        title={title}
+        title={disabled ? (disabledHint ?? title) : title}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        aria-disabled={disabled}
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) setOpen((v) => !v);
+        }}
       >
         <Icon name={buttonIcon} size={15} />
         {current.label}

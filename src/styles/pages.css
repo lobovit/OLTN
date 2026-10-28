@@ -1136,6 +1136,16 @@
   gap: 6px;
 }
 
+.vis-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.compose-edit-hint {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
 .vis-caret {
   color: var(--text-3);
 }

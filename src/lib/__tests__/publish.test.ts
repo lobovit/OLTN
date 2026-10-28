@@ -32,6 +32,7 @@ interface Call {
   id?: string;
   params?: {
     status?: string;
+    visibility?: string;
     mediaIds?: string[];
     mediaAttributes?: { id: string; description: string | null }[];
     inReplyToId?: string | null;
@@ -118,6 +119,7 @@ describe("executePublish", () => {
     expect(calls[0]).toEqual({ op: "media", description: "const a = 1;" });
     expect(calls[1].op).toBe("create");
     expect(calls[1].params?.status).toBe("antes\n\ndepois");
+    expect(calls[1].params?.visibility).toBe("public");
     expect(calls[1].params?.mediaIds).toEqual(["m1"]);
     expect(calls[1].params?.quoteApprovalPolicy).toBe("public");
     expect(store.ui.lastPostedKey).toBe("https://mock.instance/users/me/statuses/s1");
@@ -189,6 +191,7 @@ describe("executePublish", () => {
     expect(outcome.kind).toBe("update");
     expect(calls).toHaveLength(1);
     expect(calls[0].op).toBe("update");
+    expect(calls[0].params?.visibility).toBeUndefined();
     expect(calls[0].params?.mediaAttributes).toEqual([{ id: "m1", description: "alt" }]);
     expect(calls[0].params?.quoteApprovalPolicy).toBe("nobody");
   });

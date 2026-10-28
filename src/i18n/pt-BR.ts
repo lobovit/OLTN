@@ -303,6 +303,8 @@ const pt: Record<TKey, string> = {
   quotePolicyNobody: "Ninguém",
   quotePolicyNobodyHint: "Só você pode citar este post.",
   visDirectHint: "Só as pessoas mencionadas.",
+  editVisibilityLocked:
+    "A visibilidade não pode ser alterada ao editar. Exclua o post e publique de novo para mudar.",
 
   // Settings
   appearance: "Aparência",
