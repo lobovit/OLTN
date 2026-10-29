@@ -128,3 +128,25 @@ describe("StatusCard: translation", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("StatusCard: privacy lock", () => {
+  it("shows a lock for private and direct posts", () => {
+    for (const visibility of ["private", "direct"] as const) {
+      store.statuses = {};
+      const key = putStatus({ ...remoteStatus(), visibility } as Status, "my.instance");
+      const host = document.createElement("div");
+      render(<StatusCard statusKey={key} />, host);
+      expect(host.querySelector(".status-lock")).toBeTruthy();
+    }
+  });
+
+  it("hides the lock for public and unlisted posts", () => {
+    for (const visibility of ["public", "unlisted"] as const) {
+      store.statuses = {};
+      const key = putStatus({ ...remoteStatus(), visibility } as Status, "my.instance");
+      const host = document.createElement("div");
+      render(<StatusCard statusKey={key} />, host);
+      expect(host.querySelector(".status-lock")).toBeNull();
+    }
+  });
+});

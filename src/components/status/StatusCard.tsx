@@ -4,6 +4,7 @@ import { useSnapshot } from "valtio";
 import type { Status } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { fullDate, languageName, timeAgo } from "../../lib/format";
+import { canBoostStatus } from "../../lib/boost";
 import { clientFor, hrefFor, localStatus, sourceInstanceFor } from "../../lib/identity";
 import { back, navigate } from "../../lib/router";
 import { statusShareLink } from "../../lib/share";
@@ -107,17 +108,28 @@ function Byline({
             : ""}
         </div>
       </div>
-      <time
-        class="timestamp"
-        dateTime={target.createdAt}
-        title={fullDate(target.createdAt)}
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(openHref);
-        }}
-      >
-        {timeAgo(target.createdAt)}
-      </time>
+      <span class="status-meta">
+        {(target.visibility === "private" || target.visibility === "direct") && (
+          <span
+            class="status-lock"
+            title={target.visibility === "direct" ? t.visDirect : t.visPrivate}
+            aria-label={target.visibility === "direct" ? t.visDirect : t.visPrivate}
+          >
+            <Icon name="lock-line" size={13} />
+          </span>
+        )}
+        <time
+          class="timestamp"
+          dateTime={target.createdAt}
+          title={fullDate(target.createdAt)}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(openHref);
+          }}
+        >
+          {timeAgo(target.createdAt)}
+        </time>
+      </span>
     </div>
   );
 }
@@ -514,6 +526,7 @@ function StatusCardView({
             showEdit={isSelf && canAct && sourceInstance === account?.instance}
             showDelete={isSelf && canAct}
             showMore={!isSelf && canAct}
+            showBoost={canBoostStatus(target, appState.me?.id) || target.reblogged === true}
             showPin={isSelf && canAct && target.pinned != null}
             pinned={target.pinned === true}
             menuOpen={!!menu.menuPos}

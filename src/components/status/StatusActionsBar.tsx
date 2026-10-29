@@ -15,6 +15,8 @@ interface StatusActionsBarProps {
   showDelete: boolean;
   /** Someone else's status while authenticated (more/⋯ menu). */
   showMore: boolean;
+  /** Status can be boosted (or is already boosted and can be undone). */
+  showBoost: boolean;
   /** Own pinnable status (pin button). */
   showPin: boolean;
   pinned: boolean;
@@ -35,6 +37,7 @@ export function StatusActionsBar({
   showEdit,
   showDelete,
   showMore,
+  showBoost,
   showPin,
   pinned,
   menuOpen,
@@ -59,18 +62,20 @@ export function StatusActionsBar({
         <Icon name="share-forward-line" size={16} class="rot-180" />
         {target.repliesCount > 0 && <span class="count">{shortNumber(target.repliesCount)}</span>}
       </button>
-      <button
-        type="button"
-        class={`status-action boost ${target.reblogged ? "on" : ""}`}
-        title={t.boost}
-        aria-label={target.reblogsCount > 0 ? `${t.boost} (${target.reblogsCount})` : t.boost}
-        aria-pressed={!!target.reblogged}
-        onClick={(e) => onAct("boost", e)}
-        disabled={!canAct}
-      >
-        <Icon name="repeat-line" size={16} />
-        {target.reblogsCount > 0 && <span class="count">{shortNumber(target.reblogsCount)}</span>}
-      </button>
+      {showBoost && (
+        <button
+          type="button"
+          class={`status-action boost ${target.reblogged ? "on" : ""}`}
+          title={t.boost}
+          aria-label={target.reblogsCount > 0 ? `${t.boost} (${target.reblogsCount})` : t.boost}
+          aria-pressed={!!target.reblogged}
+          onClick={(e) => onAct("boost", e)}
+          disabled={!canAct}
+        >
+          <Icon name="repeat-line" size={16} />
+          {target.reblogsCount > 0 && <span class="count">{shortNumber(target.reblogsCount)}</span>}
+        </button>
+      )}
       <button
         type="button"
         class={`status-action fav ${target.favourited ? "on" : ""}`}

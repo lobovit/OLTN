@@ -243,12 +243,15 @@
 }
 
 .thread-focus {
-  border-block: var(--hairline) solid var(--divider);
+  margin: var(--s3);
+  border: 2px solid var(--accent);
   background: var(--surface-1);
 }
 
 .thread-reply {
   border-top: var(--hairline) solid var(--divider);
+  /* Vertical thread line: follows the accent color chosen in Settings. */
+  border-inline-start: 2px solid var(--accent);
 }
 
 /* ---------------- search ---------------- */

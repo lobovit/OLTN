@@ -345,8 +345,20 @@
   white-space: nowrap;
 }
 
-.status-card .timestamp {
+.status-card .status-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
   margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+.status-card .status-lock {
+  display: inline-flex;
+  color: var(--text-3);
+}
+
+.status-card .timestamp {
   font-size: 0.78rem;
   color: var(--text-3);
   white-space: nowrap;

@@ -4,7 +4,7 @@
 
 import type { ReportCategory, RestClient, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
-import { userMessageForError } from "../lib/errors";
+import { userMessageForError, httpStatusOf } from "../lib/errors";
 import { localAccountId, localStatus, sourceInstanceFor } from "../lib/identity";
 import { patchStatus, putStatus, removeStatusById, store, toast } from "./store";
 
@@ -120,7 +120,8 @@ export async function toggleStatusAction(
   } catch (err) {
     console.warn("[oltn] action failed", err);
     patchStatus(key, revertPatch(status));
-    toast(userMessageForError(err, t.errorGeneric), "error");
+    const boostDenied = kind === "boost" && httpStatusOf(err) === 403;
+    toast(boostDenied ? t.boostNotAllowed : userMessageForError(err, t.errorGeneric), "error");
     return false;
   } finally {
     end(key, kind);
