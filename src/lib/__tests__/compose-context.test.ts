@@ -62,11 +62,18 @@ describe("applyComposeContext reply", () => {
     expect(calls.text).toBe("@me ");
   });
 
-  it("keeps text the user already typed", () => {
+  it("prepends the mention to text typed before the status loads", () => {
     const { calls, set } = setters();
     calls.text = "draft";
     applyComposeContext(accountStatus("u@remote.example", "u"), "reply", "my.instance", set);
-    expect(calls.text).toBe("draft");
+    expect(calls.text).toBe("@u@remote.example draft");
+  });
+
+  it("does not duplicate an existing mention", () => {
+    const { calls, set } = setters();
+    calls.text = "@u@remote.example hello";
+    applyComposeContext(accountStatus("u@remote.example", "u"), "reply", "my.instance", set);
+    expect(calls.text).toBe("@u@remote.example hello");
   });
 
   it("keeps a direct reply direct", () => {

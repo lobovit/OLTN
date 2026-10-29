@@ -83,6 +83,7 @@ const pt: Record<TKey, string> = {
   language: "Idioma",
   reply: "Responder",
   boost: "Boost",
+  boostNotAllowed: "Este post não pode ser impulsionado.",
   favourite: "Curtir",
   bookmark: "Salvar",
   pinPost: "Fixar no perfil",
@@ -330,6 +331,7 @@ const pt: Record<TKey, string> = {
   quotePolicyFollowersHint: "Só quem te segue pode citar este post.",
   quotePolicyNobody: "Ninguém",
   quotePolicyNobodyHint: "Só você pode citar este post.",
+  quotePolicyPrivate: "Posts privados não podem ser citados.",
   visDirectHint: "Só as pessoas mencionadas.",
   editVisibilityLocked:
     "A visibilidade não pode ser alterada ao editar. Exclua o post e publique de novo para mudar.",

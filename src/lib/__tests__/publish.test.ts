@@ -180,6 +180,18 @@ describe("executePublish", () => {
     expect(calls[0].params?.quoteApprovalPolicy).toBe("followers");
   });
 
+  it("private/direct posts send the quote policy nobody", async () => {
+    const { client, calls } = fakeClient();
+    const plan = planFrom({ visibility: "direct", quotePolicy: "public" });
+
+    const outcome = await executePublish(ctx(client), plan);
+
+    expect(outcome.ok).toBe(true);
+    const create = calls.find((call) => call.op === "create");
+    expect(create?.params?.visibility).toBe("direct");
+    expect(create?.params?.quoteApprovalPolicy).toBe("nobody");
+  });
+
   it("editing calls update with mediaAttributes", async () => {
     const { client, calls } = fakeClient();
     const attachments = [{ id: "m1", description: "alt" }] as unknown as MediaAttachment[];

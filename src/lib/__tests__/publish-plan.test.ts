@@ -43,6 +43,19 @@ describe("planPublish", () => {
     expect(planPublish(draft({ text, poll }), limits, { mode: "new" }).blocks).toHaveLength(0);
   });
 
+  it("forces quote policy to nobody for private and direct posts", () => {
+    expect(
+      planPublish(draft({ visibility: "private", quotePolicy: "public" }), limits, {
+        mode: "new",
+      }).quotePolicy,
+    ).toBe("nobody");
+    expect(
+      planPublish(draft({ visibility: "direct", quotePolicy: "followers" }), limits, {
+        mode: "new",
+      }).quotePolicy,
+    ).toBe("nobody");
+  });
+
   it("the plan touches neither DOM nor network: data only", () => {
     const plan = planPublish(
       draft({

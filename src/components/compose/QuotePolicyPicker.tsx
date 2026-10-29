@@ -7,9 +7,14 @@ import { PickerMenu, type PickerOption } from "./PickerMenu";
 export function QuotePolicyPicker({
   value,
   onChange,
+  disabled,
+  disabledHint,
 }: {
   value: QuotePolicy;
   onChange: (value: QuotePolicy) => void;
+  /** Mastodon always uses "nobody" for private/direct posts. */
+  disabled?: boolean;
+  disabledHint?: string;
 }): JSX.Element {
   const options: PickerOption<QuotePolicy>[] = [
     {
@@ -38,6 +43,8 @@ export function QuotePolicyPicker({
       value={value}
       options={options}
       onChange={onChange}
+      disabled={disabled}
+      disabledHint={disabledHint}
     />
   );
 }

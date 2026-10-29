@@ -71,6 +71,8 @@ export function planPublish(
   const freeSlots = Math.max(0, limits.maxMedia - draft.media.length);
   // Code only becomes an image without a poll and not editing; respects free slots.
   const blocks = isEdit || poll ? [] : extractCodeBlocks(text).slice(0, freeSlots);
+  const quotePolicy =
+    draft.visibility === "private" || draft.visibility === "direct" ? "nobody" : draft.quotePolicy;
   return {
     mode: intent.mode,
     limits,
@@ -83,7 +85,7 @@ export function planPublish(
     media: draft.media,
     rootReplyToId: draft.replyToId,
     quoteId: draft.quoteId,
-    quotePolicy: draft.quotePolicy,
+    quotePolicy,
     blocks,
     text,
   };

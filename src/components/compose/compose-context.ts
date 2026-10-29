@@ -82,7 +82,15 @@ export function applyComposeContext(
     set.setVisibility(replyVisibility(status.visibility, options.defaultVisibility));
     // Remote accounts only become a mention with the full user@domain;
     // a bare @username would be posted as plain text.
-    set.setText((prev) => prev || `@${status.account.acct} `);
+    set.setText((prev) => {
+      const mention = `@${status.account.acct}`;
+      const typed = prev.trimStart();
+      if (!typed) return `${mention} `;
+      // Keep text typed before the status finished loading, but never lose
+      // the mention of the person being replied to.
+      if (typed.toLowerCase().startsWith(mention.toLowerCase())) return prev;
+      return `${mention} ${prev}`;
+    });
     return;
   }
   if (mode === "quote") {

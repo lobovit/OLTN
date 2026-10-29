@@ -150,6 +150,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const [media, setMedia] = useState<MediaAttachment[]>([]);
   const [poll, setPoll] = useState<PublishPoll | null>(null);
   const [busy, setBusy] = useState(false);
+  const [contextReady, setContextReady] = useState(intent.mode === "new");
   const [charLimit, setCharLimit] = useState(CHAR_LIMIT);
   const [localSupported, setLocalSupported] = useState(() =>
     /pleroma|akkoma/i.test(store.instance?.version ?? ""),
@@ -316,6 +317,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           },
           { defaultVisibility: defaultComposeVisibility(store.me?.source?.privacy) },
         );
+        setContextReady(true);
       } catch {
         toast(t.errorLoad, "error");
       }
@@ -330,6 +332,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   }, []);
 
   const remaining = charLimit - text.length;
+  const quoteRestricted = visibility === "private" || visibility === "direct";
   const canPoll = !media.length && !uploader.uploading;
   const pollReady = !poll || poll.options.every((o) => o.trim());
   const threadParts =
@@ -341,6 +344,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   } = scheduleState(scheduledAt, isEdit, threadParts);
   const canSubmit =
     !busy &&
+    contextReady &&
     !uploader.uploading &&
     (text.trim().length > 0 || media.length > 0) &&
     (isEdit || remaining >= 0) &&
@@ -490,7 +494,13 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           disabledHint={t.editVisibilityLocked}
         />
         {isEdit && <p class="muted compose-edit-hint">{t.editVisibilityLocked}</p>}
-        <QuotePolicyPicker value={quotePolicy} onChange={setQuotePolicy} />
+        <QuotePolicyPicker
+          value={quoteRestricted ? "nobody" : quotePolicy}
+          onChange={setQuotePolicy}
+          disabled={quoteRestricted}
+          disabledHint={t.quotePolicyPrivate}
+        />
+        {quoteRestricted && <p class="muted compose-edit-hint">{t.quotePolicyPrivate}</p>}
       </ComposeDropZone>
     </Sheet>
   );

@@ -81,6 +81,7 @@ export const en = {
   language: "Language",
   reply: "Reply",
   boost: "Boost",
+  boostNotAllowed: "This post can't be boosted.",
   favourite: "Like",
   bookmark: "Bookmark",
   pinPost: "Pin to profile",
@@ -328,6 +329,7 @@ export const en = {
   quotePolicyFollowersHint: "Only your followers can quote this post.",
   quotePolicyNobody: "Nobody",
   quotePolicyNobodyHint: "Only you can quote this post.",
+  quotePolicyPrivate: "Private posts can't be quoted.",
   visDirectHint: "Only the people you mention.",
   editVisibilityLocked:
     "Visibility can't be changed when editing. Delete the post and publish it again to change it.",
