@@ -302,6 +302,7 @@ const pt: Record<TKey, string> = {
   attachAlt: "Descreva a mídia (alt)",
   mentionSuggest: "Sugestões de menção",
   emojiPicker: "Emojis",
+  emojiSuggest: "Sugestões de emoji",
   emojiSearch: "Buscar emoji",
   emojiCustom: "Emojis da instância",
   emojiEmpty: "Nenhum emoji encontrado.",

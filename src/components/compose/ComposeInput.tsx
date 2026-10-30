@@ -1,13 +1,16 @@
 import type { JSX, RefObject } from "preact";
 import { t } from "../../i18n/pt-BR";
+import { EmojiMenu } from "./EmojiMenu";
 import { MentionMenu } from "./MentionMenu";
+import type { EmojiMenuState } from "./useEmojiMenu";
 import type { MentionMenuState } from "./useMentionMenu";
 
-/** Composer textarea with mention autocomplete and upload/submit shortcuts. */
+/** Composer textarea with mention/emoji autocomplete and upload/submit shortcuts. */
 export function ComposeInput({
   text,
   textRef,
   mentions,
+  emojiMenu,
   reply,
   onText,
   onResetTranslation,
@@ -17,6 +20,7 @@ export function ComposeInput({
   text: string;
   textRef: RefObject<HTMLTextAreaElement | null>;
   mentions: MentionMenuState;
+  emojiMenu: EmojiMenuState;
   reply: boolean;
   onText: (value: string) => void;
   onResetTranslation: () => void;
@@ -36,11 +40,18 @@ export function ComposeInput({
           onText(target.value);
           onResetTranslation();
           mentions.sync(target);
+          emojiMenu.sync(target);
         }}
-        onClick={(e) => mentions.sync(e.currentTarget as HTMLTextAreaElement)}
+        onClick={(e) => {
+          const target = e.currentTarget as HTMLTextAreaElement;
+          mentions.sync(target);
+          emojiMenu.sync(target);
+        }}
         onKeyUp={(e) => {
           if (e.key.startsWith("Arrow") || e.key === "Home" || e.key === "End") {
-            mentions.sync(e.currentTarget as HTMLTextAreaElement);
+            const target = e.currentTarget as HTMLTextAreaElement;
+            mentions.sync(target);
+            emojiMenu.sync(target);
           }
         }}
         onPaste={(e) => {
@@ -50,9 +61,13 @@ export function ComposeInput({
             onUpload(files);
           }
         }}
-        onBlur={mentions.clear}
+        onBlur={() => {
+          mentions.clear();
+          emojiMenu.clear();
+        }}
         onKeyDown={(e) => {
           if (mentions.handleKey(e)) return;
+          if (emojiMenu.handleKey(e)) return;
           if ((e.ctrlKey || e.metaKey) && e.key === "Enter") onSubmit();
         }}
       />
@@ -61,6 +76,12 @@ export function ComposeInput({
         index={mentions.index}
         onIndex={mentions.setIndex}
         onPick={mentions.pick}
+      />
+      <EmojiMenu
+        items={emojiMenu.items}
+        index={emojiMenu.index}
+        onIndex={emojiMenu.setIndex}
+        onPick={emojiMenu.pick}
       />
     </>
   );

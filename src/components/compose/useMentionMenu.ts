@@ -7,11 +7,6 @@ import type { Account, AccountMeta } from "../../api/types";
 const MENTION_QUERY_RE = /(^|[\s\u00a0(])@(\w+)$/;
 const MENTION_APPLY_RE = /@(\w*)$/;
 
-function mentionQueryAt(value: string, cursor: number): string | null {
-  const match = MENTION_QUERY_RE.exec(value.slice(0, cursor));
-  return match ? match[2] : null;
-}
-
 function mentionInsertion(
   text: string,
   cursor: number,
@@ -66,6 +61,8 @@ type MentionKey = "next" | "prev" | "pick";
 
 function mentionKeyFor(e: KeyboardEvent, open: boolean): MentionKey | null {
   if (!open) return null;
+  // Shift+Enter/Tab are normal editing keys even with suggestions open.
+  if (e.shiftKey) return null;
   if (e.key === "ArrowDown") return "next";
   if (e.key === "ArrowUp") return "prev";
   if (e.key === "Enter" || e.key === "Tab") return "pick";
@@ -97,6 +94,7 @@ export function useMentionMenu(input: {
   const { instance, account, text, setText, textRef } = input;
   const [query, setQuery] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
+  const [dismissedStart, setDismissedStart] = useState<number | null>(null);
   const items = useMentionSearch(instance, account, query);
 
   useEffect(() => {
@@ -105,7 +103,29 @@ export function useMentionMenu(input: {
 
   const sync = (target: HTMLTextAreaElement): void => {
     const cursor = target.selectionStart ?? target.value.length;
-    setQuery(mentionQueryAt(target.value, cursor));
+    const match = MENTION_QUERY_RE.exec(target.value.slice(0, cursor));
+    if (!match) {
+      setQuery(null);
+      setDismissedStart(null);
+      return;
+    }
+    const start = cursor - match[2].length - 1;
+    // After Escape, keep this same mention dismissed until a new @ is typed.
+    if (dismissedStart === start) {
+      setQuery(null);
+      return;
+    }
+    setDismissedStart(null);
+    setQuery(match[2]);
+  };
+
+  const dismiss = (): void => {
+    const ta = textRef.current;
+    if (!ta) return;
+    const cursor = ta.selectionStart ?? ta.value.length;
+    const match = MENTION_QUERY_RE.exec(ta.value.slice(0, cursor));
+    setDismissedStart(match ? cursor - match[2].length - 1 : null);
+    setQuery(null);
   };
 
   const pick = (picked: Account): void => {
@@ -114,6 +134,7 @@ export function useMentionMenu(input: {
       ? mentionInsertion(text, ta.selectionStart ?? text.length, picked.acct)
       : null;
     setQuery(null);
+    setDismissedStart(null);
     if (!ta || !insertion) return;
     setText(insertion.next);
     requestAnimationFrame(() => {
@@ -122,9 +143,18 @@ export function useMentionMenu(input: {
     });
   };
 
-  const clear = (): void => setQuery(null);
+  const clear = (): void => {
+    setQuery(null);
+    setDismissedStart(null);
+  };
 
   const handleKey = (e: KeyboardEvent): boolean => {
+    if (e.key === "Escape" && query !== null) {
+      e.preventDefault();
+      e.stopPropagation();
+      dismiss();
+      return true;
+    }
     const action = mentionKeyFor(e, items.length > 0);
     if (!action) return false;
     e.preventDefault();

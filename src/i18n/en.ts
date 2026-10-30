@@ -300,6 +300,7 @@ export const en = {
   attachAlt: "Describe the media (alt)",
   mentionSuggest: "Mention suggestions",
   emojiPicker: "Emojis",
+  emojiSuggest: "Emoji suggestions",
   emojiSearch: "Search emoji",
   emojiCustom: "Instance emojis",
   emojiEmpty: "No emoji found.",

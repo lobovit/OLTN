@@ -43,6 +43,7 @@ import { PollEditor } from "./PollEditor";
 import { QuotePolicyPicker } from "./QuotePolicyPicker";
 import { useComposePanels } from "./useComposePanels";
 import { useMediaUpload } from "./useMediaUpload";
+import { useEmojiMenu } from "./useEmojiMenu";
 import { useMentionMenu } from "./useMentionMenu";
 import { usePopoverDismiss } from "./usePopoverDismiss";
 import { VisibilityPicker } from "./VisibilityPicker";
@@ -169,6 +170,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
 
   const panels = useComposePanels();
   const mentions = useMentionMenu({ instance, account, text, setText, textRef });
+  const emojiMenu = useEmojiMenu({ instance, account, text, setText, textRef });
   const uploader = useMediaUpload({ instance, account, media, poll, setMedia });
   usePopoverDismiss([
     {
@@ -442,6 +444,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
           text={text}
           textRef={textRef}
           mentions={mentions}
+          emojiMenu={emojiMenu}
           reply={intent.mode === "reply"}
           onText={setText}
           onResetTranslation={() => setTranslation(null)}
