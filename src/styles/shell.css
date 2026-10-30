@@ -1132,13 +1132,63 @@ textarea.field {
   animation: shimmer 1.4s linear infinite;
 }
 
+/* Loader: hammer and sickle by Delapouite (game-icons.net, CC BY 3.0). */
 .spinner {
+  --loader-mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMDAwIiBkPSJNMjU3LjMxNiAyMS40NEM0MzQuNTg2IDE2MC40MTQgNDM4LjE1IDI2Mi44OSAzODQuNDggMzE1Ljg3bDU1LjY1IDU1LjY0OGM4MS44NDYtMTAwLjU4MiA3NC43MzgtMjc1LjkzMy0xODIuODE0LTM1MC4wOHptLTM3LjkyIDIxLjY2NGMtMTYuNzEzIDQuODQ3LTM0LjY3IDcuMDY2LTUwLjYxIDYuNzVjLTEzLjY4NC0uMjctMjUuNzEtMS40NC0zNC45MzYtNi40MUwyMS4xMyAxNTYuMTYzbDU1LjE1IDU1LjE1NkwyMzEuOTQ2IDU1LjY1NnptLTQxLjI5IDkxLjg1bC00My44NCA0My44NEw0NDIgNDg2LjUyM2MzLjAwNSAzLjAwNyA2LjQzNiAzLjUxNiAxMi41ODIgMS42NDZzMTMuNzItNi43MzUgMTkuOTQzLTEyLjk1N3MxMS4wODctMTMuOCAxMi45NTctMTkuOTQ1YzEuODctNi4xNDYgMS4zNjMtOS41NzctMS42NDItMTIuNTgyTDE3OC4xMDUgMTM0Ljk1M3ptLTguNjY1IDE3OS43MzVsLTQwLjc1IDM3LjEyNGw1MC44MTQgNTAuMzQ2YzU5Ljc0NiA0OS44MDUgMTI2LjI0NSA1My4yMzcgMTgyLjAzMyAyOS4zNmwtNzUuMjczLTc1LjI3NGMtNDMuNzQgMi43MTYtODguNjQ3LTEwLjQ2My0xMTYuODIzLTQxLjU1N3ptLTU4LjkzNiA0NS44NzNjLTUuNTI1IDEuMDY1LTguOTc3IDIuOTU3LTExLjMxNSA1LjI1Yy0xLjk1NyAxLjkyMi0zLjI1IDQuNTU2LTQuMjUgNy41NjRsNTUuMTkgNTIuODQ0YzUuNDY3LTEuMDA3IDkuMjYyLTIuNzk1IDExLjI3OC00LjY4N2MxLjk5Ny0xLjg3MiAzLjA5Ni0zLjg2MyAzLjA5Ni03LjUzbC01NC01My40NHptLTI0LjcyIDMwLjMxNEwzMC4xNiA0NDEuNTYyYy0xNi43MzcgMjcgMTQuNjk0IDYxLjIgNTEuMDk0IDQ0LjY2bDUxLjUzLTUwLjI4bC00Ny00NS4wNjN2LS4wMDN6Ii8+PC9zdmc+")
+    center / contain no-repeat;
+  position: relative;
+  display: inline-block;
+  flex: none;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--border-strong);
-  border-top-color: var(--accent);
-  animation: spin 0.7s linear infinite;
+}
+
+.spinner::before,
+.spinner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  -webkit-mask: var(--loader-mask);
+  mask: var(--loader-mask);
+}
+
+.spinner::before {
+  background: var(--accent);
+  opacity: 0.22;
+}
+
+.spinner::after {
+  background: var(--accent);
+  clip-path: inset(100% 0 0 0);
+  animation: loader-fill 1.5s ease-in-out infinite;
+}
+
+@keyframes loader-fill {
+  0%,
+  5% {
+    clip-path: inset(100% 0 0 0);
+  }
+
+  55%,
+  99% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  100% {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner::after {
+    animation: none;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.center-state .spinner {
+  width: 28px;
+  height: 28px;
 }
 
 .center-state {

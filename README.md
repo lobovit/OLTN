@@ -44,7 +44,8 @@ icon/i18n workflows.
 ## Stack
 
 Preact 11 · Vite 8 · valtio · masto v8 · vanilla CSS · TypeScript strict ·
-MingCute icons via Iconify (CC0).
+MingCute icons via Iconify (CC0). Loader icon: hammer and sickle by Delapouite,
+[game-icons.net](https://game-icons.net) (CC BY 3.0).
 
 ## Support
 
