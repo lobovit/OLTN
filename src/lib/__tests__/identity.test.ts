@@ -135,6 +135,31 @@ describe("resolveAccountHandle", () => {
     expect(calls).toEqual(["newsbot@remote.example"]);
   });
 
+  it("resolves a full handle for an account local to the instance", async () => {
+    const { client } = withSearch([
+      {
+        id: "7",
+        username: "newsbot",
+        acct: "newsbot",
+        url: "https://my.example/@newsbot",
+      },
+    ]);
+    const found = await resolveAccountHandle(client, "@newsbot@my.example");
+    expect(found?.id).toBe("7");
+  });
+
+  it("rejects a local username from a different domain", async () => {
+    const { client } = withSearch([
+      {
+        id: "7",
+        username: "newsbot",
+        acct: "newsbot",
+        url: "https://other.example/@newsbot",
+      },
+    ]);
+    expect(await resolveAccountHandle(client, "@newsbot@my.example")).toBeNull();
+  });
+
   it("rejects fuzzy results that are not the requested handle", async () => {
     const { client } = withSearch([{ id: "1", acct: "other@remote.example" }]);
     expect(await resolveAccountHandle(client, "newsbot@remote.example")).toBeNull();
@@ -177,6 +202,16 @@ describe("searchAccountsByUsername", () => {
     const matches = await searchAccountsByUsername(client, " @newsbot ");
     expect(matches.map((account) => account.id)).toEqual(["7"]);
     expect(calls).toEqual(["newsbot"]);
+  });
+
+  it("matches partial usernames when requested", async () => {
+    const { client } = withSearch([
+      { id: "1", username: "other", acct: "other@remote.example" },
+      { id: "2", username: "perfil", acct: "perfil@remote.example" },
+      { id: "3", username: "perfilnews", acct: "perfilnews@remote.example" },
+    ]);
+    const matches = await searchAccountsByUsername(client, "@perfil", { partial: true });
+    expect(matches.map((account) => account.id)).toEqual(["2", "3"]);
   });
 
   it("does not search full handles (they resolve exactly)", async () => {

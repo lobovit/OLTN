@@ -130,13 +130,16 @@ export async function localAccountId(
 }
 
 /** Resolves a full @user@host handle on the account instance (WebFinger via
-    search). Only exact acct matches are accepted — no fuzzy suggestions. */
+    search). Accepts local accounts, whose acct omits the instance domain. */
 export async function resolveAccountHandle(
   client: RestClient,
   handle: string,
 ): Promise<Account | null> {
   const acct = handle.trim().replace(/^@/, "").toLowerCase();
-  if (!acct.includes("@")) return null;
+  const at = acct.lastIndexOf("@");
+  if (at <= 0 || at === acct.length - 1) return null;
+  const username = acct.slice(0, at);
+  const host = acct.slice(at + 1);
   try {
     const result = await client.v2.search.list({
       q: acct,
@@ -144,30 +147,48 @@ export async function resolveAccountHandle(
       type: "accounts",
       limit: 5,
     });
-    return result.accounts.find((account) => account.acct.toLowerCase() === acct) ?? null;
+    return (
+      result.accounts.find((account) => {
+        if (account.acct?.toLowerCase() === acct) return true;
+        // Mastodon reports local accounts as "user" (no domain); compare the
+        // profile URL host so a full local handle still resolves.
+        if (!account.username || !account.url) return false;
+        if (account.username.toLowerCase() !== username) return false;
+        try {
+          return new URL(account.url).host.toLowerCase() === host;
+        } catch {
+          return false;
+        }
+      }) ?? null
+    );
   } catch (err) {
     console.warn("[oltn] account handle lookup failed", err);
     return null;
   }
 }
 
-/** Known accounts on the instance whose username matches a bare @handle
-    (picks the source when the domain is not typed). */
+/** Known accounts on the instance matching a bare @handle. Exact matches keep
+    the original add-one behavior; partial matches feed live suggestions. */
 export async function searchAccountsByUsername(
   client: RestClient,
   handle: string,
+  options: { partial?: boolean } = {},
 ): Promise<Account[]> {
   const username = handle.trim().replace(/^@/, "").toLowerCase();
   if (!username || username.includes("@")) return [];
   try {
     const result = await client.v2.search.list({
       q: username,
-      resolve: true,
+      resolve: false,
       type: "accounts",
       limit: 10,
     });
     return result.accounts
-      .filter((account) => account.username.toLowerCase() === username)
+      .filter((account) =>
+        options.partial
+          ? account.username.toLowerCase().includes(username)
+          : account.username.toLowerCase() === username,
+      )
       .slice(0, 5);
   } catch (err) {
     console.warn("[oltn] account search failed", err);

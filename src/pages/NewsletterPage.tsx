@@ -121,6 +121,39 @@ export function NewsletterPage(): JSX.Element {
     };
   }, [target, sourceKey]);
 
+  /* Live suggestions: search as the user types. A bare @user only reaches
+     accounts known to the instance; a full handle is resolved remotely. */
+  useEffect(() => {
+    const instance = account?.instance;
+    const raw = handle.trim();
+    const query = raw.replace(/^@/, "");
+    if (!instance || !query) {
+      setSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const client = clientFor(instance).client;
+          const found = query.includes("@")
+            ? await resolveAccountHandle(client, raw).then((result) => (result ? [result] : []))
+            : await searchAccountsByUsername(client, raw, { partial: true });
+          if (cancelled) return;
+          const existing = new Set(sources.map((source) => source.id));
+          setSuggestions(found.filter((candidate) => !existing.has(candidate.id)).slice(0, 5));
+        } catch (err) {
+          console.warn("[oltn] newsletter source search failed", err);
+          if (!cancelled) setSuggestions([]);
+        }
+      })();
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [account?.instance, handle, sourceKey]);
+
   const addAccountSource = (found: Account): void => {
     if (!sources.some((source) => source.id === found.id)) {
       saveNewsletterSources([
@@ -140,12 +173,16 @@ export function NewsletterPage(): JSX.Element {
     setAdding(true);
     try {
       const client = clientFor(account.instance).client;
-      // A bare @user has no domain to resolve: offer the known accounts with
-      // that username (or add it directly when there is a single match).
+      // A bare @user has no domain to resolve: offer the known accounts that
+      // match. Only an exact, single username is added without a click.
       if (bare) {
-        const matches = await searchAccountsByUsername(client, input);
-        if (matches.length === 1) addAccountSource(matches[0]);
-        else if (matches.length > 1) setSuggestions(matches);
+        const query = input.replace(/^@/, "").toLowerCase();
+        const matches = (await searchAccountsByUsername(client, input, { partial: true })).filter(
+          (candidate) => !sources.some((source) => source.id === candidate.id),
+        );
+        const exact = matches.find((candidate) => candidate.username.toLowerCase() === query);
+        if (matches.length === 1 && exact) addAccountSource(exact);
+        else if (matches.length > 0) setSuggestions(matches);
         else toast(t.newsletterSourceNotFound, "error");
         return;
       }
