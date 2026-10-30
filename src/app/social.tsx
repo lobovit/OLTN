@@ -5,6 +5,8 @@ import type { Tag, TrendLink } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { clientFor, hrefFor } from "../lib/identity";
 import { Link, useRouter } from "../lib/router";
+import { HomeGallery } from "../components/feed/HomeGallery";
+import { HomeGalleryToggle } from "../components/feed/HomeGalleryToggle";
 import { Timeline } from "../components/feed/Timeline";
 import { Avatar } from "../components/ui/Avatar";
 import { Icon } from "../components/ui/Icon";
@@ -108,7 +110,8 @@ type HomeTab = "home" | "local" | "federated";
 /** Single center feed with tabs and an inline compose prompt. */
 export function SocialHome(): JSX.Element {
   const account = currentAccount();
-  const stream = useSnapshot(store).stream;
+  const snap = useSnapshot(store);
+  const stream = snap.stream;
   const [tab, setTab] = useState<HomeTab>("home");
   const streamLabel =
     stream === "on"
@@ -132,6 +135,7 @@ export function SocialHome(): JSX.Element {
       title={t.home}
       actions={
         <>
+          {account && <HomeGalleryToggle />}
           <span
             class={`stream-dot ${stream === "on" ? "on" : ""}`}
             aria-hidden="true"
@@ -141,32 +145,38 @@ export function SocialHome(): JSX.Element {
         </>
       }
     >
-      <div class="subtabs social-tabs">
-        {tabs.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            class={`subtab ${tab === key ? "active" : ""}`}
-            onClick={() => setTab(key)}
-          >
-            {label}
+      {snap.ui.homeGallery ? (
+        <HomeGallery instance={account?.instance} />
+      ) : (
+        <>
+          <div class="subtabs social-tabs">
+            {tabs.map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                class={`subtab ${tab === key ? "active" : ""}`}
+                onClick={() => setTab(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button type="button" class="social-composer" onClick={() => setCompose({ mode: "new" })}>
+            {account && (
+              <Avatar src={account.avatar} name={account.displayName || account.handle} size={40} />
+            )}
+            <span>{t.socialComposePrompt}</span>
           </button>
-        ))}
-      </div>
-      <button type="button" class="social-composer" onClick={() => setCompose({ mode: "new" })}>
-        {account && (
-          <Avatar src={account.avatar} name={account.displayName || account.handle} size={40} />
-        )}
-        <span>{t.socialComposePrompt}</span>
-      </button>
-      <Timeline
-        key={tab}
-        kind={kind}
-        instance={account?.instance}
-        listenQueue={tab === "home"}
-        emptyTitle={tab === "home" ? t.emptyHome : t.empty}
-        emptyHint={tab === "home" ? t.emptyHomeHint : undefined}
-      />
+          <Timeline
+            key={tab}
+            kind={kind}
+            instance={account?.instance}
+            listenQueue={tab === "home"}
+            emptyTitle={tab === "home" ? t.emptyHome : t.empty}
+            emptyHint={tab === "home" ? t.emptyHomeHint : undefined}
+          />
+        </>
+      )}
     </PageShell>
   );
 }

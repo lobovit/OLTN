@@ -2,6 +2,8 @@ import type { JSX } from "preact";
 import { useSnapshot } from "valtio";
 import { t } from "../i18n/pt-BR";
 import { navigate } from "../lib/router";
+import { HomeGallery } from "../components/feed/HomeGallery";
+import { HomeGalleryToggle } from "../components/feed/HomeGalleryToggle";
 import { Timeline } from "../components/feed/Timeline";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
@@ -15,7 +17,8 @@ function streamLabel(stream: StreamState): string {
 
 export function HomePage(): JSX.Element {
   const account = currentAccount();
-  const stream = useSnapshot(store).stream;
+  const snap = useSnapshot(store);
+  const stream = snap.stream;
   const label = streamLabel(stream);
 
   return (
@@ -23,6 +26,7 @@ export function HomePage(): JSX.Element {
       title={t.home}
       actions={
         <>
+          {account && <HomeGalleryToggle />}
           <span
             class={`stream-dot ${stream === "on" ? "on" : ""}`}
             aria-hidden="true"
@@ -41,13 +45,17 @@ export function HomePage(): JSX.Element {
       }
     >
       {account ? (
-        <Timeline
-          kind={{ type: "home" }}
-          instance={account.instance}
-          listenQueue
-          emptyTitle={t.emptyHome}
-          emptyHint={t.emptyHomeHint}
-        />
+        snap.ui.homeGallery ? (
+          <HomeGallery instance={account.instance} />
+        ) : (
+          <Timeline
+            kind={{ type: "home" }}
+            instance={account.instance}
+            listenQueue
+            emptyTitle={t.emptyHome}
+            emptyHint={t.emptyHomeHint}
+          />
+        )
       ) : (
         <div class="center-state">
           <Icon name="home-3-line" size={28} />

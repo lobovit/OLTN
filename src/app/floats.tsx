@@ -2,6 +2,7 @@ import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import type { FloatRect } from "../api/types";
+import { HomeGalleryToggle } from "../components/feed/HomeGalleryToggle";
 import { Icon } from "../components/ui/Icon";
 import { t } from "../i18n/pt-BR";
 import {
@@ -197,6 +198,7 @@ export function FloatCanvas(): JSX.Element {
               <Icon name={iconForShortcut(shortcut)} size={18} />
               <h1>{label}</h1>
               <div class="spacer" />
+              {shortcut.type === "home" && <HomeGalleryToggle />}
               <button
                 type="button"
                 class="icon-btn col-refresh"

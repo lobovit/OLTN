@@ -83,6 +83,8 @@ export interface AppState {
     helpOpen: boolean;
     /** Key of the last published/edited status (to insert into the open thread). */
     lastPostedKey: string | null;
+    /** Home columns show the image gallery instead of the timeline. */
+    homeGallery: boolean;
     /** Bumped on every successful boost toggle; refreshes mounted boosts feeds. */
     boostsRevision: number;
     /** Bumped by the column refresh button; reloads every mounted feed. */
@@ -144,6 +146,7 @@ export const store = proxy<AppState>({
     timerOpen: false,
     helpOpen: false,
     lastPostedKey: null,
+    homeGallery: false,
     boostsRevision: 0,
     feedsRevision: 0,
     pinsRevision: 0,

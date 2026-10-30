@@ -2,6 +2,7 @@ import type { ComponentChildren, JSX } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import type { ShortcutType } from "../api/types";
+import { HomeGalleryToggle } from "../components/feed/HomeGalleryToggle";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
 import { Sheet } from "../components/ui/Sheet";
@@ -754,6 +755,7 @@ export function MultiColumns(): JSX.Element {
               <Icon name={iconForShortcut(shortcut)} size={18} />
               <h1>{shortcutLabel(shortcut)}</h1>
               <div class="spacer" />
+              {shortcut.type === "home" && <HomeGalleryToggle />}
               <button
                 type="button"
                 class="icon-btn col-refresh"

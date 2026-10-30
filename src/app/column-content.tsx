@@ -1,10 +1,13 @@
 import type { JSX } from "preact";
+import { useSnapshot } from "valtio";
 import type { Shortcut } from "../api/types";
 import { ConversationsFeed } from "../components/feed/ConversationsFeed";
+import { HomeGallery } from "../components/feed/HomeGallery";
 import { NotificationsFeed } from "../components/feed/NotificationsFeed";
 import { Timeline } from "../components/feed/Timeline";
 import { TrendingFeed } from "../components/feed/TrendingFeed";
 import { t } from "../i18n/pt-BR";
+import { store } from "../state/store";
 
 export function iconForShortcut(shortcut: Shortcut): string {
   switch (shortcut.type) {
@@ -44,9 +47,14 @@ export function ColumnContent({
   shortcut: Shortcut;
   instance?: string;
 }): JSX.Element {
+  const homeGallery = useSnapshot(store).ui.homeGallery;
   switch (shortcut.type) {
     case "home":
-      return <Timeline kind={{ type: "home" }} instance={instance} listenQueue />;
+      return homeGallery ? (
+        <HomeGallery instance={instance} />
+      ) : (
+        <Timeline kind={{ type: "home" }} instance={instance} listenQueue />
+      );
     case "local":
       return <Timeline kind={{ type: "public", local: true }} instance={instance} />;
     case "federated":

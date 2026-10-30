@@ -2,7 +2,7 @@ import type { RestClient, Status } from "../../api/types";
 import type { FeedPage } from "../../lib/paged-feed";
 
 export type TimelineKind =
-  | { type: "home" }
+  | { type: "home"; onlyMedia?: boolean }
   | { type: "public"; local?: boolean }
   | { type: "tag"; tag: string }
   | { type: "list"; listId: string }
@@ -77,7 +77,10 @@ export async function fetchStatusPage(
 
   switch (kind.type) {
     case "home":
-      return paged(await client.v1.timelines.home.list(params), limit);
+      return paged(
+        await client.v1.timelines.home.list({ ...params, onlyMedia: !!kind.onlyMedia }),
+        limit,
+      );
     case "public":
       return paged(
         await client.v1.timelines.public.list({ ...params, local: kind.local ?? false }),
