@@ -505,6 +505,14 @@
   background: var(--accent);
 }
 
+/* Desktop columns: reserve the right edge for the resize handle so it does
+   not sit on top of the column's vertical scrollbar. */
+@media (min-width: 64em) {
+  .column .deck-body {
+    margin-inline-end: 10px;
+  }
+}
+
 @media (max-width: 63.99em) {
   .col-grip,
   .col-resize {
