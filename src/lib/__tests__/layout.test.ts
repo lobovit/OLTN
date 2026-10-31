@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Shortcut } from "../../api/types";
 import {
-  buildLayoutShortcuts,
   clampWidth,
   ensureColumnVisible,
-  LAYOUT_PRESETS,
   layoutFromSettings,
   moveInOrder,
   orderColumns,
@@ -100,51 +98,6 @@ describe("ensureColumnVisible", () => {
   it("changes nothing when the column is already visible", () => {
     const base = ["a", "b"].map(shortcut);
     expect(ensureColumnVisible(base, shortcut("a")).map((s) => s.id)).toEqual(["a", "b"]);
-  });
-});
-
-describe("LAYOUT_PRESETS", () => {
-  it("tem 6 layouts combinando 2 a 4 colunas", () => {
-    expect(LAYOUT_PRESETS).toHaveLength(6);
-    expect(LAYOUT_PRESETS.map((p) => p.columns.length)).toEqual([2, 2, 3, 3, 4, 4]);
-  });
-
-  it("covers notifications first and likes in the second column", () => {
-    expect(LAYOUT_PRESETS.find((p) => p.id === "foco")?.columns[0].type).toBe("notifications");
-    expect(LAYOUT_PRESETS.find((p) => p.id === "curadoria")?.columns[1].type).toBe("favourites");
-  });
-});
-
-describe("buildLayoutShortcuts", () => {
-  const dupla = LAYOUT_PRESETS.find((p) => p.id === "dupla")!;
-
-  it("uses the preset columns in order", () => {
-    expect(buildLayoutShortcuts(dupla, []).map((s) => s.id)).toEqual(["home", "notifications"]);
-  });
-
-  it("keeps pinned lists and hashtags at the end", () => {
-    const existing: Shortcut[] = [
-      { id: "list:1", type: "list", label: "Tech", value: "1" },
-      { id: "home", type: "home", label: "Início" },
-      { id: "hashtag:arte", type: "hashtag", label: "arte", value: "arte" },
-    ];
-    expect(buildLayoutShortcuts(dupla, existing).map((s) => s.id)).toEqual([
-      "home",
-      "notifications",
-      "list:1",
-      "hashtag:arte",
-    ]);
-  });
-
-  it("replaces default columns outside the layout", () => {
-    const existing: Shortcut[] = [
-      { id: "home", type: "home", label: "Início" },
-      { id: "trending", type: "trending", label: "Em alta" },
-    ];
-    expect(buildLayoutShortcuts(dupla, existing).map((s) => s.id)).toEqual([
-      "home",
-      "notifications",
-    ]);
   });
 });
 

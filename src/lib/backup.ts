@@ -5,7 +5,6 @@ import type {
   FloatRect,
   NewsletterSource,
   RestClient,
-  SavedLayout,
   Settings,
   Shortcut,
   ShortcutType,
@@ -155,8 +154,7 @@ function domainList(value: unknown): string[] {
 /** Keeps only known setting fields with safe values. */
 export function sanitizeSettings(value: unknown): Settings {
   const base = DEFAULT_SETTINGS;
-  if (!isRecord(value)) return { ...base, pomodoro: { ...base.pomodoro } };
-  const pomodoro = isRecord(value.pomodoro) ? value.pomodoro : {};
+  if (!isRecord(value)) return { ...base };
   const navOrder = Array.isArray(value.navOrder)
     ? value.navOrder.filter((entry): entry is string => typeof entry === "string").slice(0, 50)
     : base.navOrder;
@@ -173,21 +171,6 @@ export function sanitizeSettings(value: unknown): Settings {
     autoStream: typeof value.autoStream === "boolean" ? value.autoStream : base.autoStream,
     autoplayGifs: typeof value.autoplayGifs === "boolean" ? value.autoplayGifs : base.autoplayGifs,
     navOrder,
-    pomodoro: {
-      focusMinutes: clampInt(pomodoro.focusMinutes, 1, 180, base.pomodoro.focusMinutes),
-      shortBreakMinutes: clampInt(
-        pomodoro.shortBreakMinutes,
-        1,
-        180,
-        base.pomodoro.shortBreakMinutes,
-      ),
-      longBreakMinutes: clampInt(pomodoro.longBreakMinutes, 1, 180, base.pomodoro.longBreakMinutes),
-      cycles: clampInt(pomodoro.cycles, 1, 12, base.pomodoro.cycles),
-      autoContinue:
-        typeof pomodoro.autoContinue === "boolean"
-          ? pomodoro.autoContinue
-          : base.pomodoro.autoContinue,
-    },
   };
 }
 
@@ -251,23 +234,7 @@ function newsletterSourcesOf(value: unknown): NewsletterSource[] | undefined {
   return sources;
 }
 
-function savedLayoutsOf(value: unknown): SavedLayout[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  const layouts: SavedLayout[] = [];
-  for (const entry of value.slice(0, 50)) {
-    if (!isRecord(entry)) continue;
-    const id = textOf(entry.id)?.trim();
-    const name = textOf(entry.name)?.trim();
-    if (!id || !name || !Array.isArray(entry.columns)) continue;
-    const columns = entry.columns
-      .map(sanitizeShortcut)
-      .filter((column): column is Shortcut => column !== null);
-    layouts.push({ id, name, columns, widths: numberMap(entry.widths) });
-  }
-  return layouts;
-}
-
-/** Keeps only known preference fields and valid shortcut/layout shapes. */
+/** Keeps only known preference fields and valid shortcut shapes. */
 export function sanitizePrefs(value: unknown): AccountPrefs {
   const prefs: AccountPrefs = { shortcuts: [] };
   if (!isRecord(value)) return prefs;
@@ -284,8 +251,6 @@ export function sanitizePrefs(value: unknown): AccountPrefs {
   }
   const widths = numberMap(value.columnWidths);
   if (Object.keys(widths).length) prefs.columnWidths = widths;
-  const savedLayouts = savedLayoutsOf(value.savedLayouts);
-  if (savedLayouts) prefs.savedLayouts = savedLayouts;
   const floats = rectMap(value.floats);
   if (Object.keys(floats).length) prefs.floats = floats;
   if (Array.isArray(value.floatOrder)) {

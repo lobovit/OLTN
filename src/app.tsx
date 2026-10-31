@@ -7,8 +7,6 @@ import { MediaViewer } from "./components/media/MediaViewer";
 import { SearchSheet } from "./components/search/SearchSheet";
 import { ShortcutsHelp } from "./components/help/ShortcutsHelp";
 import { HelpSheet } from "./components/help/HelpSheet";
-import { PomodoroSheet } from "./components/timer/PomodoroSheet";
-import { TimerWatcher } from "./components/timer/TimerWatcher";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { Toasts } from "./components/ui/Toasts";
 import { t } from "./i18n/pt-BR";
@@ -43,8 +41,6 @@ export function App(): JSX.Element {
         <ShortcutsHelp />
         <HelpSheet />
         <SearchSheet />
-        <TimerWatcher />
-        <PomodoroSheet />
       </RouterProvider>
     </ErrorBoundary>
   );

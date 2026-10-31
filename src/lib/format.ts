@@ -78,16 +78,6 @@ export function toLocalInputValue(date: Date): string {
   )}:${pad(date.getMinutes())}`;
 }
 
-/** Duration as mm:ss (or h:mm:ss), for timers. */
-export function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.round(ms / 1000));
-  const seconds = total % 60;
-  const minutes = Math.floor(total / 60) % 60;
-  const hours = Math.floor(total / 3600);
-  const pad = (n: number): string => String(n).padStart(2, "0");
-  return hours ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
-}
-
 /** Language name in the current UI language (e.g. "Portuguese (Brazil)"). */
 export function languageName(code: string): string {
   try {

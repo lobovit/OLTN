@@ -1,7 +1,6 @@
 /* Pure column layout and positioning helpers. */
 
-import type { LayoutMode, Shortcut, ShortcutType } from "../api/types";
-import type { TKey } from "../i18n/pt-BR";
+import type { LayoutMode, Shortcut } from "../api/types";
 
 export const COLUMN_MIN = 240;
 export const COLUMN_MAX = 720;
@@ -90,88 +89,4 @@ export function ensureColumnVisible(
     next.splice(limit - 1, 0, shortcut);
   }
   return next;
-}
-
-/* ---------------- preset layouts ---------------- */
-
-export interface PresetColumn {
-  id: string;
-  type: ShortcutType;
-  labelKey: TKey;
-}
-
-export interface LayoutPreset {
-  id: string;
-  labelKey: TKey;
-  descKey: TKey;
-  icon: string;
-  columns: readonly PresetColumn[];
-}
-
-const STANDARD = {
-  home: { id: "home", type: "home", labelKey: "home" },
-  notifications: { id: "notifications", type: "notifications", labelKey: "notifications" },
-  mentions: { id: "mentions", type: "mentions", labelKey: "mentions" },
-  local: { id: "local", type: "local", labelKey: "local" },
-  federated: { id: "federated", type: "federated", labelKey: "federated" },
-  trending: { id: "trending", type: "trending", labelKey: "trending" },
-  bookmarks: { id: "bookmarks", type: "bookmarks", labelKey: "bookmarks" },
-  favourites: { id: "favourites", type: "favourites", labelKey: "favourites" },
-} satisfies Record<string, PresetColumn>;
-
-export const LAYOUT_PRESETS: readonly LayoutPreset[] = [
-  {
-    id: "dupla",
-    labelKey: "presetDupla",
-    descKey: "presetDuplaDesc",
-    icon: "home-3-line",
-    columns: [STANDARD.home, STANDARD.notifications],
-  },
-  {
-    id: "foco",
-    labelKey: "presetFoco",
-    descKey: "presetFocoDesc",
-    icon: "notification-line",
-    columns: [STANDARD.notifications, STANDARD.home],
-  },
-  {
-    id: "curadoria",
-    labelKey: "presetCuradoria",
-    descKey: "presetCuradoriaDesc",
-    icon: "heart-line",
-    columns: [STANDARD.home, STANDARD.favourites, STANDARD.bookmarks],
-  },
-  {
-    id: "trio",
-    labelKey: "presetTrio",
-    descKey: "presetTrioDesc",
-    icon: "layout-grid-line",
-    columns: [STANDARD.home, STANDARD.notifications, STANDARD.local],
-  },
-  {
-    id: "quadra",
-    labelKey: "presetQuadra",
-    descKey: "presetQuadraDesc",
-    icon: "globe-line",
-    columns: [STANDARD.home, STANDARD.notifications, STANDARD.local, STANDARD.federated],
-  },
-  {
-    id: "radar",
-    labelKey: "presetRadar",
-    descKey: "presetRadarDesc",
-    icon: "trending-up-line",
-    columns: [STANDARD.trending, STANDARD.local, STANDARD.federated, STANDARD.notifications],
-  },
-];
-
-/** Builds a layout's columns: preset ones in order, pinned lists/hashtags at the end. */
-export function buildLayoutShortcuts(
-  preset: LayoutPreset,
-  existing: readonly Shortcut[],
-): Shortcut[] {
-  const customs = existing.filter((s) => s.type === "list" || s.type === "hashtag");
-  return [
-    ...preset.columns.map((c) => ({ id: c.id, type: c.type, label: c.labelKey })),
-    ...customs,
-  ];
 }

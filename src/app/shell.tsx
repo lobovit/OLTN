@@ -9,7 +9,6 @@ import { Sheet } from "../components/ui/Sheet";
 import { t, type TKey } from "../i18n/pt-BR";
 import { focusableCards, nextFocusIndex } from "../lib/deck-focus";
 import { bringToFront, stackOrder } from "../lib/floats";
-import { formatDuration } from "../lib/format";
 import { useHotkeys } from "../lib/hotkeys";
 import { beginPointerDrag, dropTarget, type DropTarget } from "../lib/pointer-drag";
 import {
@@ -76,7 +75,7 @@ const NAV_ITEMS: {
   badge?: boolean;
   column?: ShortcutType;
   popup?: "search";
-  action?: "timer" | "help";
+  action?: "help";
 }[] = [
   {
     id: "/",
@@ -85,6 +84,13 @@ const NAV_ITEMS: {
     iconActive: "home-3-fill",
     labelKey: "home",
     column: "home",
+  },
+  {
+    id: "/timeseries",
+    href: "/timeseries",
+    icon: "history-line",
+    iconActive: "history-line",
+    labelKey: "timeseries",
   },
   {
     id: "/p/l",
@@ -180,26 +186,11 @@ const NAV_ITEMS: {
     labelKey: "scheduledPosts",
   },
   {
-    id: "/layouts",
-    href: "/layouts",
-    icon: "layout-grid-line",
-    iconActive: "layout-grid-line",
-    labelKey: "layouts",
-  },
-  {
     id: "/settings",
     href: "/settings",
     icon: "settings-3-line",
     iconActive: "settings-3-fill",
     labelKey: "settingsShort",
-  },
-  {
-    id: "/pomodoro",
-    href: "/pomodoro",
-    icon: "time-line",
-    iconActive: "time-line",
-    labelKey: "pomodoro",
-    action: "timer",
   },
   {
     id: "/help",
@@ -363,29 +354,22 @@ function Rail(): JSX.Element | null {
       <div class="rail-main">
         {orderedNav.map((item) => {
           if (item.action) {
-            const running = item.action === "timer" && state.timer.remainingMs > 0;
             return (
               <button
                 key={item.id}
                 type="button"
-                class={`rail-item ${item.action === "timer" ? "timer-item" : "help-item"} ${
-                  running ? "active" : ""
-                }`}
+                class="rail-item help-item"
                 title={t[item.labelKey]}
                 aria-label={t[item.labelKey]}
                 data-nav-id={item.id}
                 onPointerDown={(e) => startNavDrag(e, item.id)}
                 onClick={() => {
                   if (navDragSuppress) return;
-                  if (item.action === "timer") {
-                    store.ui.timerOpen = true;
-                  } else {
-                    store.ui.helpOpen = true;
-                  }
+                  store.ui.helpOpen = true;
                 }}
               >
-                <Icon name={item.action === "timer" ? "time-line" : "question-line"} size={22} />
-                <span>{running ? formatDuration(state.timer.remainingMs) : t[item.labelKey]}</span>
+                <Icon name={item.icon} size={22} />
+                <span>{t[item.labelKey]}</span>
               </button>
             );
           }
@@ -599,8 +583,7 @@ function MoreMenu({ onClose }: { onClose: () => void }): JSX.Element {
               type="button"
               class="menu-row"
               onClick={() => {
-                if (item.action === "timer") store.ui.timerOpen = true;
-                else store.ui.helpOpen = true;
+                store.ui.helpOpen = true;
                 onClose();
               }}
             >

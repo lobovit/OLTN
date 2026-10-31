@@ -396,16 +396,6 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
-  "clock-line": {
-    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8.36 11.167l2.475 2.474l4.951-4.951M20 11c0 5.396-5.896 9.108-7.565 10.05a.87.87 0 0 1-.87 0C9.895 20.108 4 16.396 4 11a8 8 0 1 1 16 0"/>',
-    width: 24,
-    height: 24,
-  },
-  "time-line": {
-    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3m6-3a9 9 0 1 1-18 0a9 9 0 0 1 18 0"/>',
-    width: 24,
-    height: 24,
-  },
   "code-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.216 4.106L9.784 19.894M6.5 7.757L2.257 12L6.5 16.243m11-8.486L21.743 12L17.5 16.243"/>',
     width: 24,
@@ -478,11 +468,6 @@ export const ICONS: Record<string, IconDef> = {
   },
   "pin-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M9.879 14.122c2.508 2.509 4.275 3.781 5.3 4.402c.534.324 1.145-.02 1.233-.638l.175-1.227a10 10 0 0 1 1.9-4.586l2.185-2.914a1 1 0 0 0-.093-1.307l-4.43-4.43a1 1 0 0 0-1.307-.093l-2.914 2.185a10 10 0 0 1-4.586 1.9l-1.227.175c-.618.088-.962.7-.639 1.233c.622 1.025 1.894 2.792 4.403 5.3Zm0 0l-4.95 4.95"/>',
-    width: 24,
-    height: 24,
-  },
-  "layout-grid-line": {
-    body: '<path fill="none" stroke="currentColor" stroke-width="2" d="M4 12h16m-8-8v16m-7 0h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1Z"/>',
     width: 24,
     height: 24,
   },

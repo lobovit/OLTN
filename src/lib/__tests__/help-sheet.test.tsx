@@ -23,6 +23,7 @@ describe("HelpSheet", () => {
     expect(host.querySelectorAll(".help-sheet section").length).toBe(10);
     expect(host.textContent).toContain("Timelines");
     expect(host.textContent).toContain("Newsletter");
+    expect(host.textContent).toContain("Timeseries");
     expect(host.querySelector(".help-code")?.textContent).toContain("```python");
   });
 });

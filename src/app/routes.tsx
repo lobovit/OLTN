@@ -1,6 +1,7 @@
 import type { ComponentType } from "preact";
 import { LoginPage } from "../pages/LoginPage";
 import { HomePage } from "../pages/HomePage";
+import { TimeseriesPage } from "../pages/TimeseriesPage";
 import { NotificationsPage } from "../pages/NotificationsPage";
 import { StatusPage } from "../pages/StatusPage";
 import { AccountPage } from "../pages/AccountPage";
@@ -14,7 +15,6 @@ import { ScheduledPage } from "../pages/ScheduledPage";
 import { TrendingPage } from "../pages/TrendingPage";
 import { NewsletterPage } from "../pages/NewsletterPage";
 import { SettingsPage } from "../pages/SettingsPage";
-import { LayoutsPage } from "../pages/LayoutsPage";
 import { MessagesPage } from "../pages/MessagesPage";
 import { AccountsPage } from "../pages/AccountsPage";
 
@@ -32,6 +32,7 @@ export interface AppRoute {
 export const routes: AppRoute[] = [
   { pattern: "/login", page: LoginPage },
   { pattern: "/", page: HomePage, auth: true },
+  { pattern: "/timeseries", page: TimeseriesPage, auth: true, wide: true },
   { pattern: "/notifications", page: NotificationsPage, auth: true },
   { pattern: "/mentions", page: MentionsRoute, auth: true },
   { pattern: "/messages", page: MessagesPage, auth: true },
@@ -46,7 +47,6 @@ export const routes: AppRoute[] = [
   { pattern: "/trending", page: TrendingPage },
   { pattern: "/newsletter", page: NewsletterPage, wide: true },
   { pattern: "/settings", page: SettingsPage, auth: true },
-  { pattern: "/layouts", page: LayoutsPage, auth: true },
   { pattern: "/accounts", page: AccountsPage },
   { pattern: "/search", page: SearchPage },
   { pattern: "/:instance?/s/:id", page: StatusPage, centered: true },

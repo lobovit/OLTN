@@ -289,10 +289,6 @@ export function SettingsPage(): JSX.Element {
           <p class="muted">{t.layoutModeHint}</p>
           {settings.layout !== "social" && <p class="muted">{t.layoutHint}</p>}
           <div class="btn-row">
-            <button type="button" class="btn" onClick={() => navigate("/layouts")}>
-              <Icon name="layout-grid-line" size={16} />
-              {t.layouts}
-            </button>
             <button type="button" class="btn ghost" onClick={resetLayout}>
               <Icon name="refresh-2-line" size={16} />
               {t.resetLayout}

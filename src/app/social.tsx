@@ -26,6 +26,7 @@ export function SocialNav(): JSX.Element {
     href === "/" ? route.path === "/" : route.path === href || route.path.startsWith(`${href}/`);
   const links: { href: string; icon: string; label: string; badge?: number; search?: boolean }[] = [
     { href: "/", icon: "home-3-line", label: t.home },
+    { href: "/timeseries", icon: "history-line", label: t.timeseries },
     { href: "/search", icon: "search-2-line", label: t.search, search: true },
     {
       href: "/notifications",

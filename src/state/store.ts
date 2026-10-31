@@ -8,7 +8,6 @@ import type {
   MediaViewerIntent,
   NewsletterSource,
   Notification,
-  SavedLayout,
   Settings,
   Shortcut,
   Status,
@@ -18,29 +17,10 @@ import type {
 export type AuthState = "loading" | "anonymous" | "authenticated";
 export type StreamState = "off" | "connecting" | "on";
 
-export type TimerPhase = "focus" | "shortBreak" | "longBreak";
-
-export interface TimerState {
-  running: boolean;
-  /** Epoch ms when it ends (while `running`). */
-  endsAt: number | null;
-  /** Remaining milliseconds (updated by the watcher). */
-  remainingMs: number;
-  /** Total duration of the current phase (for the progress bar). */
-  totalMs: number;
-  /** Current cycle phase. */
-  phase: TimerPhase;
-  /** Focus rounds completed in the session (defines when the long break comes). */
-  completedFocus: number;
-  /** Optional reminder (e.g. "drink water"). */
-  label: string;
-}
-
 export interface AccountPrefs {
   shortcuts: Shortcut[];
   columnOrder?: string[];
   columnWidths?: Record<string, number>;
-  savedLayouts?: SavedLayout[];
   /** Floating panel rects by shortcut id (deck mode off). */
   floats?: Record<string, FloatRect>;
   /** Floating panel stacking order, back to front. */
@@ -49,6 +29,8 @@ export interface AccountPrefs {
   colors?: Record<string, string>;
   /** News profiles aggregated by the Newsletter page. */
   newsletterSources?: NewsletterSource[];
+  /** End of the last Timeseries review (Unix ms). */
+  timeseriesLastAt?: number;
 }
 
 export interface AppState {
@@ -70,15 +52,12 @@ export interface AppState {
   statusSources: Record<string, string>;
   /** Accts blocked in this session (hides posts immediately). */
   blockedAccounts: string[];
-  /** Pomodoro/reminder (runs outside the sheet). */
-  timer: TimerState;
   ui: {
     compose: ComposeIntent | null;
     mediaViewer: MediaViewerIntent | null;
     toasts: ToastItem[];
     shortcutsHelp: boolean;
     searchOpen: boolean;
-    timerOpen: boolean;
     /** Platform intro popup. */
     helpOpen: boolean;
     /** Key of the last published/edited status (to insert into the open thread). */
@@ -102,13 +81,6 @@ export const DEFAULT_SETTINGS: Settings = {
   layout: "columns",
   autoStream: true,
   autoplayGifs: true,
-  pomodoro: {
-    focusMinutes: 25,
-    shortBreakMinutes: 5,
-    longBreakMinutes: 15,
-    cycles: 4,
-    autoContinue: true,
-  },
 };
 
 export const store = proxy<AppState>({
@@ -128,22 +100,12 @@ export const store = proxy<AppState>({
   statuses: {},
   statusSources: {},
   blockedAccounts: [],
-  timer: {
-    running: false,
-    endsAt: null,
-    remainingMs: 0,
-    totalMs: 0,
-    phase: "focus",
-    completedFocus: 0,
-    label: "",
-  },
   ui: {
     compose: null,
     mediaViewer: null,
     toasts: [],
     shortcutsHelp: false,
     searchOpen: false,
-    timerOpen: false,
     helpOpen: false,
     lastPostedKey: null,
     homeGallery: false,
@@ -220,98 +182,6 @@ export function setCompose(intent: ComposeIntent | null): void {
 
 export function setMediaViewer(intent: MediaViewerIntent | null): void {
   store.ui.mediaViewer = intent;
-}
-
-/* ---------- pomodoro / reminder ---------- */
-
-function pomodoroMinutes(phase: TimerPhase): number {
-  const cfg = store.settings.pomodoro;
-  let minutes: number;
-  if (phase === "focus") {
-    minutes = cfg.focusMinutes;
-  } else if (phase === "shortBreak") {
-    minutes = cfg.shortBreakMinutes;
-  } else {
-    minutes = cfg.longBreakMinutes;
-  }
-  return Math.max(1, Math.round(minutes));
-}
-
-/** Next cycle phase: focus → short break (long every N rounds) → focus. */
-export function nextTimerPhase(phase: TimerPhase, completedFocus: number): TimerPhase {
-  if (phase !== "focus") return "focus";
-  const cycles = Math.max(1, Math.round(store.settings.pomodoro.cycles));
-  return completedFocus > 0 && completedFocus % cycles === 0 ? "longBreak" : "shortBreak";
-}
-
-function setTimerPhase(
-  phase: TimerPhase,
-  running: boolean,
-  completedFocus: number,
-  label: string,
-): void {
-  const totalMs = pomodoroMinutes(phase) * 60_000;
-  store.timer = {
-    running,
-    endsAt: running ? Date.now() + totalMs : null,
-    remainingMs: totalMs,
-    totalMs,
-    phase,
-    completedFocus,
-    label,
-  };
-}
-
-/** Starts a fresh cycle, on focus. */
-export function startPomodoro(label: string): void {
-  setTimerPhase("focus", true, 0, label.trim());
-}
-
-/** Ends the current phase (timer end or "skip") and prepares the next. */
-export function completeTimerPhase(): void {
-  const timer = store.timer;
-  if (!timer.running && timer.remainingMs <= 0) return;
-  const completedFocus = timer.phase === "focus" ? timer.completedFocus + 1 : timer.completedFocus;
-  const next = nextTimerPhase(timer.phase, completedFocus);
-  setTimerPhase(next, store.settings.pomodoro.autoContinue, completedFocus, timer.label);
-}
-
-/** Skips the current phase without stopping the cycle. */
-export function skipTimerPhase(): void {
-  const timer = store.timer;
-  if (!timer.running && timer.remainingMs <= 0) return;
-  const completedFocus = timer.phase === "focus" ? timer.completedFocus + 1 : timer.completedFocus;
-  const next = nextTimerPhase(timer.phase, completedFocus);
-  setTimerPhase(next, timer.running, completedFocus, timer.label);
-}
-
-export function pauseTimer(): void {
-  const timer = store.timer;
-  if (!timer.running || !timer.endsAt) return;
-  store.timer = {
-    ...timer,
-    running: false,
-    endsAt: null,
-    remainingMs: Math.max(0, timer.endsAt - Date.now()),
-  };
-}
-
-export function resumeTimer(): void {
-  const timer = store.timer;
-  if (timer.running || timer.remainingMs <= 0) return;
-  store.timer = { ...timer, running: true, endsAt: Date.now() + timer.remainingMs };
-}
-
-export function stopTimer(): void {
-  store.timer = {
-    running: false,
-    endsAt: null,
-    remainingMs: 0,
-    totalMs: 0,
-    phase: "focus",
-    completedFocus: 0,
-    label: "",
-  };
 }
 
 export function currentAccount(): AccountMeta | null {

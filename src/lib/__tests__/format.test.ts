@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   extractMention,
-  formatDuration,
   htmlToPlainText,
   normalizeInstance,
   plainTextToHtml,
@@ -44,15 +43,6 @@ describe("timeAgo", () => {
 describe("toLocalInputValue", () => {
   it("formats for datetime-local with leading zero", () => {
     expect(toLocalInputValue(new Date(2026, 0, 5, 9, 7))).toBe("2026-01-05T09:07");
-  });
-});
-
-describe("formatDuration", () => {
-  it("formata mm:ss e h:mm:ss", () => {
-    expect(formatDuration(25 * 60_000)).toBe("25:00");
-    expect(formatDuration(65_000)).toBe("01:05");
-    expect(formatDuration(3_600_000 + 61_000)).toBe("1:01:01");
-    expect(formatDuration(-1000)).toBe("00:00");
   });
 });
 

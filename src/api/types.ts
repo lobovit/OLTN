@@ -80,19 +80,6 @@ export interface Shortcut {
   value?: string;
 }
 
-export interface PomodoroSettings {
-  /** Focus minutes (25 by default). */
-  focusMinutes: number;
-  /** Short break after each focus (5 by default). */
-  shortBreakMinutes: number;
-  /** Long break after N focus rounds (15 by default). */
-  longBreakMinutes: number;
-  /** Focus rounds before a long break (4 by default). */
-  cycles: number;
-  /** Automatically starts the next phase (break/focus). */
-  autoContinue: boolean;
-}
-
 /** Desktop home layout chosen in Settings. Phones always use a single column. */
 export type LayoutMode = "columns" | "floats" | "social";
 
@@ -109,21 +96,12 @@ export interface Settings {
   autoplayGifs: boolean;
   /** Nav button order (hrefs). */
   navOrder?: readonly string[];
-  /** Pomodoro cycle settings. */
-  pomodoro: PomodoroSettings;
 }
 
 export interface ComposeIntent {
   mode: "new" | "reply" | "quote" | "edit";
   statusId?: string;
   prefill?: string;
-}
-
-export interface SavedLayout {
-  id: string;
-  name: string;
-  columns: readonly Shortcut[];
-  widths?: Readonly<Record<string, number>>;
 }
 
 /** Position and size of a floating panel on the canvas (deck mode off). */

@@ -90,12 +90,11 @@ describe("parseBackup", () => {
 
   it("falls back to safe settings", () => {
     const backup = parsed({
-      settings: { theme: "neon", accent: "purple", textSize: 99, pomodoro: { cycles: 0 } },
+      settings: { theme: "neon", accent: "purple", textSize: 99 },
     });
     expect(backup.settings.theme).toBe(DEFAULT_SETTINGS.theme);
     expect(backup.settings.accent).toBe("purple");
     expect(backup.settings.textSize).toBe(20);
-    expect(backup.settings.pomodoro.cycles).toBe(1);
   });
 
   it("migrates the legacy deckMode field from old backups", () => {
@@ -116,7 +115,6 @@ describe("sanitizeSettings", () => {
       autoStream: false,
       autoplayGifs: false,
       navOrder: ["/", "/settings", 3],
-      pomodoro: { focusMinutes: 30, cycles: 6, autoContinue: false },
     });
     expect(settings.theme).toBe("light");
     expect(settings.accent).toBe("purple");
@@ -124,14 +122,11 @@ describe("sanitizeSettings", () => {
     expect(settings.textSize).toBe(15);
     expect(settings.layout).toBe("floats");
     expect(settings.navOrder).toEqual(["/", "/settings"]);
-    expect(settings.pomodoro.focusMinutes).toBe(30);
-    expect(settings.pomodoro.cycles).toBe(6);
-    expect(settings.pomodoro.autoContinue).toBe(false);
   });
 });
 
 describe("sanitizePrefs", () => {
-  it("keeps valid shortcuts, layouts and panel colors", () => {
+  it("keeps valid shortcuts and panel colors", () => {
     const prefs = sanitizePrefs({
       shortcuts: [
         { id: "home", type: "home", label: "Home" },
@@ -142,25 +137,16 @@ describe("sanitizePrefs", () => {
       columnWidths: { home: 420, bad: "wide" },
       floats: { home: { x: 1, y: 2, w: 300, h: 400 }, bad: { x: 1 } },
       colors: { home: "purple", bad: "neon" },
-      savedLayouts: [
-        {
-          id: "l1",
-          name: "Reading",
-          columns: [{ id: "home", type: "home", label: "Home" }],
-          widths: { home: 400 },
-        },
-      ],
     });
     expect(prefs.shortcuts.map((shortcut) => shortcut.id)).toEqual(["home", "tag"]);
     expect(prefs.columnOrder).toEqual(["home"]);
     expect(prefs.columnWidths).toEqual({ home: 420 });
     expect(prefs.floats).toEqual({ home: { x: 1, y: 2, w: 300, h: 400 } });
     expect(prefs.colors).toEqual({ home: "purple" });
-    expect(prefs.savedLayouts?.[0]?.name).toBe("Reading");
   });
 
-  it("drops unknown preference keys", () => {
-    const prefs = sanitizePrefs({ shortcuts: [], evil: true });
+  it("drops unknown and removed preference keys", () => {
+    const prefs = sanitizePrefs({ shortcuts: [], evil: true, savedLayouts: [] });
     expect(Object.keys(prefs)).toEqual(["shortcuts"]);
   });
 });

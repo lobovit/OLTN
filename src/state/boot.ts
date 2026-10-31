@@ -5,7 +5,6 @@ import type {
   AccountMeta,
   FloatRect,
   NewsletterSource,
-  SavedLayout,
   Settings,
   Shortcut,
   Status,
@@ -154,12 +153,12 @@ export function savePanelColor(id: string, color: PanelColor | ""): void {
   updatePrefs({ colors: updatePanelColor(prev?.colors ?? {}, id, color) });
 }
 
-export function saveSavedLayouts(layouts: readonly SavedLayout[]): void {
-  updatePrefs({ savedLayouts: [...layouts] });
-}
-
 export function saveNewsletterSources(sources: readonly NewsletterSource[]): void {
   updatePrefs({ newsletterSources: [...sources] });
+}
+
+export function saveTimeseriesLastAt(at: number): void {
+  updatePrefs({ timeseriesLastAt: at });
 }
 
 export function resetColumnLayout(): void {
@@ -397,6 +396,7 @@ export async function boot(): Promise<void> {
   const layout = layoutFromSettings(storedSettings, DEFAULT_SETTINGS.layout);
   delete storedSettings.deckMode;
   delete storedSettings.layout;
+  delete storedSettings.pomodoro;
   store.settings = {
     ...DEFAULT_SETTINGS,
     ...(storedSettings as Partial<Settings>),
