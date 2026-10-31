@@ -5,6 +5,10 @@ node_modules/
 dist/
 .deploy/
 
+# Demo videos and recorder scripts
+*.mp4
+scripts/demo/
+
 # Logs
 *.log
 npm-debug.log*
