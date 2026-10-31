@@ -98,7 +98,7 @@ export function applyComposeContext(
     return;
   }
   if (mode !== "edit") return;
-  set.setText(() => htmlToPlainText(status.content));
+  set.setText(() => htmlToPlainText(status.content, status.mentions ?? []));
   set.setSpoiler(status.spoilerText);
   set.setShowCw(!!status.spoilerText);
   set.setVisibility(status.visibility);

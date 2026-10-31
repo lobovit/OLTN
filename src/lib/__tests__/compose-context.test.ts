@@ -120,6 +120,27 @@ describe("applyComposeContext reply", () => {
   });
 });
 
+describe("applyComposeContext edit", () => {
+  it("restores remote mentions with their domain", () => {
+    const { calls, set } = setters();
+    const status = {
+      id: "1",
+      account: { acct: "me", username: "me" },
+      visibility: "public",
+      content:
+        '<p><span class="h-card"><a href="https://remote.example/@ana" class="u-url mention">@<span>ana</span></a></span> oi</p>',
+      mentions: [
+        { url: "https://remote.example/@ana", acct: "ana@remote.example", username: "ana" },
+      ],
+      spoilerText: "",
+      mediaAttachments: [],
+      poll: null,
+    } as unknown as Status;
+    applyComposeContext(status, "edit", "my.instance", set);
+    expect(calls.text).toBe("@ana@remote.example oi");
+  });
+});
+
 describe("replyVisibility", () => {
   it("never makes a reply more public than its parent", () => {
     expect(replyVisibility("direct")).toBe("direct");

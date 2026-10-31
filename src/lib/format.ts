@@ -137,13 +137,49 @@ export function extractMention(input: string): {
   return host ? { host } : null;
 }
 
+export interface PlainTextMention {
+  url?: string | null;
+  acct: string;
+  username?: string;
+}
+
+function urlKey(value: string): string {
+  try {
+    const url = new URL(value, "https://local.invalid");
+    return `${url.host.toLowerCase()}${url.pathname.replace(/\/+$/, "")}`;
+  } catch {
+    return value.replace(/\/+$/, "");
+  }
+}
+
+/** Editable mentions need the full acct; Mastodon's HTML may show only @user. */
+function mentionForLink(
+  href: string,
+  text: string,
+  mentions: readonly PlainTextMention[],
+): PlainTextMention | null {
+  if (!mentions.length) return null;
+  const key = urlKey(href);
+  const byUrl = mentions.find((mention) => mention.url && urlKey(mention.url) === key);
+  if (byUrl) return byUrl;
+  const handle = text.trim();
+  if (!handle.startsWith("@") || handle.slice(1).includes("@")) return null;
+  const username = handle.slice(1).toLowerCase();
+  const byName = mentions.filter(
+    (mention) => (mention.username ?? mention.acct.split("@")[0]).toLowerCase() === username,
+  );
+  return byName.length === 1 ? byName[0] : null;
+}
+
 /** Converts a status HTML into editable text (used when editing a post). */
-export function htmlToPlainText(html: string): string {
+export function htmlToPlainText(html: string, mentions: readonly PlainTextMention[] = []): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const body = doc.body;
   for (const a of [...body.querySelectorAll("a")]) {
     const rawHref = a.getAttribute("href") ?? "";
-    const text = a.textContent ?? "";
+    const original = a.textContent ?? "";
+    const mention = mentionForLink(rawHref, original, mentions);
+    const text = mention ? `@${mention.acct}` : original;
     const isAbsolute = /^https?:\/\//.test(rawHref);
     const redundant =
       !isAbsolute ||

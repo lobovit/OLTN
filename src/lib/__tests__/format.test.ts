@@ -86,6 +86,22 @@ describe("htmlToPlainText", () => {
     );
   });
 
+  it("restores the full acct of remote mentions for editing", () => {
+    const html =
+      '<p>Oi <span class="h-card"><a href="https://remote.example/@ana" class="u-url mention">@<span>ana</span></a></span></p>';
+    const mentions = [
+      { url: "https://remote.example/@ana", acct: "ana@remote.example", username: "ana" },
+    ];
+    expect(htmlToPlainText(html, mentions)).toBe("Oi @ana@remote.example");
+  });
+
+  it("keeps local mentions bare and resolves by username when the URL differs", () => {
+    const html =
+      '<p><span class="h-card"><a href="https://local.example/@ana" class="u-url mention">@<span>ana</span></a></span> oi</p>';
+    const mentions = [{ url: "https://other.example/@ana", acct: "ana", username: "ana" }];
+    expect(htmlToPlainText(html, mentions)).toBe("@ana oi");
+  });
+
   it("decodes entities and strips tags", () => {
     expect(htmlToPlainText("<p>a &amp; b &lt;3</p>")).toBe("a & b <3");
     expect(htmlToPlainText("<p><span>nada</span> de novo</p>")).toBe("nada de novo");
