@@ -129,6 +129,19 @@ export async function localAccountId(
   }
 }
 
+/** Handle to prefill when mentioning an account from its profile page. Local
+    accounts only need the domain when the profile came from another instance. */
+export function mentionHandleFor(
+  account: Pick<Account, "acct">,
+  profileInstance: string,
+  ownInstance: string | undefined,
+): string {
+  if (account.acct.includes("@")) return account.acct;
+  return profileInstance && profileInstance !== ownInstance
+    ? `${account.acct}@${profileInstance}`
+    : account.acct;
+}
+
 /** Resolves a full @user@host handle on the account instance (WebFinger via
     search). Accepts local accounts, whose acct omits the instance domain. */
 export async function resolveAccountHandle(

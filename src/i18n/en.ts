@@ -32,6 +32,7 @@ export const en = {
   confirm: "Confirm",
   notifications: "Notifications",
   mentions: "Mentions",
+  mention: "Mention",
   bookmarks: "Bookmarks",
   favourites: "Favourites",
   lists: "Lists",

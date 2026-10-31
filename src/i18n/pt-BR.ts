@@ -34,6 +34,7 @@ const pt: Record<TKey, string> = {
   confirm: "Confirmar",
   notifications: "Notificações",
   mentions: "Menções",
+  mention: "Mencionar",
   bookmarks: "Salvos",
   favourites: "Curtidas",
   lists: "Listas",

@@ -2,7 +2,7 @@ import type { JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import type { Account, Relationship, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
-import { clientFor, isOwnInstance, localAccountId } from "../lib/identity";
+import { clientFor, isOwnInstance, localAccountId, mentionHandleFor } from "../lib/identity";
 import { navigate, back } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Content } from "../components/status/Content";
@@ -12,7 +12,7 @@ import { EmojiText } from "../components/status/EmojiText";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
 import { ProfileEditor } from "../components/profile/ProfileEditor";
-import { currentAccount, putStatuses, statusKey } from "../state/store";
+import { currentAccount, putStatuses, setCompose, statusKey } from "../state/store";
 import { useAppState } from "../state/hooks";
 
 type Tab = "posts" | "replies" | "media" | "followers" | "following";
@@ -94,13 +94,17 @@ function followLabel(relationship: Relationship): string {
 function AccountActions({
   account,
   isSelf,
+  canMention,
   relationship,
+  onMention,
   onEdit,
   onFollow,
 }: {
   account: Account | null;
   isSelf: boolean;
+  canMention: boolean;
   relationship: Relationship | null;
+  onMention: () => void;
   onEdit: () => void;
   onFollow: () => void;
 }): JSX.Element | null {
@@ -113,12 +117,26 @@ function AccountActions({
       </button>
     );
   }
-  if (!relationship) return null;
-  const following = relationship.following || relationship.requested;
+  const following = relationship?.following || relationship?.requested;
   return (
-    <button type="button" class={`btn ${following ? "ghost" : "primary"}`} onClick={onFollow}>
-      {followLabel(relationship)}
-    </button>
+    <>
+      {canMention && (
+        <button
+          type="button"
+          class="btn ghost"
+          onClick={onMention}
+          aria-label={`${t.mention}: @${account.acct}`}
+        >
+          <Icon name="at-line" size={16} />
+          {t.mention}
+        </button>
+      )}
+      {relationship && (
+        <button type="button" class={`btn ${following ? "ghost" : "primary"}`} onClick={onFollow}>
+          {followLabel(relationship)}
+        </button>
+      )}
+    </>
   );
 }
 
@@ -306,6 +324,10 @@ export function AccountPage({ params }: Props): JSX.Element {
 
   const isSelf =
     !!appState.me && !!account && appState.me.id === account.id && isOwnInstance(instance);
+  const canMention = appState.auth === "authenticated" && !!account && !isSelf;
+  const mentionAcct = account
+    ? mentionHandleFor(account, instance, currentAccount()?.instance)
+    : "";
 
   if (error && !account) {
     return (
@@ -332,7 +354,11 @@ export function AccountPage({ params }: Props): JSX.Element {
           <AccountActions
             account={account}
             isSelf={isSelf}
+            canMention={canMention}
             relationship={relationship}
+            onMention={() => {
+              if (mentionAcct) setCompose({ mode: "new", prefill: `@${mentionAcct} ` });
+            }}
             onEdit={() => setEditing(true)}
             onFollow={() => void toggleFollow()}
           />

@@ -6,6 +6,7 @@ import {
   isOwnInstance,
   localAccountId,
   localStatus,
+  mentionHandleFor,
   resolveAccountHandle,
   searchAccountsByUsername,
   sourceInstanceFor,
@@ -105,6 +106,24 @@ describe("sourceInstanceFor", () => {
     expect(sourceInstanceFor("missing", remote)).toBe("remote.example");
     store.instance = { uri: "my.instance" } as never;
     expect(sourceInstanceFor("missing", status("2", "not a url"))).toBe("my.instance");
+  });
+});
+
+describe("mentionHandleFor", () => {
+  it("keeps a local account bare on the same instance", () => {
+    expect(mentionHandleFor({ acct: "alice" }, "my.instance", "my.instance")).toBe("alice");
+  });
+
+  it("adds the profile domain for a local account viewed on another instance", () => {
+    expect(mentionHandleFor({ acct: "alice" }, "remote.example", "my.instance")).toBe(
+      "alice@remote.example",
+    );
+  });
+
+  it("keeps the full acct of a remote account", () => {
+    expect(mentionHandleFor({ acct: "alice@remote.example" }, "my.instance", "my.instance")).toBe(
+      "alice@remote.example",
+    );
   });
 });
 

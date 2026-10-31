@@ -143,7 +143,8 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   const isEdit = intent.mode === "edit";
   const account = currentAccount();
   const instance = account?.instance ?? "";
-  const [text, setText] = useState("");
+  const prefill = intent.mode === "new" ? (intent.prefill ?? "") : "";
+  const [text, setText] = useState(prefill);
   const [spoiler, setSpoiler] = useState("");
   const [showCw, setShowCw] = useState(false);
   const [visibility, setVisibility] = useState<ComposeVisibility>("public");
@@ -269,9 +270,10 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     if (!poll) setMedia([]);
   };
 
-  /* draft (new mode) */
+  /* draft (new mode); a mention prefill starts a fresh composer and leaves
+     the saved draft untouched until the user edits it. */
   useEffect(() => {
-    if (intent.mode !== "new") return;
+    if (intent.mode !== "new" || prefill) return;
     const draft = readJSON<Draft | null>(DRAFT_KEY, null);
     if (draft) {
       setText(draft.text);
@@ -279,17 +281,18 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
       setVisibility(draft.visibility);
       if (draft.spoiler) setShowCw(true);
     }
-  }, []);
+  }, [intent.mode, prefill]);
 
   useEffect(() => {
     if (intent.mode !== "new") return;
+    if (prefill && text === prefill && !spoiler) return;
     const timer = window.setTimeout(() => {
       if (text || spoiler) {
         writeJSON(DRAFT_KEY, { text, spoiler, visibility } satisfies Draft);
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [text, spoiler, visibility, intent.mode]);
+  }, [text, spoiler, visibility, intent.mode, prefill]);
 
   /* reply/quote/edit context */
   useEffect(() => {
@@ -330,7 +333,10 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   }, [intent, instance, account]);
 
   useEffect(() => {
-    textRef.current?.focus();
+    const ta = textRef.current;
+    if (!ta) return;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
   }, []);
 
   const remaining = charLimit - text.length;
