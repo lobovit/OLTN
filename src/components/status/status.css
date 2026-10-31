@@ -445,6 +445,12 @@
   background: var(--reply-soft);
 }
 
+.status-action.quote:hover,
+.status-action.quote:focus-visible {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .status-action.boost:hover,
 .status-action.boost.on {
   color: var(--boost);

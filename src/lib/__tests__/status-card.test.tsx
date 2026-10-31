@@ -33,6 +33,7 @@ function remoteStatus(): Status {
 beforeEach(() => {
   store.statuses = {};
   store.statusSources = {};
+  store.ui.compose = null;
   store.auth = "authenticated";
   store.me = null;
   store.instance = null;
@@ -69,6 +70,55 @@ describe("StatusCard: actions on remote posts", () => {
     const host = document.createElement("div");
     render(<StatusCard statusKey={key} />, host);
     expect(host.querySelector<HTMLButtonElement>(".status-action.fav")?.disabled).toBe(false);
+  });
+});
+
+describe("StatusCard: quote action", () => {
+  function quotable(): Status {
+    return {
+      ...remoteStatus(),
+      quoteApproval: {
+        automatic: ["public"],
+        manual: [],
+        currentUser: "automatic",
+      },
+    } as unknown as Status;
+  }
+
+  it("shows quote when the status supports it and the viewer may quote", () => {
+    const key = putStatus(quotable(), "my.instance");
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={key} />, host);
+    expect(host.querySelector(".status-action.quote")).toBeTruthy();
+  });
+
+  it("hides quote for denied, unsupported and private posts", () => {
+    const cases: Status[] = [
+      {
+        ...quotable(),
+        quoteApproval: { automatic: [], manual: [], currentUser: "denied" },
+      } as unknown as Status,
+      { ...remoteStatus() } as unknown as Status,
+      { ...quotable(), visibility: "private" } as unknown as Status,
+      { ...quotable(), visibility: "direct" } as unknown as Status,
+    ];
+    for (const status of cases) {
+      store.statuses = {};
+      const key = putStatus(status, "my.instance");
+      const host = document.createElement("div");
+      render(<StatusCard statusKey={key} />, host);
+      expect(host.querySelector(".status-action.quote")).toBeNull();
+    }
+  });
+
+  it("opens the quote composer via the local status id", async () => {
+    const key = putStatus(quotable(), "my.instance");
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={key} />, host);
+    host.querySelector<HTMLButtonElement>(".status-action.quote")?.click();
+    await vi.waitFor(() => {
+      expect(store.ui.compose).toEqual({ mode: "quote", statusId: "123" });
+    });
   });
 });
 

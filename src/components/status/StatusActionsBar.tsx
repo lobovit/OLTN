@@ -17,11 +17,14 @@ interface StatusActionsBarProps {
   showMore: boolean;
   /** Status can be boosted (or is already boosted and can be undone). */
   showBoost: boolean;
+  /** Quoting is supported and allowed for this status. */
+  showQuote: boolean;
   /** Own pinnable status (pin button). */
   showPin: boolean;
   pinned: boolean;
   menuOpen: boolean;
   onReply: (e: MouseEvent) => void;
+  onQuote: (e: MouseEvent) => void;
   onAct: (kind: ToggleKind, e: MouseEvent) => void;
   onEdit: (e: MouseEvent) => void;
   onDelete: (e: MouseEvent) => void;
@@ -38,10 +41,12 @@ export function StatusActionsBar({
   showDelete,
   showMore,
   showBoost,
+  showQuote,
   showPin,
   pinned,
   menuOpen,
   onReply,
+  onQuote,
   onAct,
   onEdit,
   onDelete,
@@ -62,6 +67,19 @@ export function StatusActionsBar({
         <Icon name="share-forward-line" size={16} class="rot-180" />
         {target.repliesCount > 0 && <span class="count">{shortNumber(target.repliesCount)}</span>}
       </button>
+      {showQuote && (
+        <button
+          type="button"
+          class="status-action quote"
+          title={t.quote}
+          aria-label={target.quotesCount > 0 ? `${t.quote} (${target.quotesCount})` : t.quote}
+          onClick={onQuote}
+          disabled={!canAct}
+        >
+          <Icon name="quote-left-line" size={16} />
+          {target.quotesCount > 0 && <span class="count">{shortNumber(target.quotesCount)}</span>}
+        </button>
+      )}
       {showBoost && (
         <button
           type="button"

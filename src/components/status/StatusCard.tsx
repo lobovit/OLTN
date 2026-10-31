@@ -346,6 +346,14 @@ function StatusCardView({
   const account = currentAccount();
   const canAct = appState.auth === "authenticated" && !!account;
   const isSelf = !!appState.me && appState.me.id === target.account.id;
+  const quoteApproval = target.quoteApproval;
+  const canQuote =
+    canAct &&
+    !!quoteApproval &&
+    quoteApproval.currentUser !== "denied" &&
+    quoteApproval.currentUser !== "unknown" &&
+    target.visibility !== "private" &&
+    target.visibility !== "direct";
   const targetKey = statusKeyOf(target);
   // The `id` is only valid on the instance that originated the status — for
   // remote/boosted posts this is not the author's host.
@@ -444,6 +452,17 @@ function StatusCardView({
     setCompose({ mode: "reply", statusId: id });
   };
 
+  const quote = async (e: MouseEvent): Promise<void> => {
+    e.stopPropagation();
+    if (!canAct || !canQuote) return;
+    const id = await resolveLocalId();
+    if (!id) {
+      toast(t.errorGeneric, "error");
+      return;
+    }
+    setCompose({ mode: "quote", statusId: id });
+  };
+
   const cwHidden = !!target.spoilerText && !cwOpen;
   const displayContent = translation.translated ? translation.translated.content : target.content;
   const blockedAccount = appState.blockedAccounts.includes(target.account.acct);
@@ -527,10 +546,12 @@ function StatusCardView({
             showDelete={isSelf && canAct}
             showMore={!isSelf && canAct}
             showBoost={canBoostStatus(target, appState.me?.id) || target.reblogged === true}
+            showQuote={canQuote}
             showPin={isSelf && canAct && target.pinned != null}
             pinned={target.pinned === true}
             menuOpen={!!menu.menuPos}
             onReply={reply}
+            onQuote={(e) => void quote(e)}
             onAct={act}
             onPin={(e) => void pinStatus(e)}
             onEdit={(e) => {

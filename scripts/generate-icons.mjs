@@ -69,6 +69,7 @@ const wanted = [
   "globe-line",
   "shield-line",
   "message-1-line",
+  "quote-left-line",
   "signal-line",
   "wifi-line",
   "wifi-off-line",

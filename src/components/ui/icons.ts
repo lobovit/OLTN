@@ -331,6 +331,11 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "quote-left-line": {
+    body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 14.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 0 0-5 0Zm0 0C4.833 13 5 10 9 7m5 7.5C13.833 13 14 10 18 7m-4 7.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 0 0-5 0Z"/>',
+    width: 24,
+    height: 24,
+  },
   "signal-line": {
     body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 17v2m4-5v5m4-8v8m4-11v11m4-14v14"/>',
     width: 24,
