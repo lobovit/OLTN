@@ -1,11 +1,11 @@
 import type { JSX } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import type { Account, Status, TrendLink } from "../api/types";
+import type { Account, NewsletterSource, Status, TrendLink } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { shortNumber } from "../lib/format";
 import { clientFor, resolveAccountHandle, searchAccountsByUsername } from "../lib/identity";
-import { newestFirst } from "../lib/newsletter";
+import { DEFAULT_NEWSLETTER_SOURCES, mergeResolvedSources, newestFirst } from "../lib/newsletter";
 import { trendTotalUses } from "../lib/trending";
 import { accountNS, currentAccount, putStatuses, statusKey, store, toast } from "../state/store";
 import { saveNewsletterSources } from "../state/boot";
@@ -66,13 +66,20 @@ export function NewsletterPage(): JSX.Element {
   const account = currentAccount();
   const target = account?.instance ?? "";
   const snap = useSnapshot(store);
-  const sources = (account ? snap.prefs[accountNS(account)]?.newsletterSources : undefined) ?? [];
+  const sources =
+    (account ? snap.prefs[accountNS(account)]?.newsletterSources : undefined) ??
+    DEFAULT_NEWSLETTER_SOURCES;
   const [links, setLinks] = useState<TrendLink[] | null>(null);
   const [handle, setHandle] = useState("");
   const [adding, setAdding] = useState(false);
   const [suggestions, setSuggestions] = useState<Account[]>([]);
   const [sourcePosts, setSourcePosts] = useState<Status[] | null>(null);
-  const sourceKey = sources.map((source) => source.id).join(",");
+  const resolvedSources = sources.filter((source) => !!source.id);
+  const sourceKey = resolvedSources.map((source) => source.id).join(",");
+  const unresolvedKey = sources
+    .filter((source) => !source.id)
+    .map((source) => source.acct)
+    .join("\n");
 
   useEffect(() => {
     if (!target) return;
@@ -101,7 +108,7 @@ export function NewsletterPage(): JSX.Element {
       try {
         const client = clientFor(target).client;
         const lists = await Promise.all(
-          sources.map((source) =>
+          resolvedSources.map((source) =>
             client.v1.accounts.$select(source.id).statuses.list({
               limit: 8,
               excludeReplies: true,
@@ -120,6 +127,44 @@ export function NewsletterPage(): JSX.Element {
       cancelled = true;
     };
   }, [target, sourceKey]);
+
+  /* Default sources ship with handles only; resolve their local account ids
+     once, then persist them. Removed sources are simply absent from prefs. */
+  useEffect(() => {
+    if (!account || !unresolvedKey) return;
+    const instance = account.instance;
+    let cancelled = false;
+    void (async () => {
+      const client = clientFor(instance).client;
+      const resolved = (
+        await Promise.all(
+          sources
+            .filter((source) => !source.id)
+            .map(async (source) => {
+              const found = await resolveAccountHandle(client, source.acct);
+              return found
+                ? { id: found.id, acct: found.acct, name: found.displayName || found.username }
+                : null;
+            }),
+        )
+      ).filter((source): source is NewsletterSource => !!source);
+      if (cancelled || !resolved.length) return;
+      const live = store.prefs[accountNS(account)]?.newsletterSources ?? DEFAULT_NEWSLETTER_SOURCES;
+      const next = mergeResolvedSources(live, resolved);
+      const changed =
+        next.length !== live.length ||
+        next.some((source, index) => {
+          const before = live[index];
+          return (
+            source.id !== before.id || source.acct !== before.acct || source.name !== before.name
+          );
+        });
+      if (changed) saveNewsletterSources(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [account?.instance, unresolvedKey]);
 
   /* Live suggestions: search as the user types. A bare @user only reaches
      accounts known to the instance; a full handle is resolved remotely. */
@@ -155,12 +200,13 @@ export function NewsletterPage(): JSX.Element {
   }, [account?.instance, handle, sourceKey]);
 
   const addAccountSource = (found: Account): void => {
-    if (!sources.some((source) => source.id === found.id)) {
-      saveNewsletterSources([
-        ...sources,
-        { id: found.id, acct: found.acct, name: found.displayName || found.username },
-      ]);
-    }
+    const source = { id: found.id, acct: found.acct, name: found.displayName || found.username };
+    const index = sources.findIndex(
+      (item) => item.id === found.id || item.acct.toLowerCase() === found.acct.toLowerCase(),
+    );
+    saveNewsletterSources(
+      index < 0 ? [...sources, source] : sources.map((item, i) => (i === index ? source : item)),
+    );
     setHandle("");
     setSuggestions([]);
   };
@@ -197,8 +243,10 @@ export function NewsletterPage(): JSX.Element {
     }
   };
 
-  const removeSource = (id: string): void => {
-    saveNewsletterSources(sources.filter((source) => source.id !== id));
+  const removeSource = (acct: string): void => {
+    saveNewsletterSources(
+      sources.filter((source) => source.acct.toLowerCase() !== acct.toLowerCase()),
+    );
   };
 
   const [hero, ...rest] = links ?? [];
@@ -255,14 +303,14 @@ export function NewsletterPage(): JSX.Element {
           {sources.length > 0 && (
             <div class="newsletter-chips">
               {sources.map((source) => (
-                <span class="newsletter-chip" key={source.id}>
+                <span class="newsletter-chip" key={source.id || source.acct}>
                   @{source.acct}
                   <button
                     type="button"
                     class="newsletter-chip-remove"
                     title={`${t.delete}: @${source.acct}`}
                     aria-label={`${t.delete}: @${source.acct}`}
-                    onClick={() => removeSource(source.id)}
+                    onClick={() => removeSource(source.acct)}
                   >
                     <Icon name="close-line" size={12} />
                   </button>

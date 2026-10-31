@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Status } from "../../api/types";
-import { newestFirst } from "../newsletter";
+import type { NewsletterSource, Status } from "../../api/types";
+import { DEFAULT_NEWSLETTER_SOURCES, mergeResolvedSources, newestFirst } from "../newsletter";
 
 function status(id: string, createdAt: string): Status {
   return {
@@ -9,6 +9,36 @@ function status(id: string, createdAt: string): Status {
     createdAt,
   } as unknown as Status;
 }
+
+describe("default newsletter sources", () => {
+  it("ships the three requested profiles", () => {
+    expect(DEFAULT_NEWSLETTER_SOURCES.map((source) => source.acct)).toEqual([
+      "icnoticias.com.br@rss-parrot.net",
+      "jornalpublicobot@mastodon.world",
+      "FlipboardBR@flipboard.com",
+    ]);
+  });
+
+  it("fills the local ids of unresolved sources", () => {
+    const current: NewsletterSource[] = [
+      { id: "", acct: "ana@remote.example", name: "ana" },
+      { id: "2", acct: "local", name: "Local" },
+    ];
+    const resolved: NewsletterSource[] = [
+      { id: "1", acct: "ana@remote.example", name: "Ana" },
+      { id: "3", acct: "removed@remote.example", name: "Removed" },
+    ];
+    expect(mergeResolvedSources(current, resolved)).toEqual([
+      { id: "1", acct: "ana@remote.example", name: "Ana" },
+      { id: "2", acct: "local", name: "Local" },
+    ]);
+  });
+
+  it("does not resurrect a removed default", () => {
+    const resolved: NewsletterSource[] = [{ id: "1", acct: "ana@remote.example", name: "Ana" }];
+    expect(mergeResolvedSources([], resolved)).toEqual([]);
+  });
+});
 
 describe("newestFirst", () => {
   it("merges lists ordered by date, newest first", () => {

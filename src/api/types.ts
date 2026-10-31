@@ -136,7 +136,7 @@ export interface FloatRect {
 
 /** A news profile the reader aggregates from the Newsletter page. */
 export interface NewsletterSource {
-  /** Account id on the reader's instance (always resolvable there). */
+  /** Account id on the reader's instance; empty until a default is resolved. */
   id: string;
   acct: string;
   name: string;
