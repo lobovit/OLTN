@@ -1,5 +1,27 @@
 import type { NewsletterSource, Status } from "../api/types";
 
+const EARLY_DEFAULT_ACCTS = new Set([
+  "icnoticias.com.br@rss-parrot.net",
+  "jornalpublicobot@mastodon.world",
+  "flipboardbr@flipboard.com",
+]);
+
+const ADDED_DEFAULT_SOURCES: readonly NewsletterSource[] = [
+  {
+    id: "",
+    acct: "teiadospovos@kolektiva.social",
+    name: "teiadospovos",
+  },
+  {
+    id: "",
+    acct: "noticiasbrasil@mastodon.social",
+    name: "noticiasbrasil",
+  },
+];
+
+/** Bumped when new default sources should reach accounts that already seeded the old set. */
+export const NEWSLETTER_DEFAULTS_VERSION = 2;
+
 /** Sources every account starts with; ids are filled by the Newsletter page. */
 export const DEFAULT_NEWSLETTER_SOURCES: readonly NewsletterSource[] = [
   {
@@ -17,7 +39,27 @@ export const DEFAULT_NEWSLETTER_SOURCES: readonly NewsletterSource[] = [
     acct: "FlipboardBR@flipboard.com",
     name: "FlipboardBR",
   },
+  ...ADDED_DEFAULT_SOURCES,
 ];
+
+/** Adds newly shipped defaults to a seeded list without reviving removed sources. */
+export function addDefaultNewsletterSources(
+  current: readonly NewsletterSource[],
+  version: number | undefined,
+): NewsletterSource[] {
+  if (version != null && version >= NEWSLETTER_DEFAULTS_VERSION) return [...current];
+  if (!current.some((source) => EARLY_DEFAULT_ACCTS.has(source.acct.toLowerCase()))) {
+    return [...current];
+  }
+  const seen = new Set(current.map((source) => source.acct.toLowerCase()));
+  const next = [...current];
+  for (const source of ADDED_DEFAULT_SOURCES) {
+    if (seen.has(source.acct.toLowerCase())) continue;
+    seen.add(source.acct.toLowerCase());
+    next.push({ ...source });
+  }
+  return next;
+}
 
 /** Fills unresolved sources in place, ignoring accounts the user removed. */
 export function mergeResolvedSources(

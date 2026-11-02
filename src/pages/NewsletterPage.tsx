@@ -5,10 +5,16 @@ import type { Account, NewsletterSource, Status, TrendLink } from "../api/types"
 import { t } from "../i18n/pt-BR";
 import { shortNumber } from "../lib/format";
 import { clientFor, resolveAccountHandle, searchAccountsByUsername } from "../lib/identity";
-import { DEFAULT_NEWSLETTER_SOURCES, mergeResolvedSources, newestFirst } from "../lib/newsletter";
+import {
+  addDefaultNewsletterSources,
+  DEFAULT_NEWSLETTER_SOURCES,
+  mergeResolvedSources,
+  NEWSLETTER_DEFAULTS_VERSION,
+  newestFirst,
+} from "../lib/newsletter";
 import { trendTotalUses } from "../lib/trending";
 import { accountNS, currentAccount, putStatuses, statusKey, store, toast } from "../state/store";
-import { saveNewsletterSources } from "../state/boot";
+import { saveNewsletterSources, saveNewsletterSourcesVersion } from "../state/boot";
 import { Avatar } from "../components/ui/Avatar";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
@@ -66,9 +72,8 @@ export function NewsletterPage(): JSX.Element {
   const account = currentAccount();
   const target = account?.instance ?? "";
   const snap = useSnapshot(store);
-  const sources =
-    (account ? snap.prefs[accountNS(account)]?.newsletterSources : undefined) ??
-    DEFAULT_NEWSLETTER_SOURCES;
+  const prefs = account ? snap.prefs[accountNS(account)] : undefined;
+  const sources = prefs?.newsletterSources ?? DEFAULT_NEWSLETTER_SOURCES;
   const [links, setLinks] = useState<TrendLink[] | null>(null);
   const [handle, setHandle] = useState("");
   const [adding, setAdding] = useState(false);
@@ -80,6 +85,25 @@ export function NewsletterPage(): JSX.Element {
     .filter((source) => !source.id)
     .map((source) => source.acct)
     .join("\n");
+
+  /* Accounts that already seeded the old defaults receive only the newly
+     shipped profiles; custom lists and removed sources are left untouched. */
+  useEffect(() => {
+    if (!account) return;
+    const live = store.prefs[accountNS(account)];
+    const version = live?.newsletterSourcesVersion;
+    if (version != null && version >= NEWSLETTER_DEFAULTS_VERSION) return;
+    if (!live?.newsletterSources) {
+      saveNewsletterSourcesVersion(NEWSLETTER_DEFAULTS_VERSION);
+      return;
+    }
+    const next = addDefaultNewsletterSources(live.newsletterSources, version);
+    if (next.length !== live.newsletterSources.length) {
+      saveNewsletterSources(next, NEWSLETTER_DEFAULTS_VERSION);
+    } else {
+      saveNewsletterSourcesVersion(NEWSLETTER_DEFAULTS_VERSION);
+    }
+  }, [account?.instance, account?.id]);
 
   useEffect(() => {
     if (!target) return;

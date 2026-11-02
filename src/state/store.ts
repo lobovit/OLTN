@@ -29,6 +29,8 @@ export interface AccountPrefs {
   colors?: Record<string, string>;
   /** News profiles aggregated by the Newsletter page. */
   newsletterSources?: NewsletterSource[];
+  /** Last set of shipped newsletter defaults merged into prefs. */
+  newsletterSourcesVersion?: number;
   /** End of the last Timeseries review (Unix ms). */
   timeseriesLastAt?: number;
 }

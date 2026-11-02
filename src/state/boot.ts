@@ -153,8 +153,18 @@ export function savePanelColor(id: string, color: PanelColor | ""): void {
   updatePrefs({ colors: updatePanelColor(prev?.colors ?? {}, id, color) });
 }
 
-export function saveNewsletterSources(sources: readonly NewsletterSource[]): void {
-  updatePrefs({ newsletterSources: [...sources] });
+export function saveNewsletterSources(
+  sources: readonly NewsletterSource[],
+  version?: number,
+): void {
+  updatePrefs({
+    newsletterSources: [...sources],
+    ...(version === undefined ? {} : { newsletterSourcesVersion: version }),
+  });
+}
+
+export function saveNewsletterSourcesVersion(version: number): void {
+  updatePrefs({ newsletterSourcesVersion: version });
 }
 
 export function saveTimeseriesLastAt(at: number): void {
