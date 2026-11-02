@@ -2,6 +2,7 @@ import type { ComponentChildren, JSX } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import type { ShortcutType } from "../api/types";
+import { ColumnRefreshButton } from "../components/feed/ColumnRefreshButton";
 import { HomeGalleryToggle } from "../components/feed/HomeGalleryToggle";
 import { Icon } from "../components/ui/Icon";
 import { Avatar } from "../components/ui/Avatar";
@@ -739,17 +740,7 @@ export function MultiColumns(): JSX.Element {
               <h1>{shortcutLabel(shortcut)}</h1>
               <div class="spacer" />
               {shortcut.type === "home" && <HomeGalleryToggle />}
-              <button
-                type="button"
-                class="icon-btn col-refresh"
-                title={t.refresh}
-                aria-label={`${t.refresh}: ${shortcutLabel(shortcut)}`}
-                onClick={() => {
-                  store.ui.feedsRevision += 1;
-                }}
-              >
-                <Icon name="refresh-2-line" size={15} />
-              </button>
+              <ColumnRefreshButton label={shortcutLabel(shortcut)} />
               <PanelColorButton
                 id={shortcut.id}
                 color={colors[shortcut.id]}

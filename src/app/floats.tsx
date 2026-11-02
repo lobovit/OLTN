@@ -2,6 +2,7 @@ import type { JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
 import type { FloatRect } from "../api/types";
+import { ColumnRefreshButton } from "../components/feed/ColumnRefreshButton";
 import { HomeGalleryToggle } from "../components/feed/HomeGalleryToggle";
 import { Icon } from "../components/ui/Icon";
 import { t } from "../i18n/pt-BR";
@@ -199,17 +200,7 @@ export function FloatCanvas(): JSX.Element {
               <h1>{label}</h1>
               <div class="spacer" />
               {shortcut.type === "home" && <HomeGalleryToggle />}
-              <button
-                type="button"
-                class="icon-btn col-refresh"
-                title={t.refresh}
-                aria-label={`${t.refresh}: ${label}`}
-                onClick={() => {
-                  store.ui.feedsRevision += 1;
-                }}
-              >
-                <Icon name="refresh-2-line" size={15} />
-              </button>
+              <ColumnRefreshButton label={label} />
               <PanelColorButton id={shortcut.id} color={colors[shortcut.id]} label={label} />
               <button
                 type="button"
