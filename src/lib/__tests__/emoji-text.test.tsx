@@ -18,6 +18,22 @@ describe("EmojiText", () => {
     expect(host.textContent).toBe("lobo  ");
   });
 
+  it("supports shortcodes with hyphens", () => {
+    const host = document.createElement("div");
+    render(
+      <EmojiText
+        text="lobo :party-parrot:"
+        emojis={
+          [{ shortcode: "party-parrot", url: "https://ex.com/emoji/party-parrot.png" }] as never
+        }
+      />,
+      host,
+    );
+    const img = host.querySelector("img.emoji") as HTMLImageElement | null;
+    expect(img?.src).toContain("party-parrot.png");
+    expect(img?.alt).toBe(":party-parrot:");
+  });
+
   it("without emojis or shortcodes returns plain text", () => {
     const host = document.createElement("div");
     render(<EmojiText text="lobo" emojis={null} />, host);

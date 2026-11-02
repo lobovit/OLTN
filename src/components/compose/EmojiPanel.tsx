@@ -59,7 +59,7 @@ export function EmojiPanel({ instance, account, onInsert }: EmojiPanelProps): JS
   const needle = query.trim().toLowerCase();
   const customMatches = needle
     ? custom.filter((e) => e.shortcode.toLowerCase().includes(needle))
-    : custom.slice(0, 120);
+    : custom;
   const unicodeMatches = data && query.trim() ? searchEmojis(data, query) : null;
 
   const preview = (item: EmojiItem): string => (tone > 0 && item.s?.[tone - 1]) || item.c;

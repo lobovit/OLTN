@@ -66,6 +66,15 @@ describe("emojifyInPlace", () => {
     expect((imgs[0] as HTMLImageElement).src).toContain("emacs.png");
   });
 
+  it("replaces shortcodes with hyphens", () => {
+    const el = document.createElement("div");
+    el.innerHTML = sanitizeContent("<p>Usando :party-parrot: aqui</p>");
+    emojifyInPlace(el, [
+      { shortcode: "party-parrot", url: "https://ex.com/emoji/party-parrot.png" } as never,
+    ]);
+    expect((el.querySelector("img.emoji") as HTMLImageElement).src).toContain("party-parrot.png");
+  });
+
   it("ignores non-https urls", () => {
     const el = document.createElement("div");
     el.innerHTML = sanitizeContent("<p>:emacs:</p>");
