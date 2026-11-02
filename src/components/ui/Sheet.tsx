@@ -228,7 +228,12 @@ export function Sheet({
 
   return (
     <>
-      <div class="overlay-backdrop" onClick={onClose} />
+      <div
+        class="overlay-backdrop"
+        onPointerDown={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      />
       <div
         ref={ref}
         class={`sheet ${className ?? ""} ${draggable ? "draggable" : ""} ${dragging ? "dragging" : ""} ${resizing ? "resizing" : ""}`}

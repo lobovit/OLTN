@@ -359,6 +359,17 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     pollReady &&
     (!scheduleDate || (scheduleValid && !scheduleBlocked));
 
+  const closeCompose = (): void => {
+    if (intent.mode === "new" && !(prefill && text === prefill && !spoiler)) {
+      if (text || spoiler) {
+        writeJSON(DRAFT_KEY, { text, spoiler, visibility } satisfies Draft);
+      } else if (!prefill) {
+        writeJSON(DRAFT_KEY, null);
+      }
+    }
+    setCompose(null);
+  };
+
   const codeBlocks = isEdit || poll ? [] : extractCodeBlocks(text);
 
   const submit = async (): Promise<void> => {
@@ -410,7 +421,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
   return (
     <Sheet
       title={composeTitle(intent.mode)}
-      onClose={() => setCompose(null)}
+      onClose={closeCompose}
       draggable
       class="compose-sheet"
       headerActions={
