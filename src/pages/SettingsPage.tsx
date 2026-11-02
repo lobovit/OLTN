@@ -19,6 +19,7 @@ import {
   type ImportSummary,
 } from "../lib/import-backup";
 import { navigate } from "../lib/router";
+import { PushSettings } from "../components/settings/PushSettings";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
 import {
@@ -314,6 +315,8 @@ export function SettingsPage(): JSX.Element {
           </div>
           <p class="muted">{t.autoStreamHint}</p>
         </section>
+
+        <PushSettings />
 
         <section class="settings-section">
           <h2 class="section-title">{t.media}</h2>

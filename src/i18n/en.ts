@@ -428,6 +428,33 @@ export const en = {
     "With this on, new posts and notifications arrive in realtime. Turn it off to refresh only when you ask.",
   autoplayGifs: "Autoplay GIFs",
   autoplayGifsHint: "Animated GIFs play on their own in timelines.",
+  pushNotifications: "Push notifications",
+  pushHint: "Receive alerts even when OLTN is closed. Your browser will ask for permission.",
+  pushPromptTitle: "Enable push notifications?",
+  pushPromptReconnectText:
+    "Reconnect your account to receive notifications even when OLTN is closed.",
+  pushActivate: "Enable",
+  pushLater: "Not now",
+  pushEnable: "Enable push notifications",
+  pushDisable: "Disable push notifications",
+  pushEnabled: "Push notifications are on for this account in this browser.",
+  pushDisabled: "Push notifications are off for this account in this browser.",
+  pushEnabledToast: "Push notifications enabled.",
+  pushDisabledToast: "Push notifications disabled.",
+  pushPermissionDenied:
+    "Notifications are blocked. Allow them in your browser settings and try again.",
+  pushScopeError:
+    "This session was created before push support. Reconnect your account to authorize push without losing your settings.",
+  pushReconnect: "Reconnect account",
+  pushReconnectError: "Could not start the reconnection. Try again.",
+  pushInsecure: "Push notifications require HTTPS or localhost.",
+  pushUnsupported:
+    "This browser does not offer Web Push here. On iPhone or iPad, add OLTN to the Home Screen first.",
+  pushVapidError: "This server did not provide a push key. Try again later or update the server.",
+  pushSubscriptionError: "The browser could not create the push subscription.",
+  pushServerError:
+    "The push subscription could not be registered. If you signed in before this update, sign out and sign in again to grant push permission.",
+  pushError: "Could not change push notifications.",
 
   // Filter contexts
   contextHome: "timeline",
@@ -511,7 +538,7 @@ export const en = {
   helpProfileText:
     "This is your public page: picture, name, bio, posts, followers and the people you follow. It is what others see when they click your name.\n\nUse it to check how your profile looks and to reach your posts. Choose Edit profile to change your picture, name, bio, fields and privacy.",
   helpSettingsText:
-    "This gathers your preferences. Appearance changes the theme, accent colour, text size, language and desktop layout: Columns, Float or Social.\n\nBehaviour includes live updates, GIF autoplay and other options. Shortcuts lets you pin timelines and choose what appears in the menu. Data exports and imports settings, lists, filters and portable account data.\n\nOn phones, the layout is always one column.",
+    "This gathers your preferences. Appearance changes the theme, accent colour, text size, language and desktop layout: Columns, Float or Social.\n\nBehaviour includes live updates, GIF autoplay and other options. Push notifications can be enabled in their own section. Shortcuts lets you pin timelines and choose what appears in the menu. Data exports and imports settings, lists, filters and portable account data.\n\nOn phones, the layout is always one column.",
   helpHelpText:
     "This is this screen. It explains the fediverse and each part of OLTN in plain language.\n\nThe footer has the Keyboard shortcuts button. On desktop, press ? at any time to open that list.\n\nIf something is not working, check your connection and try reloading the page. If the error continues, the problem may be on your instance's server.",
   helpEverydayTitle: "Using OLTN day to day",

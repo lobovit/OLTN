@@ -1,4 +1,15 @@
-import { exchangeCode, PENDING_AUTH_KEY, revokeToken, type PendingAuth } from "../api/auth";
+import {
+  buildAuthorizeUrl,
+  exchangeCode,
+  makeChallenge,
+  makeState,
+  makeVerifier,
+  PENDING_AUTH_KEY,
+  registerApp,
+  revokeToken,
+  supportsPKCE,
+  type PendingAuth,
+} from "../api/auth";
 import { connectUserStream, getRest, getInstanceInfo } from "../api/client";
 import type {
   AccentSetting,
@@ -19,6 +30,7 @@ import {
   readJSON,
   sessionRead,
   sessionRemove,
+  sessionWrite,
   writeJSON,
 } from "../lib/storage";
 import {
@@ -278,6 +290,45 @@ export async function signOut(): Promise<void> {
   navigate("/login", { replace: true });
 }
 
+/** Reauthorizes the current account with the push scope, keeping its prefs. */
+export async function beginAccountReconnect(account: AccountMeta): Promise<void> {
+  const app = await registerApp(account.instance);
+  const pkce = await supportsPKCE(account.instance);
+  const pending: PendingAuth = {
+    instance: account.instance,
+    clientId: app.clientId,
+    clientSecret: app.clientSecret,
+    pkce,
+    state: makeState(),
+    redirectAfter: "/settings",
+    reconnectAccountId: account.id,
+  };
+  if (pkce) {
+    const verifier = makeVerifier();
+    pending.codeVerifier = verifier;
+    const challenge = await makeChallenge(verifier);
+    sessionWrite(PENDING_AUTH_KEY, pending);
+    window.location.assign(
+      buildAuthorizeUrl({
+        instance: account.instance,
+        clientId: app.clientId,
+        pkce: true,
+        codeChallenge: challenge,
+        state: pending.state,
+      }),
+    );
+    return;
+  }
+  sessionWrite(PENDING_AUTH_KEY, pending);
+  window.location.assign(
+    buildAuthorizeUrl({
+      instance: account.instance,
+      clientId: app.clientId,
+      state: pending.state,
+    }),
+  );
+}
+
 /* ---------- stream ---------- */
 
 /** Connects or disconnects the stream based on the auto-update preference. */
@@ -368,6 +419,12 @@ async function handleOAuthCallback(code: string, state?: string): Promise<boolea
     });
     const client = getRest(pending.instance, accessToken);
     const me = await client.v1.accounts.verifyCredentials();
+    if (pending.reconnectAccountId && me.id !== pending.reconnectAccountId) {
+      throw new Error("oauth_account_mismatch");
+    }
+    const previous = pending.reconnectAccountId
+      ? store.accounts.find((item) => item.id === pending.reconnectAccountId)
+      : null;
     const account: AccountMeta = {
       id: me.id,
       instance: pending.instance,
@@ -377,10 +434,18 @@ async function handleOAuthCallback(code: string, state?: string): Promise<boolea
       accessToken,
       clientId: pending.clientId,
       clientSecret: pending.clientSecret,
-      createdAt: Date.now(),
+      createdAt: previous?.createdAt ?? Date.now(),
     };
     addAccount(account);
     await signIn(account);
+    if (previous && previous.accessToken !== accessToken) {
+      void revokeToken({
+        instance: previous.instance,
+        clientId: previous.clientId,
+        clientSecret: previous.clientSecret,
+        token: previous.accessToken,
+      });
+    }
     navigate(
       pending.redirectAfter && !pending.redirectAfter.startsWith("/login")
         ? pending.redirectAfter

@@ -1119,6 +1119,82 @@ textarea.field {
   color: var(--danger);
 }
 
+.push-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-height) + 80px + env(safe-area-inset-bottom));
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: min(520px, calc(100vw - 2 * var(--s4)));
+  padding: var(--s3) var(--s4);
+  border: var(--hairline) solid var(--glass-border);
+  border-radius: var(--r-lg);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-3);
+  transform: translateX(-50%);
+  animation: rise-in var(--dur) var(--ease-out);
+}
+
+@media (min-width: 48em) {
+  .push-prompt {
+    bottom: var(--s5);
+  }
+}
+
+.push-prompt-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.push-prompt-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.push-prompt-copy strong {
+  font-size: 0.9rem;
+}
+
+.push-prompt-copy span {
+  color: var(--text-2);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.push-prompt-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--s2);
+}
+
+@media (max-width: 30em) {
+  .push-prompt {
+    flex-wrap: wrap;
+  }
+
+  .push-prompt-copy {
+    flex-basis: calc(100% - 48px);
+  }
+
+  .push-prompt-actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+
 /* ---------------- Avatar ---------------- */
 
 .avatar {

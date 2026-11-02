@@ -430,6 +430,34 @@ const pt: Record<TKey, string> = {
     "Com isso ligado, novos posts e notificações chegam em tempo real. Desligue para atualizar só quando você pedir.",
   autoplayGifs: "Reproduzir GIFs automaticamente",
   autoplayGifsHint: "GIFs animados tocam sozinhos nas timelines.",
+  pushNotifications: "Notificações push",
+  pushHint: "Receba alertas mesmo com o OLTN fechado. O navegador pedirá permissão.",
+  pushPromptTitle: "Ativar notificações push?",
+  pushPromptReconnectText:
+    "Reconecte sua conta para receber notificações mesmo com o OLTN fechado.",
+  pushActivate: "Ativar",
+  pushLater: "Agora não",
+  pushEnable: "Ativar notificações push",
+  pushDisable: "Desativar notificações push",
+  pushEnabled: "Notificações push ativadas para esta conta neste navegador.",
+  pushDisabled: "Notificações push desativadas para esta conta neste navegador.",
+  pushEnabledToast: "Notificações push ativadas.",
+  pushDisabledToast: "Notificações push desativadas.",
+  pushPermissionDenied:
+    "As notificações estão bloqueadas. Permita-as nas configurações do navegador e tente novamente.",
+  pushScopeError:
+    "Sua sessão foi criada antes do suporte a push. Reconecte sua conta para autorizar sem perder suas configurações.",
+  pushReconnect: "Reconectar conta",
+  pushReconnectError: "Não foi possível iniciar a reconexão. Tente novamente.",
+  pushInsecure: "Notificações push exigem HTTPS ou localhost.",
+  pushUnsupported:
+    "Este navegador não oferece Web Push aqui. No iPhone ou iPad, adicione o OLTN à Tela de Início primeiro.",
+  pushVapidError:
+    "Este servidor não forneceu uma chave de push. Tente novamente mais tarde ou atualize o servidor.",
+  pushSubscriptionError: "O navegador não conseguiu criar a assinatura de push.",
+  pushServerError:
+    "Não foi possível registrar a assinatura de push. Se você entrou antes desta atualização, saia e entre novamente para conceder a permissão de push.",
+  pushError: "Não foi possível alterar as notificações push.",
 
   // Filters (contexts)
   contextHome: "timeline",
@@ -513,7 +541,7 @@ const pt: Record<TKey, string> = {
   helpProfileText:
     "É a sua página pública: foto, nome, bio, posts, seguidores e quem você segue. É o que outras pessoas veem quando clicam no seu nome.\n\nUse para conferir como seu perfil aparece e acessar seus posts. Escolha Editar perfil para mudar foto, nome, bio, campos e privacidade.",
   helpSettingsText:
-    "Reúne suas preferências. Aparência muda tema, cor de destaque, tamanho do texto, idioma e layout do computador: Colunas, Flutuante ou Social.\n\nComportamento inclui atualização ao vivo, autoplay de GIFs e outras opções. Atalhos permite fixar timelines e escolher o que aparece no menu. Dados exporta e importa configurações, listas, filtros e dados portáveis da conta.\n\nNo celular, o layout é sempre uma coluna.",
+    "Reúne suas preferências. Aparência muda tema, cor de destaque, tamanho do texto, idioma e layout do computador: Colunas, Flutuante ou Social.\n\nComportamento inclui atualização ao vivo, autoplay de GIFs e outras opções. Notificações push podem ser ativadas na seção própria. Atalhos permite fixar timelines e escolher o que aparece no menu. Dados exporta e importa configurações, listas, filtros e dados portáveis da conta.\n\nNo celular, o layout é sempre uma coluna.",
   helpHelpText:
     "É esta tela. Ela explica o fediverso e cada parte do OLTN em linguagem simples.\n\nNo rodapé fica o botão Atalhos de teclado. No computador, aperte ? a qualquer momento para abrir essa lista.\n\nSe algo não estiver funcionando, confira sua conexão e tente recarregar a página. Se o erro continuar, o problema pode estar no servidor da sua instância.",
   helpEverydayTitle: "Usando o OLTN no dia a dia",

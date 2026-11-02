@@ -2,7 +2,7 @@
 
 import { isRetriable, withRetry } from "../lib/retry";
 
-const SCOPES = "read write follow";
+const SCOPES = "read write follow push";
 
 export const REDIRECT_URI = location.origin + location.pathname;
 
@@ -203,6 +203,8 @@ export interface PendingAuth {
   pkce: boolean;
   state?: string;
   redirectAfter?: string;
+  /** Existing account being reauthorized, rather than a new sign-in. */
+  reconnectAccountId?: string;
 }
 
 export const PENDING_AUTH_KEY = "pendingAuth";
