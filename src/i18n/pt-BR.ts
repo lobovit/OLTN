@@ -15,6 +15,7 @@ const pt: Record<TKey, string> = {
   error: "Algo deu errado.",
   retry: "Tentar de novo",
   refresh: "Atualizar",
+  refreshing: "Atualizando",
   empty: "Nada por aqui.",
   search: "Buscar",
   compose: "Escrever",
@@ -456,37 +457,78 @@ const pt: Record<TKey, string> = {
   // Shortcut help
   shortcutsHelp: "Atalhos de teclado",
   help: "Ajuda",
-  helpTitle: "Como o OLTN funciona",
-  helpIntro: "Um passeio rápido pelo básico.",
-  helpTimelinesTitle: "Timelines",
-  helpTimelinesText:
-    "A Home mostra posts de quem você segue, atualizados ao vivo. A Local mostra posts da sua instância e a Federated alcança o fediverso. Notificações e Menções reúnem as interações com você.",
-  helpPostTitle: "Publicar",
-  helpPostText:
-    "Escreva com mídia, enquetes, avisos de conteúdo, emojis e tradução. O compositor também cuida de políticas de citação, agendamento e blocos de código.",
-  helpCodeTitle: "Código como imagem",
-  helpCodeText:
-    "Envolva o código em três crases, opcionalmente com a linguagem logo após a abertura, e ele é publicado como imagem arredondada, com o código salvo como descrição da mídia.",
-  helpInteractTitle: "Interagir",
-  helpInteractText:
-    "Responda, impulsione, curta e salve. Use ⋯ em um post para denunciá-lo ou bloquear a pessoa. Seus próprios posts podem ser editados, excluídos ou fixados no perfil.",
-  helpColumnsTitle: "Colunas e painéis",
-  helpColumnsText:
-    "No deck da home, clique nos ícones do menu para abrir até 6 colunas, arraste para reordenar e arraste a borda direita para redimensionar. Escolha Flutuante nas Configurações para as mesmas telas virarem painéis soltos: mova, redimensione, pinte e deixe os ímãs encaixarem nas bordas. Escolha Social para um feed único com navegação lateral e uma barra de tendências.",
-  helpDiscoverTitle: "Busca e descoberta",
-  helpDiscoverText:
-    "Busque contas, hashtags e posts. O Trending tem abas de posts, hashtags, pessoas e notícias.",
-  helpNewsletterTitle: "Newsletter",
-  helpNewsletterText:
-    "A Newsletter reúne links em alta e deixa você agregar perfis do fediverso que publicam notícias. Digite o handle completo @usuario@instancia, ou só @usuario para escolher entre contas conhecidas.",
-  helpTimeseriesTitle: "Timeseries",
+  helpTitle: "Guia do OLTN",
+  helpIntro:
+    "Este guia explica o OLTN e o fediverso do zero, em linguagem simples. Leia na ordem ou pule direto para o recurso que você quer entender.",
+  helpContents: "Neste guia",
+  helpContentsFediverse: "O fediverso",
+  helpContentsMenu: "O menu",
+  helpContentsEveryday: "No dia a dia",
+  helpQuickTitle: "Comece por aqui",
+  helpQuickRead: "Leia",
+  helpQuickReadText:
+    "Abra Início para ver posts de quem você segue. Local e Federação mostram o que vem do seu servidor e do resto da rede.",
+  helpQuickPost: "Publique",
+  helpQuickPostText:
+    "Clique em Escrever, digite sua mensagem e envie. Fotos, enquetes, emojis e avisos de conteúdo são opcionais.",
+  helpQuickFind: "Encontre e guarde",
+  helpQuickFindText:
+    "Use a lupa para buscar pessoas, hashtags e posts. Salve o que quiser reler: tudo vai para a Biblioteca.",
+  helpFediverseTitle: "Primeiro: o que é o fediverso?",
+  helpFediverseText:
+    "O Fediverso (termo que vem de Universo Federado) pode parecer um conceito complexo à primeira vista, mas a maneira mais simples de compreendê-lo é pensando no funcionamento dos serviços de e-mail. \n\nHoje existem diversos provedores conhecidos, como Gmail, Outlook e Yahoo. Mesmo usando provedores diferentes, você consegue enviar mensagens para qualquer pessoa porque todos eles seguem regras padronizadas, utilizando protocolos de comunicação em comum como SMTP, IMAP e POP.\n\nO Fediverso funciona de maneira bastante parecida. Em plataformas como o Mastodon uma rede de microblogging no estilo do X (antigo Twitter) ou do Bluesky, cada usuário ou comunidade pode criar sua própria infraestrutura de servidores, chamados de instâncias. \n\nTodas essas instâncias independentes conseguem se conversar entre si por meio de um protocolo unificado chamado ActivityPub, permitindo que a sua conta seja identificada de forma muito similar a um endereço de e-mail, no formato @voce@servidor.",
+  helpFediverseSummary:
+    "Resumindo: você não precisa criar uma conta em cada lugar. Ter um perfil no seu servidor de origem já é o suficiente para interagir com pessoas de qualquer outro servidor. Para este primeiro contato, a recomendação é permanecer na sua instância atual até aprender a navegar bem no Mastodon. Caso sinta necessidade de mudar no futuro, o processo é simples, pois toda instância da rede permite exportar e importar seus dados para migrar de servidor facilmente.",
+  helpMenuTitle: "O menu, item por item",
+  helpMenuIntro:
+    "Cada botão do menu abre uma tela diferente. Veja o que cada um faz e quando usar.",
+  helpHomeText:
+    "É a sua timeline principal. Mostra posts de pessoas que você segue, de qualquer servidor, além dos seus próprios posts e boosts. Os posts mais novos aparecem no topo.\n\nQuando a atualização ao vivo está ligada, novos posts chegam sozinhos. Se preferir, desligue o streaming em Configurações e use o botão de atualizar da coluna.\n\nUse Início no dia a dia: é onde você acompanha quem escolheu seguir. Para ir além de quem você segue, abra Federação; para ver só o seu servidor, abra Local.",
   helpTimeseriesText:
-    "A Timeseries é uma revisão compacta da sua timeline Home em um período escolhido, da última hora a mais de 12 horas. Use quando ficar um tempo fora para se atualizar rápido: ela reúne posts de quem você segue, com filtros por autor e tipo de post, ordenação por engajamento, links em destaque e um marcador de “Marcar como visto” para a próxima visita.",
-  helpLibraryTitle: "Biblioteca",
-  helpLibraryText: "Salvos, curtidas, boosts e listas, além dos seus posts agendados.",
-  helpSettingsTitle: "Ajustes",
+    "É um resumo dos posts de quem você segue dentro de um período: 1 hora, 2 horas e assim por diante, até mais de 12 horas. Em vez de rolar a timeline inteira, você vê o que importou enquanto estava fora.\n\nEscolha o período, filtre por autor ou tipo de post e ordene por engajamento. A página também lista os links mais compartilhados. Ao terminar, clique em “Marcar como visto” para a próxima revisão começar do ponto certo.\n\nUse depois de dormir, voltar do trabalho ou passar um tempo sem abrir o app.",
+  helpLocalText:
+    "Mostra posts públicos de contas que vivem no mesmo servidor que o seu. Você não precisa segui-las: é como ler o mural da sua cidade.\n\nServe para descobrir gente nova e entender o assunto da sua instância. Se o seu servidor for pequeno, pode ter pouco movimento.\n\nA página Federação é parecida, mas mostra posts públicos que o seu servidor já conhece, inclusive os que vêm de outros servidores. Ela não é o fediverso inteiro, porque nenhum servidor consegue ver tudo.",
+  helpNotificationsText:
+    "Reúne o que aconteceu com você: quem curtiu, deu boost, seguiu, mencionou ou respondeu, além de enquetes e outros avisos.\n\nUse para ver o que precisa da sua atenção. Menções é uma tela separada, só com posts que marcaram @voce.\n\nO número no ícone avisa que há novidade.",
+  helpMentionsText:
+    "Mostra posts e respostas em que alguém marcou @seu_usuario. Funciona como uma caixa de entrada de conversas públicas: você vê a mensagem e pode responder na mesma thread.\n\nÉ a parte de Notificações dedicada a conversas, para não perder perguntas e respostas.",
+  helpMessagesText:
+    "Reúne conversas privadas (mensagens diretas) com uma ou mais pessoas. Abra uma conversa para ler e responder.\n\nImportante: mensagens diretas no fediverso não têm criptografia de ponta a ponta. Elas não são públicas, mas administradores dos servidores envolvidos podem vê-las. Não use para senhas, documentos ou assuntos muito sensíveis.",
+  helpSearchText:
+    "A busca encontra contas, hashtags e posts. Digite um nome, @usuario, #assunto ou palavras de um post.\n\nPara achar alguém de outro servidor, digite o endereço completo: @usuario@servidor. Só @usuario costuma encontrar contas que o seu servidor já conhece.\n\nA busca do Mastodon não é como o Google: cada servidor tem seu próprio índice. Se não encontrar, tente o endereço completo ou abra o perfil no navegador.",
+  helpTrendingText:
+    "Mostra o que está recebendo mais atenção agora. Há abas para posts, hashtags, pessoas e notícias.\n\nUse para descobrir assuntos e contas sem seguir ninguém novo. Em servidores pequenos, a lista pode ser curta, porque depende do que aquela instância conhece.",
+  helpNewsletterText:
+    "Junta duas coisas: links em alta e posts de perfis que publicam notícias. É uma forma curada de ver as manchetes sem visitar vários sites.\n\nA lista começa com alguns perfis, e você pode adicionar ou remover fontes. Para adicionar, digite @usuario@servidor. Se digitar só @usuario, o OLTN sugere contas conhecidas.\n\nAs fontes são salvas por conta. Remover uma fonte não apaga posts antigos; só deixa de buscar novos.",
+  helpBoostsText:
+    "Mostra os boosts que aparecem na sua timeline Início: posts que pessoas que você segue decidiram compartilhar de novo.\n\nÉ diferente das suas curtidas: aqui não está o que você curtiu, mas o que chegou até você por meio de outra pessoa.\n\nUse para rever o que passou pela timeline e encontrar posts que você viu com pressa.",
+  helpAppsText:
+    "É um catálogo de outros aplicativos e plataformas que falam ActivityPub: vídeo, fotos, áudio, blogs, eventos, fóruns, código e mais.\n\nUse para descobrir que o fediverso não é só Mastodon. Muitos desses apps têm contas que você pode seguir daqui, dependendo do que o seu servidor aceita.\n\nAs categorias no topo filtram a lista.",
+  helpListsText:
+    "Listas são grupos de contas que você cria para organizar quem quer acompanhar. Uma lista pode ter só contatos de trabalho, amigos ou contas sobre um assunto.\n\nAbra Listas, crie uma, dê um nome e adicione pessoas. A timeline da lista mostra posts dessas contas sem misturar com o resto da Início.\n\nVocê pode fixar uma lista como coluna. Isso ajuda a separar assuntos sem deixar de seguir ninguém.",
+  helpBookmarksText:
+    "Salvos guarda posts para ler depois. É privado: só você vê a lista, e a pessoa autora não recebe aviso.\n\nPara salvar, abra o menu do post e escolha Salvar. Use o mesmo botão para remover.\n\nCurtidas e boosts são diferentes: curtir é uma reação rápida, boost compartilha o post com seus seguidores, e salvar é só para você.",
+  helpScheduledText:
+    "Mostra posts que você programou para sair mais tarde. Você pode conferir a data, mudar o horário ou cancelar antes da publicação.\n\nO servidor guarda o agendamento, então ele pode ser publicado mesmo com o OLTN fechado. Os horários seguem o fuso do seu navegador quando você cria o post.\n\nUse para escrever quando tiver tempo e publicar no melhor momento.",
+  helpProfileText:
+    "É a sua página pública: foto, nome, bio, posts, seguidores e quem você segue. É o que outras pessoas veem quando clicam no seu nome.\n\nUse para conferir como seu perfil aparece e acessar seus posts. Escolha Editar perfil para mudar foto, nome, bio, campos e privacidade.",
   helpSettingsText:
-    "Tema, idioma, tamanho do texto, layout do desktop (Colunas, Flutuante ou Social), streaming em tempo real e autoplay de GIFs. A seção Dados exporta e importa sua configuração e os dados portáveis da conta. Celulares usam sempre uma coluna. Aperte ? para ver os atalhos de teclado.",
+    "Reúne suas preferências. Aparência muda tema, cor de destaque, tamanho do texto, idioma e layout do computador: Colunas, Flutuante ou Social.\n\nComportamento inclui atualização ao vivo, autoplay de GIFs e outras opções. Atalhos permite fixar timelines e escolher o que aparece no menu. Dados exporta e importa configurações, listas, filtros e dados portáveis da conta.\n\nNo celular, o layout é sempre uma coluna.",
+  helpHelpText:
+    "É esta tela. Ela explica o fediverso e cada parte do OLTN em linguagem simples.\n\nNo rodapé fica o botão Atalhos de teclado. No computador, aperte ? a qualquer momento para abrir essa lista.\n\nSe algo não estiver funcionando, confira sua conexão e tente recarregar a página. Se o erro continuar, o problema pode estar no servidor da sua instância.",
+  helpEverydayTitle: "Usando o OLTN no dia a dia",
+  helpEverydayIntro: "Estas são as ações que você mais vai usar ao ler e publicar.",
+  helpActionsTitle: "Ações em um post",
+  helpActionsText:
+    "Responder começa uma conversa pública embaixo do post. Boost compartilha com seus seguidores. Curtir é uma reação rápida. Salvar guarda o post só para você na Biblioteca.\n\nO menu ⋯ tem as ações extras: copiar o link, traduzir, denunciar, bloquear ou silenciar a pessoa. Nos seus próprios posts, você pode editar, excluir ou fixar no perfil.\n\nAs ações são as mesmas, venha o post do seu servidor ou de outro.",
+  helpLayoutTitle: "Organizando a tela",
+  helpLayoutText:
+    "No computador, o modo Colunas deixa você abrir até 6 colunas, arrastar para mudar a ordem e puxar a borda direita para alargar.\n\nFlutuante transforma as mesmas telas em painéis soltos que você pode mover, redimensionar e pintar. Social mostra um feed único com menu lateral e uma barra de tendências.\n\nNo celular, a tela fica sempre em uma coluna. Você pode mudar o layout em Configurações.",
+  helpPostText:
+    "O botão Escrever abre o compositor. Digite o texto, escolha quem pode ver e publique.\n\nAntes de enviar, você pode anexar fotos ou vídeos, descrever imagens (texto alternativo), criar uma enquete, adicionar emojis ou GIFs, marcar conteúdo sensível, traduzir o rascunho, citar outro post e agendar para depois.\n\nPara responder a alguém, use Responder no post. Para uma conversa privada, abra Mensagens.\n\nDica: descreva imagens e vídeos sempre que possível; isso deixa seu post acessível para mais pessoas.",
+  helpCodeTitle: "Código como imagem (opcional)",
+  helpCodeText:
+    "Cole o código entre três crases e publique. Se quiser, coloque a linguagem logo depois das crases de abertura, assim: ```python.\n\nO OLTN transforma o bloco em uma imagem arredondada e salva o código como descrição da mídia. Use quando quiser compartilhar código sem perder a formatação.",
   navHelp: "Navegação",
   generalHelp: "Geral",
   yourProfile: "Seu perfil",

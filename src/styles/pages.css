@@ -1247,6 +1247,74 @@
 .help-sheet .help-intro {
   margin: 0 0 var(--s3);
   color: var(--text-2);
+  line-height: 1.5;
+}
+
+.help-contents {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--s3);
+  color: var(--text-2);
+  font-size: 0.78rem;
+}
+
+.help-contents-label {
+  margin-right: 2px;
+}
+
+.help-contents-link {
+  padding: 3px 9px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.78rem;
+}
+
+.help-contents-link:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.help-sheet .help-quick {
+  padding: var(--s3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.help-steps {
+  display: grid;
+  gap: var(--s2);
+  margin: var(--s2) 0 0;
+  padding-left: 1.25rem;
+}
+
+.help-steps li {
+  padding-left: 4px;
+}
+
+.help-steps li::marker {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.help-steps strong,
+.help-steps span {
+  display: block;
+}
+
+.help-steps strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.help-steps span {
+  color: var(--text-2);
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .help-sheet section {
@@ -1260,10 +1328,73 @@
 }
 
 .help-sheet section p {
-  margin: 0;
+  margin: 0 0 var(--s2);
   color: var(--text-2);
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.help-sheet .help-chapter {
+  padding: var(--s4) 0 var(--s2);
+  scroll-margin-top: var(--s2);
+}
+
+.help-sheet .help-chapter > h3 {
+  margin-bottom: var(--s2);
+  font-size: 1.02rem;
+}
+
+.help-sheet .help-callout {
+  margin: var(--s3) 0;
+  padding: var(--s3);
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.help-topics {
+  margin-top: var(--s2);
+}
+
+.help-topic {
+  padding: var(--s3) 0;
+  border-top: var(--hairline) solid var(--divider);
+}
+
+.help-topic:first-child {
+  padding-top: var(--s2);
+  border-top: 0;
+}
+
+.help-topic-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--s2);
+  color: var(--text);
+  font-size: 0.94rem;
+}
+
+.help-topic-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.help-topic p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.help-topic p:last-of-type {
+  margin-bottom: 0;
 }
 
 .help-sheet .help-code {

@@ -13,6 +13,7 @@ export const en = {
   error: "Something went wrong.",
   retry: "Try again",
   refresh: "Refresh",
+  refreshing: "Refreshing",
   empty: "Nothing here.",
   search: "Search",
   compose: "Write",
@@ -454,37 +455,78 @@ export const en = {
   // Shortcuts help
   shortcutsHelp: "Keyboard shortcuts",
   help: "Help",
-  helpTitle: "How OLTN works",
-  helpIntro: "A quick tour of the basics.",
-  helpTimelinesTitle: "Timelines",
-  helpTimelinesText:
-    "Home shows posts from people you follow, updated live. Local shows posts from your instance and Federated reaches the wider fediverse. Notifications and Mentions collect interactions with you.",
-  helpPostTitle: "Posting",
-  helpPostText:
-    "Write with media, polls, content warnings, emoji and translation. Quote policies, scheduling and code blocks live in the composer too.",
-  helpCodeTitle: "Code as image",
-  helpCodeText:
-    "Wrap code in triple backticks, optionally with the language right after the opening fence, and it is posted as a rounded image, with the code saved as the media description.",
-  helpInteractTitle: "Interacting",
-  helpInteractText:
-    "Reply, boost, like and bookmark. Use ⋯ on a post to report it or block the user. Your own posts can be edited, deleted or pinned to your profile.",
-  helpColumnsTitle: "Columns and panels",
-  helpColumnsText:
-    "On the home deck, click nav icons to open up to 6 columns, drag them to reorder, and drag the right edge to resize. Choose Float in Settings to turn the same views into floating panels you can move, resize, recolor and magnetically snap. Choose Social for a single feed with a navigation rail and a trends sidebar.",
-  helpDiscoverTitle: "Search & discover",
-  helpDiscoverText:
-    "Search accounts, hashtags and posts. Trending has tabs for posts, hashtags, people and news.",
-  helpNewsletterTitle: "Newsletter",
-  helpNewsletterText:
-    "Newsletter gathers trending links and lets you aggregate fediverse profiles that post news. Type a full @user@instance handle, or just @user to pick from known accounts.",
-  helpTimeseriesTitle: "Timeseries",
+  helpTitle: "OLTN guide",
+  helpIntro:
+    "This guide explains OLTN and the fediverse from scratch, in plain language. Read it in order or jump to the feature you need.",
+  helpContents: "In this guide",
+  helpContentsFediverse: "The fediverse",
+  helpContentsMenu: "The menu",
+  helpContentsEveryday: "Day to day",
+  helpQuickTitle: "Start here",
+  helpQuickRead: "Read",
+  helpQuickReadText:
+    "Open Home for posts from people you follow. Local and Federated show what comes from your server and the wider network.",
+  helpQuickPost: "Post",
+  helpQuickPostText:
+    "Click Write, type your message and send. Photos, polls, emoji and content warnings are optional.",
+  helpQuickFind: "Find and save",
+  helpQuickFindText:
+    "Use search to find people, hashtags and posts. Bookmark anything you want to revisit: it goes to your Library.",
+  helpFediverseTitle: "First, what is the fediverse?",
+  helpFediverseText:
+    "The Fediverse (short for Federated Universe) can seem complex at first, but the simplest way to understand it is by thinking about how email services work.\n\nToday there are many well-known providers, such as Gmail, Outlook and Yahoo. Even when using different providers, you can send messages to anyone because they all follow standard rules and use common communication protocols such as SMTP, IMAP and POP.\n\nThe Fediverse works in a very similar way. On platforms such as Mastodon — a microblogging network in the style of X (formerly Twitter) or Bluesky — each user or community can set up their own server infrastructure, called an instance.\n\nAll these independent instances can communicate with one another through a unified protocol called ActivityPub, allowing your account to be identified in a way very similar to an email address, in the format @you@server.",
+  helpFediverseSummary:
+    "In short: you do not need to create an account everywhere. Having a profile on your home server is enough to interact with people on any other server. For this first experience, the recommendation is to stay on your current instance until you are comfortable navigating Mastodon. If you feel the need to move in the future, the process is simple, because every instance on the network lets you export and import your data to migrate servers easily.",
+  helpMenuTitle: "The menu, item by item",
+  helpMenuIntro:
+    "Each menu button opens a different screen. Here is what every one does and when to use it.",
+  helpHomeText:
+    "This is your main timeline. It shows posts from people you follow, from any server, plus your own posts and boosts. Newest posts appear at the top.\n\nWhen live updates are on, new posts arrive by themselves. If you prefer, turn streaming off in Settings and use the refresh button on the column.\n\nUse Home every day: it is where you follow the people you chose. To go beyond the people you follow, open Federated; to see only your own server, open Local.",
   helpTimeseriesText:
-    "Timeseries is a compact review of your Home timeline over a chosen period, from the last hour to beyond 12 hours. Use it when you have been away to catch up quickly: it gathers posts from the people you follow, with filters by author and post type, engagement sorting, top shared links, and a “Mark as caught up” marker for your next visit.",
-  helpLibraryTitle: "Library",
-  helpLibraryText: "Bookmarks, likes, boosts and lists, plus your scheduled posts.",
-  helpSettingsTitle: "Settings",
+    "This is a summary of posts from people you follow over a chosen period: 1 hour, 2 hours and so on, up to more than 12 hours. Instead of scrolling the whole timeline, you see what mattered while you were away.\n\nPick the period, filter by author or post type and sort by engagement. The page also lists the most shared links. When you finish, click “Mark as caught up” so the next review starts from the right point.\n\nUse it after sleeping, coming back from work or spending time away from the app.",
+  helpLocalText:
+    "This shows public posts from accounts that live on the same server as you. You do not need to follow them: it is like reading the noticeboard of your own town.\n\nIt is useful for discovering new people and understanding what your instance is talking about. If your server is small, there may not be much movement.\n\nThe Federated page is similar, but brings public posts your server already knows, including those from other servers. It is not the whole fediverse, because no server can see everything.",
+  helpNotificationsText:
+    "This gathers what happened to you: who liked, boosted, followed, mentioned or replied to you, plus polls and other alerts.\n\nUse it to see what needs your attention. Mentions is a separate screen with only the posts that tagged @you.\n\nThe number on the icon tells you there is something new.",
+  helpMentionsText:
+    "This shows posts and replies where someone tagged @your_username. It works like an inbox for public conversations: you see the message and can reply in the same thread.\n\nIt is the part of Notifications dedicated to conversations, so it is harder to miss a question or answer.",
+  helpMessagesText:
+    "This gathers private conversations (direct messages) with one or more people. Open a conversation to read and reply.\n\nImportant: direct messages on the fediverse do not have end-to-end encryption. They are not public, but administrators of the servers involved may be able to see them. Do not use them for passwords, documents or very sensitive subjects.",
+  helpSearchText:
+    "Search finds accounts, hashtags and posts. Type a name, @user, #topic or words from a post.\n\nTo find someone from another server, type the full address: @user@server. Just @user usually finds accounts your server already knows.\n\nMastodon search is not like Google: each server has its own index. If you cannot find something, try the full address or open the profile in your browser.",
+  helpTrendingText:
+    "This shows what is getting the most attention right now. There are tabs for posts, hashtags, people and news.\n\nUse it to discover topics and accounts without following anyone new. On small servers the list may be short, because it depends on what that instance knows.",
+  helpNewsletterText:
+    "Newsletter combines two things: trending links and posts from profiles that publish news. It is a curated way to catch the headlines without visiting several sites.\n\nThe list starts with a few profiles, and you can add or remove sources. To add one, type @user@server. If you type just @user, OLTN suggests known accounts.\n\nSources are saved per account. Removing a source does not delete old posts; it only stops new posts from being fetched.",
+  helpBoostsText:
+    "This shows the boosts that appear in your Home timeline: posts that people you follow chose to share again.\n\nIt is different from your likes: this is not what you liked, but what reached you through someone else.\n\nUse it to review what passed through your timeline and find posts you only saw in a hurry.",
+  helpAppsText:
+    "This is a catalogue of other apps and platforms that speak ActivityPub: video, photos, audio, blogs, events, forums, code and more.\n\nUse it to discover that the fediverse is not only Mastodon. Many of these apps have accounts you can follow from here, depending on what your server accepts.\n\nThe categories at the top filter the list.",
+  helpListsText:
+    "Lists are groups of accounts you create to organise the people you want to follow. A list can contain only work contacts, friends or accounts about one subject.\n\nOpen Lists, create one, give it a name and add people. The list timeline then shows posts from those accounts without mixing them with the rest of Home.\n\nYou can pin a list as a column. That helps separate subjects without unfollowing anyone.",
+  helpBookmarksText:
+    "Bookmarks save posts to read later. They are private: only you see the list, and the author is not notified.\n\nTo save a post, open its menu and choose Bookmark. Use the same button to remove it.\n\nLikes and boosts are different: a like is a quick reaction, a boost shares the post with your followers, and a bookmark is just for you.",
+  helpScheduledText:
+    "This shows posts you scheduled to go out later. You can check the date, change the time or cancel before it is published.\n\nThe server stores the schedule, so it can publish even with OLTN closed. Times follow your browser time zone when you create the post.\n\nUse it to write when you have time and publish at the best moment.",
+  helpProfileText:
+    "This is your public page: picture, name, bio, posts, followers and the people you follow. It is what others see when they click your name.\n\nUse it to check how your profile looks and to reach your posts. Choose Edit profile to change your picture, name, bio, fields and privacy.",
   helpSettingsText:
-    "Theme, language, text size, desktop layout (Columns, Float or Social), real-time streaming and GIF autoplay. The Data section exports and imports your setup plus portable account data. Phones always use a single column. Press ? anytime for keyboard shortcuts.",
+    "This gathers your preferences. Appearance changes the theme, accent colour, text size, language and desktop layout: Columns, Float or Social.\n\nBehaviour includes live updates, GIF autoplay and other options. Shortcuts lets you pin timelines and choose what appears in the menu. Data exports and imports settings, lists, filters and portable account data.\n\nOn phones, the layout is always one column.",
+  helpHelpText:
+    "This is this screen. It explains the fediverse and each part of OLTN in plain language.\n\nThe footer has the Keyboard shortcuts button. On desktop, press ? at any time to open that list.\n\nIf something is not working, check your connection and try reloading the page. If the error continues, the problem may be on your instance's server.",
+  helpEverydayTitle: "Using OLTN day to day",
+  helpEverydayIntro: "These are the actions you will use most when reading and posting.",
+  helpActionsTitle: "Actions on a post",
+  helpActionsText:
+    "Reply starts a public conversation under the post. Boost shares it with your followers. Like is a quick reaction. Bookmark saves it privately in your Library.\n\nThe ⋯ menu has the extra actions: copy the link, translate, report, block or mute the author. On your own posts, you can edit, delete or pin them to your profile.\n\nThese actions are the same whether the post came from your server or another one.",
+  helpLayoutTitle: "Arranging the screen",
+  helpLayoutText:
+    "On desktop, Columns mode lets you open up to 6 columns, drag them to reorder and pull the right edge to widen them.\n\nFloat turns the same views into loose panels you can move, resize and recolour. Social shows one feed with a side menu and a trends sidebar.\n\nOn phones, the screen is always one column. You can change the layout in Settings.",
+  helpPostText:
+    "The Write button opens the composer. Type your text, choose who can see it and publish.\n\nBefore sending, you can attach photos or videos, describe images (alt text), create a poll, add emoji or GIFs, mark sensitive content, translate the draft, quote another post and schedule it for later.\n\nTo reply to someone, use Reply on the post. For a private conversation, open Messages.\n\nTip: describe images and videos whenever possible; this makes your post accessible to more people.",
+  helpCodeTitle: "Code as an image (optional)",
+  helpCodeText:
+    "Paste code between three backticks and publish. If you want, put the language right after the opening backticks, like this: ```python.\n\nOLTN turns the block into a rounded image and saves the code as the media description. Use it when you want to share code without losing formatting.",
   navHelp: "Navigation",
   generalHelp: "General",
   yourProfile: "Your profile",
