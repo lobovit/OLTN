@@ -26,6 +26,18 @@ describe("sanitizeContent", () => {
   });
 });
 
+describe("sanitizeContent quote fallback", () => {
+  it("can remove the quote-inline fallback paragraph", () => {
+    const out = sanitizeContent(
+      '<p class="quote-inline">RE: <a href="https://ex.com/post">link</a></p><p>comentário</p>',
+      { hideQuoteInline: true },
+    );
+    expect(out).not.toContain("RE:");
+    expect(out).not.toContain("link");
+    expect(out).toContain("comentário");
+  });
+});
+
 describe("emojifyInPlace", () => {
   it("gives explicit dimensions and lazy to marked emojis", () => {
     const el = document.createElement("div");

@@ -93,6 +93,7 @@ const pt: Record<TKey, string> = {
   postPinned: "Fixado no perfil.",
   postUnpinned: "Removido do perfil.",
   quote: "Citar",
+  quotedPost: "Post citado",
   editPost: "Editar post",
   deletePost: "Excluir post",
   deleteConfirm: "Excluir este post?",

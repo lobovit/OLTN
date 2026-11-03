@@ -76,9 +76,20 @@ DOMPurify.addHook("afterSanitizeAttributes", (node) => {
   }
 });
 
+export interface SanitizeOptions {
+  hideQuoteInline?: boolean;
+}
+
 /** Sanitizes server HTML before rendering. */
-export function sanitizeContent(html: string): string {
-  return DOMPurify.sanitize(html, {
+export function sanitizeContent(html: string, options?: SanitizeOptions): string {
+  let source = html;
+  if (options?.hideQuoteInline) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    template.content.querySelectorAll(".quote-inline").forEach((node) => node.remove());
+    source = template.innerHTML;
+  }
+  return DOMPurify.sanitize(source, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ALLOW_DATA_ATTR: false,

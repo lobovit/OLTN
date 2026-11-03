@@ -190,6 +190,81 @@ function LinkCard({ card }: { card: NonNullable<Status["card"]> }): JSX.Element 
   );
 }
 
+function QuotedStatusCard({
+  status,
+  sourceInstance,
+}: {
+  status: Status;
+  sourceInstance: string;
+}): JSX.Element {
+  const href = hrefFor.status(status.id, sourceInstance);
+  const media = status.mediaAttachments.find(
+    (attachment) => attachment.type === "image" || attachment.type === "gifv",
+  );
+  const open = (e: MouseEvent): void => {
+    e.stopPropagation();
+    navigate(href);
+  };
+  return (
+    <div
+      class="quote-card"
+      role="link"
+      tabIndex={0}
+      aria-label={`${t.quotedPost}: ${status.account.displayName || status.account.username}`}
+      onClick={open}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(href);
+      }}
+    >
+      <div class="quote-head">
+        <Avatar
+          src={status.account.avatar}
+          name={status.account.displayName || status.account.username}
+          size={20}
+        />
+        <span class="quote-head-text">
+          <span class="quote-author">
+            <EmojiText
+              text={status.account.displayName || status.account.username}
+              emojis={status.account.emojis}
+            />
+          </span>
+          <span class="quote-handle">@{status.account.acct}</span>
+        </span>
+        <time dateTime={status.createdAt} title={fullDate(status.createdAt)}>
+          {timeAgo(status.createdAt)}
+        </time>
+      </div>
+      {status.spoilerText ? (
+        <div class="quote-cw">
+          <Icon name="eye-close-line" size={13} />
+          {t.warningPrefix} {status.spoilerText}
+        </div>
+      ) : (
+        <Content
+          html={status.content}
+          emojis={status.emojis}
+          class="quote-content"
+          hideQuoteInline={!!status.quote}
+        />
+      )}
+      {media && !status.sensitive && !status.spoilerText && (
+        <img
+          class="quote-media"
+          src={media.previewUrl ?? media.url ?? ""}
+          alt={media.description ?? ""}
+          loading="lazy"
+        />
+      )}
+      {status.card && !status.mediaAttachments.length && <LinkCard card={status.card} />}
+    </div>
+  );
+}
+
 function StatusTranslationBlock({
   target,
   canAct,
@@ -359,6 +434,17 @@ function StatusCardView({
   // remote/boosted posts this is not the author's host.
   const sourceInstance = sourceInstanceFor(targetKey, target);
   const openHref = hrefFor.status(target.id, sourceInstance);
+  const quoteEntity = target.quote;
+  const quoted =
+    quoteEntity?.state === "accepted" && "quotedStatus" in quoteEntity
+      ? (quoteEntity.quotedStatus ?? null)
+      : null;
+  const quoteHref =
+    quoteEntity?.state === "accepted" &&
+    "quotedStatusId" in quoteEntity &&
+    quoteEntity.quotedStatusId
+      ? hrefFor.status(quoteEntity.quotedStatusId, sourceInstance)
+      : null;
 
   /** Status id on the account instance (resolves posts from other instances). */
   const resolveLocalId = async (): Promise<string | null> => {
@@ -510,8 +596,22 @@ function StatusCardView({
               html={displayContent}
               emojis={target.emojis}
               class={translation.translated ? "translated" : ""}
+              hideQuoteInline={!!quoted || !!quoteHref}
             />
             <StatusTranslationBlock target={target} canAct={canAct} translation={translation} />
+
+            {quoted && <QuotedStatusCard status={quoted} sourceInstance={sourceInstance} />}
+            {!quoted && quoteHref && (
+              <a
+                class="quote-card quote-card-link"
+                href={`#${quoteHref}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Icon name="quote-left-line" size={15} />
+                {t.quotedPost}
+                <Icon name="arrow-right-line" size={14} />
+              </a>
+            )}
 
             <MediaGrid
               attachments={target.mediaAttachments}

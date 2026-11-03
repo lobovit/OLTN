@@ -9,18 +9,25 @@ interface ContentProps {
   emojis?: readonly CustomEmoji[] | null;
   class?: string;
   onClick?: (e: MouseEvent) => void;
+  hideQuoteInline?: boolean;
 }
 
-export function Content({ html, emojis, class: className, onClick }: ContentProps): JSX.Element {
+export function Content({
+  html,
+  emojis,
+  class: className,
+  onClick,
+  hideQuoteInline,
+}: ContentProps): JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const emojiKey = emojis ? emojis.map((e) => e.shortcode).join(",") : "";
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    el.innerHTML = sanitizeContent(html);
+    el.innerHTML = sanitizeContent(html, { hideQuoteInline });
     emojifyInPlace(el, emojis ?? []);
-  }, [html, emojiKey]);
+  }, [html, emojiKey, hideQuoteInline]);
 
   const handleClick = (e: MouseEvent) => {
     handleContentClick(e);

@@ -91,6 +91,7 @@ export const en = {
   postPinned: "Pinned to profile.",
   postUnpinned: "Removed from profile.",
   quote: "Quote",
+  quotedPost: "Quoted post",
   editPost: "Edit post",
   deletePost: "Delete post",
   deleteConfirm: "Delete this post?",

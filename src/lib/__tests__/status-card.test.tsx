@@ -122,6 +122,55 @@ describe("StatusCard: quote action", () => {
   });
 });
 
+describe("StatusCard: quoted posts", () => {
+  it("replaces the fallback quote link with a preview card", async () => {
+    const quoted = {
+      ...remoteStatus(),
+      id: "200",
+      uri: "https://remote.example/users/flip/statuses/200",
+      content: "<p>Uma notícia importante.</p>",
+      card: {
+        url: "https://example.com/news",
+        title: "Notícia importante",
+        description: "Resumo da notícia.",
+        providerName: "Example",
+        image: null,
+      },
+    } as unknown as Status;
+    const status = {
+      ...remoteStatus(),
+      content:
+        '<p class="quote-inline">RE: <a href="https://remote.example/@flip/200">notícia</a></p><p>Meu comentário.</p>',
+      quote: { state: "accepted", quotedStatus: quoted },
+    } as unknown as Status;
+    const key = putStatus(status, "my.instance");
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={key} />, host);
+    await vi.waitFor(() => expect(host.textContent).toContain("Meu comentário."));
+
+    expect(host.querySelector(".content:not(.quote-content)")?.textContent).not.toContain("RE:");
+    expect(host.querySelector(".quote-card .quote-author")?.textContent).toContain("Ana");
+    expect(host.querySelector(".quote-card .link-card .title")?.textContent).toContain(
+      "Notícia importante",
+    );
+  });
+
+  it("does not reveal quotes that are not accepted", async () => {
+    const status = {
+      ...remoteStatus(),
+      content: '<p class="quote-inline">RE: link</p><p>Comentário.</p>',
+      quote: { state: "pending", quotedStatus: null },
+    } as unknown as Status;
+    const key = putStatus(status, "my.instance");
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={key} />, host);
+    await vi.waitFor(() => expect(host.textContent).toContain("Comentário."));
+
+    expect(host.querySelector(".quote-card")).toBeNull();
+    expect(host.querySelector(".content")?.textContent).toContain("RE: link");
+  });
+});
+
 describe("StatusCard: boost cards", () => {
   it("renders the inner status from the cache, not the stale wrapper copy", () => {
     const inner = remoteStatus();
