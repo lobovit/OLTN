@@ -17,6 +17,10 @@ import { NewsletterPage } from "../pages/NewsletterPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { MessagesPage } from "../pages/MessagesPage";
 import { AccountsPage } from "../pages/AccountsPage";
+import { CollectionPage } from "../pages/CollectionPage";
+import { CollectionEditorPage } from "../pages/CollectionEditorPage";
+import { CollectionsPage } from "../pages/CollectionsPage";
+import { CollectionAccountsPage } from "../pages/CollectionAccountsPage";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface AppRoute {
@@ -50,6 +54,16 @@ export const routes: AppRoute[] = [
   { pattern: "/accounts", page: AccountsPage },
   { pattern: "/search", page: SearchPage },
   { pattern: "/:instance?/s/:id", page: StatusPage, centered: true },
+  { pattern: "/collections", page: CollectionsPage, auth: true, centered: true },
+  { pattern: "/collections/new", page: CollectionEditorPage, auth: true, centered: true },
+  {
+    pattern: "/:instance?/c/:id/accounts",
+    page: CollectionAccountsPage,
+    auth: true,
+    centered: true,
+  },
+  { pattern: "/:instance?/c/:id/edit", page: CollectionEditorPage, auth: true, centered: true },
+  { pattern: "/:instance?/c/:id", page: CollectionPage, centered: true },
   { pattern: "/:instance?/a/:id", page: AccountPage },
   { pattern: "/:instance?/t/:tag", page: HashtagPage },
   { pattern: "/:instance?/p/:scope", page: PublicPage },

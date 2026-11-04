@@ -249,3 +249,23 @@ describe("StatusCard: privacy lock", () => {
     }
   });
 });
+
+describe("StatusCard: tagged collections", () => {
+  it("links collections the post belongs to", () => {
+    const status = {
+      ...remoteStatus(),
+      taggedCollections: [
+        {
+          id: "30",
+          name: "Vozes do fediverso",
+          url: "https://remote.example/collections/30",
+          itemCount: 3,
+        },
+      ],
+    } as unknown as Status;
+    const key = putStatus(status, "my.instance");
+    const host = document.createElement("div");
+    render(<StatusCard statusKey={key} />, host);
+    expect(host.querySelector(".status-collections")?.textContent).toContain("Vozes do fediverso");
+  });
+});

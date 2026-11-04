@@ -1,7 +1,7 @@
 import type { JSX, RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useSnapshot } from "valtio";
-import type { Status } from "../../api/types";
+import type { Collection, Status } from "../../api/types";
 import { t } from "../../i18n/pt-BR";
 import { fullDate, languageName, timeAgo } from "../../lib/format";
 import { canBoostStatus } from "../../lib/boost";
@@ -190,6 +190,34 @@ function LinkCard({ card }: { card: NonNullable<Status["card"]> }): JSX.Element 
   );
 }
 
+function StatusCollections({
+  collections,
+  sourceInstance,
+}: {
+  collections: readonly Collection[];
+  sourceInstance: string;
+}): JSX.Element | null {
+  if (!collections.length) return null;
+  return (
+    <div class="status-collections" onClick={(e) => e.stopPropagation()}>
+      <span class="status-collections-label">
+        <Icon name="group-line" size={14} />
+        {t.statusInCollection}
+      </span>
+      {collections.slice(0, 3).map((collection) => (
+        <button
+          key={collection.id}
+          type="button"
+          class="status-collection-link"
+          onClick={() => navigate(hrefFor.collection(collection.id, sourceInstance))}
+        >
+          {collection.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function QuotedStatusCard({
   status,
   sourceInstance,
@@ -278,7 +306,7 @@ function StatusTranslationBlock({
     return (
       <div class="translation muted" onClick={(e) => e.stopPropagation()}>
         <span class="faint">
-          {t.translated} · {languageName(translation.transLang)}
+          {t.translated} Ã‚Â· {languageName(translation.transLang)}
         </span>{" "}
         <button
           type="button"
@@ -430,7 +458,7 @@ function StatusCardView({
     target.visibility !== "private" &&
     target.visibility !== "direct";
   const targetKey = statusKeyOf(target);
-  // The `id` is only valid on the instance that originated the status — for
+  // The `id` is only valid on the instance that originated the status Ã¢â‚¬â€ for
   // remote/boosted posts this is not the author's host.
   const sourceInstance = sourceInstanceFor(targetKey, target);
   const openHref = hrefFor.status(target.id, sourceInstance);
@@ -445,6 +473,10 @@ function StatusCardView({
     quoteEntity.quotedStatusId
       ? hrefFor.status(quoteEntity.quotedStatusId, sourceInstance)
       : null;
+  const taggedCollections =
+    target.taggedCollections ??
+    (target as Status & { tagged_collections?: Collection[] }).tagged_collections ??
+    [];
 
   /** Status id on the account instance (resolves posts from other instances). */
   const resolveLocalId = async (): Promise<string | null> => {
@@ -612,6 +644,8 @@ function StatusCardView({
                 <Icon name="arrow-right-line" size={14} />
               </a>
             )}
+
+            <StatusCollections collections={taggedCollections} sourceInstance={sourceInstance} />
 
             <MediaGrid
               attachments={target.mediaAttachments}

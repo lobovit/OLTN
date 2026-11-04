@@ -11,6 +11,7 @@ import { t, type TKey } from "../i18n/pt-BR";
 import { focusableCards, nextFocusIndex } from "../lib/deck-focus";
 import { bringToFront, stackOrder } from "../lib/floats";
 import { useHotkeys } from "../lib/hotkeys";
+import { supportsCollections } from "../lib/instance-features";
 import { beginPointerDrag, dropTarget, type DropTarget } from "../lib/pointer-drag";
 import {
   clampWidth,
@@ -172,6 +173,13 @@ const NAV_ITEMS: {
     labelKey: "lists",
   },
   {
+    id: "/collections",
+    href: "/collections",
+    icon: "group-line",
+    iconActive: "group-line",
+    labelKey: "collections",
+  },
+  {
     id: "/b",
     href: "/b",
     icon: "bookmark-line",
@@ -205,7 +213,7 @@ const NAV_ITEMS: {
 
 let navDragSuppress = false;
 
-/* Types already represented by nav buttons — do not repeat in rail shortcuts */
+/* Types already represented by nav buttons ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â do not repeat in rail shortcuts */
 const NAV_COLUMN_TYPES = new Set(NAV_ITEMS.flatMap((item) => (item.column ? [item.column] : [])));
 
 function startNavDrag(e: PointerEvent, id: string): void {
@@ -297,7 +305,10 @@ function Rail(): JSX.Element | null {
 
   const hasColumn = (type: ShortcutType): boolean => shortcuts.some((s) => s.type === type);
 
-  const orderedNav = orderColumns(NAV_ITEMS, state.settings.navOrder ?? []);
+  const collectionsEnabled = supportsCollections(state.instance);
+  const orderedNav = orderColumns(NAV_ITEMS, state.settings.navOrder ?? []).filter(
+    (item) => item.id !== "/collections" || collectionsEnabled,
+  );
 
   const openColumn = (item: (typeof NAV_ITEMS)[number]): void => {
     const type = item.column;
@@ -550,11 +561,13 @@ function MoreMenu({ onClose }: { onClose: () => void }): JSX.Element {
     (shortcut) => shortcut.type !== "home" && shortcut.type !== "notifications",
   );
   const pinnedTypes = new Set(pinned.map((shortcut) => shortcut.type));
+  const collectionsEnabled = supportsCollections(store.instance);
   const navItems = NAV_ITEMS.filter(
     (item) =>
       item.href !== "/" &&
       item.href !== "/notifications" &&
       !item.popup &&
+      (item.id !== "/collections" || collectionsEnabled) &&
       !(item.column && pinnedTypes.has(item.column)),
   );
   return (

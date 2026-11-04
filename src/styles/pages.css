@@ -1563,3 +1563,52 @@
   font-size: 20px;
   line-height: 1;
 }
+
+.notif-collection-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: calc(100% - var(--s4) * 2);
+  margin: 0 var(--s4) var(--s3);
+  padding: var(--s3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  color: inherit;
+  text-align: start;
+}
+
+.notif-collection-card:hover {
+  background: var(--surface-2);
+}
+
+.notif-collection-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.notif-collection-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notif-collection-main strong {
+  overflow: hidden;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notif-collection-main span {
+  color: var(--text-3);
+  font-size: 0.78rem;
+}

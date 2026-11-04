@@ -1,11 +1,31 @@
 import type { mastodon } from "masto";
 import type { InstanceRule } from "../lib/instance-rules";
 
-export type Status = mastodon.v1.Status;
+export type Status = mastodon.v1.Status & {
+  /** Collections the post is tagged into (Mastodon 4.6+). */
+  taggedCollections?: Collection[];
+};
 export type StatusEdit = mastodon.v1.StatusEdit;
 export type ScheduledStatus = mastodon.v1.ScheduledStatus;
-export type Account = mastodon.v1.Account;
-export type CredentialAccount = mastodon.v1.CredentialAccount;
+/** Profile visibility fields exposed by Mastodon 4.6+ but missing from masto v8. */
+interface AccountVisibilityFields {
+  showMedia?: boolean;
+  showMediaReplies?: boolean;
+  showFeatured?: boolean;
+}
+
+export type Account = mastodon.v1.Account & AccountVisibilityFields;
+export type CredentialAccount = mastodon.v1.CredentialAccount & AccountVisibilityFields;
+/** The API omits `account_id` on some pending items; masto types it as required. */
+export type CollectionItem = Omit<mastodon.v1.CollectionItem, "accountId"> & {
+  accountId?: string;
+};
+export type Collection = Omit<mastodon.v1.Collection, "items"> & {
+  items: CollectionItem[];
+};
+export type CollectionWithAccounts = mastodon.v1.CollectionWithAccounts;
+export type CreateCollectionParams = mastodon.rest.v1.CreateCollectionParams;
+export type UpdateCollectionParams = mastodon.rest.v1.UpdateCollectionParams;
 export type Notification = mastodon.v1.Notification;
 export type MediaAttachment = mastodon.v1.MediaAttachment;
 export type Poll = mastodon.v1.Poll;
@@ -22,12 +42,13 @@ export type TrendLink = mastodon.v1.TrendLink;
 export type Conversation = mastodon.v1.Conversation;
 export type AccountField = mastodon.v1.AccountField;
 export type UpdateCredentialsParams = mastodon.rest.v1.UpdateCredentialsParams;
+export type ReportAccountParams = mastodon.rest.v1.ReportAccountParams;
 export type Filter = mastodon.v2.Filter;
 export type FilterAction = mastodon.v2.FilterAction;
 export type FilterContext = mastodon.v2.FilterContext;
 export type Search = mastodon.v2.Search;
 export type StatusVisibility = mastodon.v1.StatusVisibility;
-/** Compose visibility — includes "local" (Pleroma/Akkoma). */
+/** Compose visibility Ã¢â‚¬â€ includes "local" (Pleroma/Akkoma). */
 export type ComposeVisibility = StatusVisibility | "local";
 export type NotificationType = mastodon.v1.NotificationType;
 export type Translation = mastodon.v1.Translation;
@@ -40,6 +61,10 @@ export interface InstanceInfo {
   thumbnail?: string | null;
   streamingApi?: string | null;
   version?: string;
+  /** `api_versions.mastodon`; missing on old Mastodon and most forks. */
+  apiVersion?: number | null;
+  /** Languages the instance advertises for posts and collections. */
+  languages?: string[];
   rules: InstanceRule[];
 }
 

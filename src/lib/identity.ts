@@ -52,6 +52,9 @@ export const hrefFor = {
   tag(tag: string, host: string): string {
     return `/${encodeURIComponent(host)}/t/${encodeURIComponent(tag)}`;
   },
+  collection(id: string, instance: string): string {
+    return `/${encodeURIComponent(instance)}/c/${encodeURIComponent(id)}`;
+  },
   /**
    * Converts a Mastodon URL path (post, account or tag) into an internal
    * route; returns null when the path is none of those.
@@ -65,6 +68,9 @@ export const hrefFor = {
     const status =
       clean.match(/^\/@[^/]+\/(\d+)$/) || clean.match(/^\/users\/[^/]+\/statuses\/(\d+)$/);
     if (status) return hrefFor.status(status[1], host);
+    // collection: /collections/123
+    const collection = clean.match(/^\/collections\/([0-9]+)$/);
+    if (collection) return hrefFor.collection(collection[1], host);
     // account: /@user | /users/user
     const account = clean.match(/^\/@([^/]+)$/) || clean.match(/^\/users\/([^/]+)$/);
     if (account) return hrefFor.account(account[1], host);

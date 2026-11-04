@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import type { Account, Relationship, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
 import { clientFor, isOwnInstance, localAccountId, mentionHandleFor } from "../lib/identity";
-import { navigate, back } from "../lib/router";
+import { navigate, back, useRouter } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Content } from "../components/status/Content";
 import { StatusCard } from "../components/status/StatusCard";
@@ -12,13 +12,30 @@ import { EmojiText } from "../components/status/EmojiText";
 import { Icon } from "../components/ui/Icon";
 import { PageShell } from "../components/ui/PageShell";
 import { ProfileEditor } from "../components/profile/ProfileEditor";
+import { CollectionsTab } from "../components/collections/CollectionsTab";
+import { useCollectionsSupport } from "../components/collections/useCollectionsSupport";
 import { currentAccount, putStatuses, setCompose, statusKey } from "../state/store";
 import { useAppState } from "../state/hooks";
 
-type Tab = "posts" | "replies" | "media" | "followers" | "following";
+type Tab = "posts" | "replies" | "media" | "featured" | "followers" | "following";
 
 interface Props {
   params: { instance?: string; id: string };
+  query?: URLSearchParams;
+}
+
+const ACCOUNT_TABS = new Set<Tab>([
+  "posts",
+  "replies",
+  "media",
+  "featured",
+  "followers",
+  "following",
+]);
+
+function tabFromQuery(query?: URLSearchParams): Tab {
+  const value = query?.get("tab") as Tab | null;
+  return value && ACCOUNT_TABS.has(value) ? value : "posts";
 }
 
 /** Loads the account, the viewer relationship and exposes the follow toggle. */
@@ -194,11 +211,20 @@ function AccountProfile({
   );
 }
 
-function AccountTabs({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }): JSX.Element {
+function AccountTabs({
+  tab,
+  onTab,
+  showFeatured,
+}: {
+  tab: Tab;
+  onTab: (tab: Tab) => void;
+  showFeatured: boolean;
+}): JSX.Element {
   const tabs: [Tab, string][] = [
     ["posts", t.posts],
     ["replies", t.replies],
     ["media", t.media],
+    ...(showFeatured ? ([["featured", t.featured]] as [Tab, string][]) : []),
     ["followers", t.followers],
     ["following", t.following],
   ];
@@ -279,11 +305,13 @@ function AccountTabBody({
   account,
   instance,
   loading,
+  isSelf,
 }: {
   tab: Tab;
   account: Account | null;
   instance: string;
   loading: boolean;
+  isSelf: boolean;
 }): JSX.Element {
   if (!account || loading) {
     return (
@@ -291,6 +319,9 @@ function AccountTabBody({
         <span class="spinner" />
       </div>
     );
+  }
+  if (tab === "featured") {
+    return <CollectionsTab account={account} instance={instance} isSelf={isSelf} />;
   }
   if (tab === "followers" || tab === "following") {
     return <AccountList instance={instance} kind={tab} accountId={account.id} />;
@@ -312,22 +343,44 @@ function AccountTabBody({
   );
 }
 
-export function AccountPage({ params }: Props): JSX.Element {
+export function AccountPage({ params, query }: Props): JSX.Element {
   const instance = params.instance ?? "";
-  const [tab, setTab] = useState<Tab>("posts");
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>(() => tabFromQuery(query));
   const [editing, setEditing] = useState(false);
   const appState = useAppState();
+
+  const selectTab = (next: Tab): void => {
+    setTab(next);
+    const params = new URLSearchParams(query?.toString());
+    if (next === "posts") params.delete("tab");
+    else params.set("tab", next);
+    const suffix = params.toString();
+    navigate(`${router.path}${suffix ? `?${suffix}` : ""}`, { replace: true });
+  };
+
+  useEffect(() => {
+    setTab(tabFromQuery(query));
+  }, [query?.toString()]);
   const { account, relationship, loading, error, toggleFollow, reload } = useAccountProfile(
     instance,
     params.id,
   );
 
+  const collectionsSupported = useCollectionsSupport(instance);
   const isSelf =
     !!appState.me && !!account && appState.me.id === account.id && isOwnInstance(instance);
+  const showFeatured = collectionsSupported === true && !!account && account.showFeatured !== false;
   const canMention = appState.auth === "authenticated" && !!account && !isSelf;
   const mentionAcct = account
     ? mentionHandleFor(account, instance, currentAccount()?.instance)
     : "";
+
+  useEffect(() => {
+    if (account && tab === "featured" && collectionsSupported !== null && !showFeatured) {
+      selectTab("posts");
+    }
+  }, [account, collectionsSupported, showFeatured, tab]);
 
   if (error && !account) {
     return (
@@ -364,9 +417,15 @@ export function AccountPage({ params }: Props): JSX.Element {
           />
         }
       >
-        {account && <AccountProfile account={account} onTab={setTab} />}
-        <AccountTabs tab={tab} onTab={setTab} />
-        <AccountTabBody tab={tab} account={account} instance={instance} loading={loading} />
+        {account && <AccountProfile account={account} onTab={selectTab} />}
+        <AccountTabs tab={tab} onTab={selectTab} showFeatured={showFeatured} />
+        <AccountTabBody
+          tab={tab}
+          account={account}
+          instance={instance}
+          loading={loading}
+          isSelf={isSelf}
+        />
       </PageShell>
       {editing && account && (
         <ProfileEditor

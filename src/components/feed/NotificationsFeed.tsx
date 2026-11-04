@@ -4,10 +4,11 @@ import { t } from "../../i18n/pt-BR";
 import { clientFor, hrefFor } from "../../lib/identity";
 import { navigate } from "../../lib/router";
 import { snapshotValue } from "../../lib/snapshot";
-import type { Notification, Status } from "../../api/types";
+import type { Collection, Notification, Status } from "../../api/types";
 import { currentAccount, putStatuses, statusKey, store } from "../../state/store";
 import { usePagedFeed } from "../../state/hooks";
 import { StatusCard } from "../status/StatusCard";
+import { collectionAccountCount } from "../collections/format";
 import { EmojiText } from "../status/EmojiText";
 import { Avatar } from "../ui/Avatar";
 import { Icon } from "../ui/Icon";
@@ -22,6 +23,10 @@ const TYPE_ICON: Record<string, string> = {
   follow_request: "user-3-line",
   poll: "list-check-line",
   update: "history-line",
+  quote: "quote-left-line",
+  quoted_update: "history-line",
+  added_to_collection: "group-line",
+  collection_update: "group-line",
   severed_relationships: "unlink-line",
   moderation_warning: "information-line",
 };
@@ -44,6 +49,14 @@ function typeText(type: string): string {
       return t.notifPoll;
     case "update":
       return t.notifUpdate;
+    case "quote":
+      return t.notifQuote;
+    case "quoted_update":
+      return t.notifQuotedUpdate;
+    case "added_to_collection":
+      return t.notifAddedToCollection;
+    case "collection_update":
+      return t.notifCollectionUpdated;
     case "severed_relationships":
       return t.notifSevered;
     case "moderation_warning":
@@ -78,6 +91,31 @@ function groupNotifications(list: readonly Notification[]): Group[] {
     }
   }
   return groups;
+}
+
+function CollectionNotificationCard({
+  collection,
+  instance,
+}: {
+  collection: Collection;
+  instance: string;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      class="notif-collection-card"
+      onClick={() => navigate(hrefFor.collection(collection.id, instance))}
+    >
+      <span class="notif-collection-icon">
+        <Icon name="group-line" size={16} />
+      </span>
+      <span class="notif-collection-main">
+        <strong>{collection.name}</strong>
+        <span>{collectionAccountCount(collection.itemCount)}</span>
+      </span>
+      <Icon name="arrow-right-line" size={15} />
+    </button>
+  );
 }
 
 interface NotificationsFeedProps {
@@ -152,6 +190,7 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
       {groups.map((group) => {
         const first = group.items[0];
         const status = first.status;
+        const collection = "collection" in first ? first.collection : null;
         const repeated = group.items.length > 1;
         const time = new Date(first.createdAt);
         return (
@@ -183,6 +222,9 @@ export function NotificationsFeed({ instance, mode = "all" }: NotificationsFeedP
                 {time.toLocaleDateString(undefined, { day: "numeric", month: "short" })}
               </span>
             </button>
+            {collection && (
+              <CollectionNotificationCard collection={collection} instance={instance} />
+            )}
             {status && <StatusCard statusKey={statusKey(status)} compact hideHeader />}
           </div>
         );

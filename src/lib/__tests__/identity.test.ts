@@ -77,6 +77,7 @@ describe("hrefFor", () => {
     expect(hrefFor.account("user@remote.example", "fallback")).toBe("/remote.example/a/@user");
     expect(hrefFor.account("user", "fallback")).toBe("/fallback/a/@user");
     expect(hrefFor.tag("ola mundo", "my.instance")).toBe("/my.instance/t/ola%20mundo");
+    expect(hrefFor.collection("42", "my.instance")).toBe("/my.instance/c/42");
   });
 
   it("converts external Mastodon paths, including legacy shapes", () => {
@@ -88,6 +89,7 @@ describe("hrefFor", () => {
     expect(hrefFor.fromExternalUrl("h.example", "/users/user")).toBe("/h.example/a/@user");
     expect(hrefFor.fromExternalUrl("h.example", "/tags/foo")).toBe("/h.example/t/foo");
     expect(hrefFor.fromExternalUrl("h.example", "/tag/foo")).toBe("/h.example/t/foo");
+    expect(hrefFor.fromExternalUrl("h.example", "/collections/42")).toBe("/h.example/c/42");
     expect(hrefFor.fromExternalUrl("h.example", "/about")).toBeNull();
   });
 });

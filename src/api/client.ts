@@ -45,12 +45,18 @@ export async function getInstanceInfo(instance: string): Promise<InstanceInfo> {
         baseDelayMs: 400,
         retryIf: isRetriable,
       });
+      const raw = info as typeof info & {
+        apiVersions?: { mastodon?: number };
+        api_versions?: { mastodon?: number };
+      };
       return {
         uri: info.uri || instance,
         title: info.title || instance,
         thumbnail: info.thumbnail ?? null,
         streamingApi: info.urls?.streamingApi ?? null,
         version: info.version,
+        apiVersion: raw.apiVersions?.mastodon ?? raw.api_versions?.mastodon ?? null,
+        languages: info.languages ?? [],
         rules: (info.rules ?? []).map((rule) => ({
           id: rule.id,
           text: rule.text,
@@ -63,6 +69,24 @@ export async function getInstanceInfo(instance: string): Promise<InstanceInfo> {
       return { uri: instance, title: instance, rules: [] };
     }
   });
+}
+
+/** Calls a write endpoint whose success response has no body (Mastodon 4.6 Collections). */
+export async function requestVoid(
+  instance: string,
+  accessToken: string,
+  path: string,
+  method: "POST" | "DELETE",
+): Promise<void> {
+  const response = await fetch(`https://${instance}${path}`, {
+    method,
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    const error = new Error(`http_${response.status}`) as Error & { statusCode?: number };
+    error.statusCode = response.status;
+    throw error;
+  }
 }
 
 export interface StreamHandlers {

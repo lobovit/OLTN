@@ -795,3 +795,33 @@
 .status-card.in-thread {
   cursor: default;
 }
+
+.status-collections {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--s2);
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+
+.status-collections-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+}
+
+.status-collection-link {
+  padding: 2px 8px;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--accent);
+  font: inherit;
+}
+
+.status-collection-link:hover {
+  background: var(--hover);
+}
