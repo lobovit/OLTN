@@ -2,7 +2,14 @@ import type { JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import type { Account, Relationship, Status } from "../api/types";
 import { t } from "../i18n/pt-BR";
-import { clientFor, isOwnInstance, localAccountId, mentionHandleFor } from "../lib/identity";
+import {
+  clientFor,
+  hrefFor,
+  isOwnInstance,
+  localAccountId,
+  mentionHandleFor,
+  resolveAccountHandle,
+} from "../lib/identity";
 import { navigate, back, useRouter } from "../lib/router";
 import { Timeline } from "../components/feed/Timeline";
 import { Content } from "../components/status/Content";
@@ -51,8 +58,10 @@ function useAccountProfile(instance: string, rawId: string) {
     setLoading(true);
     setError(null);
     const { client } = clientFor(instance);
+    const me = currentAccount();
+    const acct = rawId.startsWith("@") ? rawId.slice(1) : rawId;
+    let redirected = false;
     try {
-      const acct = rawId.startsWith("@") ? rawId.slice(1) : rawId;
       const resolved =
         acct.includes("@") || /^\d+$/.test(acct)
           ? await client.v1.accounts.$select(acct).fetch()
@@ -60,7 +69,6 @@ function useAccountProfile(instance: string, rawId: string) {
       setAccount(resolved);
       // The relationship lives on the account's instance; the profile may have
       // been loaded from another one, so resolve the local id first.
-      const me = currentAccount();
       if (!me) {
         setLocalId(null);
         setRelationship(null);
@@ -76,9 +84,23 @@ function useAccountProfile(instance: string, rawId: string) {
       const rel = await local.v1.accounts.relationships.fetch({ id: [resolvedLocalId] });
       setRelationship(rel[0] ?? null);
     } catch (err) {
+      // Some instances keep the public API behind auth. When the viewer belongs
+      // to another instance, resolve the handle locally and open the profile by
+      // the id that is valid there instead of failing on the remote API.
+      if (me && me.instance !== instance && !/^\d+$/.test(acct)) {
+        const local = await resolveAccountHandle(
+          clientFor(me.instance).client,
+          acct.includes("@") ? acct : `${acct}@${instance}`,
+        );
+        if (local) {
+          redirected = true;
+          navigate(hrefFor.accountById(me.instance, local.id), { replace: true });
+          return;
+        }
+      }
       setError(err);
     } finally {
-      setLoading(false);
+      if (!redirected) setLoading(false);
     }
   }, [instance, rawId]);
 
