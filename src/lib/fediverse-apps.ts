@@ -1,5 +1,7 @@
 /* Fediverse apps directory — source: https://fediverse.info/apps (scraped 2026-10-12).
    Static data: the source has no API and no CORS, so the list is embedded.
+   Links checked 2026-11-05: dead ones point to the current official page or mirror;
+   projects whose sites are offline were removed.
    `descriptionPt` was translated with Google gtx (same engine as the draft translator). */
 
 export interface FediverseApp {
@@ -67,7 +69,7 @@ export const FEDIVERSE_APPS: readonly FediverseApp[] = [
     category: "Microblogging",
     description: "The free/libre software social networking platform.",
     descriptionPt: "A plataforma de rede social de software gratuito.",
-    website: "https://gnusocial.network",
+    website: "https://gnusocial.rocks",
   },
   {
     name: "Gotosocial",
@@ -139,13 +141,6 @@ export const FEDIVERSE_APPS: readonly FediverseApp[] = [
     descriptionPt:
       "Meisskey é uma plataforma de microblogging descentralizada, um fork do Misskey.",
     website: "https://github.com/mei23/misskey",
-  },
-  {
-    name: "Microblogpub",
-    category: "Microblogging",
-    description: "A self-hosted, single-user, ActivityPub powered microblog.",
-    descriptionPt: "Um microblog auto-hospedado e de usuário único desenvolvido pelo ActivityPub.",
-    website: "https://microblog.pub",
   },
   {
     name: "Microdotblog",
@@ -276,7 +271,7 @@ export const FEDIVERSE_APPS: readonly FediverseApp[] = [
     category: "Audio",
     description: "An open community for bands and musicians",
     descriptionPt: "Uma comunidade aberta para bandas e músicos",
-    website: "https://bandwagon.fm/home",
+    website: "https://bandwagon.fm/",
   },
   {
     name: "Castopod",
@@ -369,14 +364,14 @@ export const FEDIVERSE_APPS: readonly FediverseApp[] = [
     description: "Mobilizon is an open source software for event planning and group management.",
     descriptionPt:
       "Mobilizon é um software de código aberto para planejamento de eventos e gerenciamento de grupos.",
-    website: "https://joinmobilizon.org",
+    website: "https://mobilizon.org",
   },
   {
     name: "Brutalinks",
     category: "Forums",
     description: "Link aggregator inspired by reddit using ActivityPub federation.",
     descriptionPt: "Agregador de links inspirado no reddit usando a federação ActivityPub.",
-    website: "https://git.sr.ht/~mariusor/brutalinks",
+    website: "https://github.com/mariusor/brutalinks",
   },
   {
     name: "Lemmy",
@@ -390,7 +385,7 @@ export const FEDIVERSE_APPS: readonly FediverseApp[] = [
     category: "Forums",
     description: "A federated forum / link aggregator using ActivityPub.",
     descriptionPt: "Um fórum federado/agregador de links usando ActivityPub.",
-    website: "https://git.sr.ht/~vpzom/lotide",
+    website: "https://github.com/lotide-org/lotide",
   },
   {
     name: "Mbin",
