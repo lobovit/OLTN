@@ -1,5 +1,30 @@
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import preact from "@preact/preset-vite";
 import { defineConfig } from "vitest/config";
+
+/* Build metadata: semver comes from package.json, the rest is best-effort git info. */
+const pkg = JSON.parse(
+  readFileSync(fileURLToPath(new URL("./package.json", import.meta.url)), "utf8"),
+) as { version: string };
+
+function gitOutput(args: string[]): string {
+  try {
+    return execFileSync("git", args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "";
+  }
+}
+
+const appInfo = {
+  version: pkg.version,
+  commit: gitOutput(["rev-parse", "--short", "HEAD"]),
+  date: gitOutput(["show", "-s", "--format=%cI", "HEAD"]) || new Date().toISOString(),
+};
 
 // Alguns deps (valtio) importam `react` — mapeamos para preact/compat,
 // mantendo o runtime 100% Preact.
@@ -20,6 +45,9 @@ const securityHeaders = {
 export default defineConfig({
   base: "./",
   envPrefix: ["VITE_", "SCOV_"],
+  define: {
+    __APP_INFO__: JSON.stringify(appInfo),
+  },
   plugins: [preact()],
   resolve: {
     alias: reactAlias,

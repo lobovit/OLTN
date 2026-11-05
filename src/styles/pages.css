@@ -364,6 +364,31 @@
   font-size: 0.92rem;
 }
 
+.version-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--s2) var(--s4);
+  width: 100%;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.version-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.version-info dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.version-info dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .shortcut-list {
   display: flex;
   flex-wrap: wrap;

@@ -101,6 +101,8 @@ const wanted = [
   "news-line",
   "news-fill",
   "building-2-line",
+  "copy-line",
+  "copy-fill",
   "file-export-line",
   "file-import-line",
   "menu-line",

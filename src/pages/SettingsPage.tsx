@@ -106,6 +106,17 @@ export function SettingsPage(): JSX.Element {
     toast(t.layoutReset, "ok");
   };
 
+  const copyVersion = async (): Promise<void> => {
+    const build = __APP_INFO__.commit ? ` (${__APP_INFO__.commit})` : "";
+    const text = `OLTN v${__APP_INFO__.version}${build}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(t.versionCopied, "ok");
+    } catch {
+      toast(text);
+    }
+  };
+
   const addShortcut = (e: Event): void => {
     e.preventDefault();
     const needsValue = scType === "list" || scType === "hashtag";
@@ -513,6 +524,30 @@ export function SettingsPage(): JSX.Element {
         <section class="settings-section">
           <h2 class="section-title">{t.about}</h2>
           <p class="muted">{t.aboutText}</p>
+          <dl class="version-info">
+            <div>
+              <dt>{t.version}</dt>
+              <dd>v{__APP_INFO__.version}</dd>
+            </div>
+            {__APP_INFO__.commit && (
+              <div>
+                <dt>{t.build}</dt>
+                <dd>
+                  <code>{__APP_INFO__.commit}</code>
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt>{t.builtOn}</dt>
+              <dd>{__APP_INFO__.date.slice(0, 10)}</dd>
+            </div>
+          </dl>
+          <div class="btn-row">
+            <button type="button" class="btn ghost" onClick={() => void copyVersion()}>
+              <Icon name="copy-line" size={16} />
+              {t.copyVersion}
+            </button>
+          </div>
         </section>
       </div>
     </PageShell>

@@ -491,6 +491,16 @@ export const ICONS: Record<string, IconDef> = {
     width: 24,
     height: 24,
   },
+  "copy-line": {
+    body: '<path fill="currentColor" d="M8 11a1 1 0 1 0 0 2zm4 2a1 1 0 1 0 0-2zm-4 2a1 1 0 1 0 0 2zm2 2a1 1 0 1 0 0-2zm6-9h-1v12h2V8zm-1 13v-1H5v2h10zM4 20h1V8H3v12zM5 7v1h10V6H5zm3 5v1h4v-2H8zm0 4v1h2v-2H8zm12 0h1V4h-2v12zM19 3V2H9v2h10zM8 4H7v3h2V4zm8 13v1h3v-2h-3zM9 3V2a2 2 0 0 0-2 2h2zm11 1h1a2 2 0 0 0-2-2v2zm0 12h-1v2a2 2 0 0 0 2-2zM5 21v-1H3a2 2 0 0 0 2 2zm11-1h-1v2a2 2 0 0 0 2-2zm0-12h1a2 2 0 0 0-2-2v2zM4 8h1V6a2 2 0 0 0-2 2z"/>',
+    width: 24,
+    height: 24,
+  },
+  "copy-fill": {
+    body: '<path fill="currentColor" d="M19 2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2zM8 15a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zm1-9h6a2 2 0 0 1 2 2v8h2V4H9zm-1 5a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2z"/>',
+    width: 24,
+    height: 24,
+  },
   "file-export-line": {
     body: '<path fill="currentColor" d="M14 17a1 1 0 1 0 0 2zm4.707-2.536a1 1 0 1 0-1.414 1.415l.707-.707zM20.828 18l.707.707a1 1 0 0 0 0-1.414zm-3.535 2.121a1 1 0 0 0 1.414 1.415L18 20.828zm-3-16.828L13.586 4zM19 8.414h-1V9h2v-.586zM19 9h-1v3h2V9zM6 3v1h7V2H6zm7 0v1h.586V2H13zm1.293.293L13.586 4L18 8.414l.707-.707l.707-.707L15 2.586zM13 3h-1v5.5h2V3zm.5 6v1H19V8h-5.5zM5 20h1V4H4v16zm9-2v1h6.328v-2H14zm4-2.828l-.707.707l2.828 2.828l.707-.707l.707-.707l-2.828-2.828zM20.828 18l-.707-.707l-2.828 2.828l.707.707l.707.707l2.828-2.828zM6 21v1h6v-2H6zm-1-1H4a2 2 0 0 0 2 2v-2zm8-11.5h-1a1.5 1.5 0 0 0 1.5 1.5V8a.5.5 0 0 1 .5.5zM6 3V2a2 2 0 0 0-2 2h2zm7.586 0v1l.707-.707l.707-.707A2 2 0 0 0 13.586 2zM19 8.414h1A2 2 0 0 0 19.414 7l-.707.707l-.707.707z"/>',
     width: 24,
