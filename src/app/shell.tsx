@@ -303,7 +303,11 @@ function Rail(): JSX.Element | null {
 
   if (!account && state.auth !== "authenticated") return null;
 
-  const hasColumn = (type: ShortcutType): boolean => shortcuts.some((s) => s.type === type);
+  /** Shortcuts in the visible area (first COLUMN_LIMIT entries). */
+  const visibleIndex = (type: ShortcutType): number => {
+    const index = store.shortcuts.findIndex((s) => s.type === type);
+    return index >= 0 && index < COLUMN_LIMIT ? index : -1;
+  };
 
   const collectionsEnabled = supportsCollections(state.instance);
   const orderedNav = orderColumns(NAV_ITEMS, state.settings.navOrder ?? []).filter(
@@ -313,6 +317,11 @@ function Rail(): JSX.Element | null {
   const openColumn = (item: (typeof NAV_ITEMS)[number]): void => {
     const type = item.column;
     if (!type) return;
+    const visible = visibleIndex(type);
+    if (visible >= 0) {
+      saveShortcuts(store.shortcuts.filter((_, index) => index !== visible));
+      return;
+    }
     const existing = store.shortcuts.find((s) => s.type === type);
     const shortcut = existing ?? { id: type, type, label: t[item.labelKey] };
     const next = ensureColumnVisible(store.shortcuts, shortcut);
@@ -327,6 +336,11 @@ function Rail(): JSX.Element | null {
   const openFloat = (item: (typeof NAV_ITEMS)[number]): void => {
     const type = item.column;
     if (!type || !account) return;
+    const visible = visibleIndex(type);
+    if (visible >= 0) {
+      saveShortcuts(store.shortcuts.filter((_, index) => index !== visible));
+      return;
+    }
     const existing = store.shortcuts.find((s) => s.type === type);
     const shortcut = existing ?? { id: type, type, label: t[item.labelKey] };
     const next = ensureColumnVisible(store.shortcuts, shortcut);
@@ -350,7 +364,7 @@ function Rail(): JSX.Element | null {
   };
 
   const navActive = (item: (typeof NAV_ITEMS)[number]): boolean => {
-    if (mode !== "page" && item.column) return hasColumn(item.column);
+    if (mode !== "page" && item.column) return visibleIndex(item.column) >= 0;
     if (item.popup === "search") return pathActive(item.href) || state.ui.searchOpen;
     return pathActive(item.href);
   };
