@@ -370,7 +370,7 @@ function ComposeInner({ intent }: { intent: ComposeIntent }): JSX.Element {
     setCompose(null);
   };
 
-  const codeBlocks = isEdit || poll ? [] : extractCodeBlocks(text);
+  const codeBlocks = poll ? [] : extractCodeBlocks(text);
 
   const submit = async (): Promise<void> => {
     if (!account || !canSubmit) return;

@@ -34,12 +34,12 @@ describe("planPublish", () => {
     expect(full.blocks).toHaveLength(1);
   });
 
-  it("ignores blocks when editing and when there is a poll", () => {
+  it("plans blocks when editing but ignores them when there is a poll", () => {
     const text = "```js\n1\n```";
     const poll = { options: ["a"], expiresIn: 300, multiple: false };
     expect(
       planPublish(draft({ text }), limits, { mode: "edit", statusId: "1" }).blocks,
-    ).toHaveLength(0);
+    ).toHaveLength(1);
     expect(planPublish(draft({ text, poll }), limits, { mode: "new" }).blocks).toHaveLength(0);
   });
 
@@ -157,6 +157,18 @@ describe("buildPublishExecution", () => {
     );
     expect(withPoll.parts[0].poll).toEqual(poll);
     expect(withPoll.parts[0].mediaAttributes).toBeUndefined();
+  });
+
+  it("edit: converted code adds generated media and removes the block", () => {
+    const plan = planPublish(draft({ text: "antes\n```js\n1\n```\ndepois" }), limits, {
+      mode: "edit",
+      statusId: "9",
+    });
+    const execution = buildPublishExecution(plan, plan.blocks, ["gen1"]);
+    expect(execution.kind).toBe("update");
+    expect(execution.parts[0].status).toBe("antes\n\ndepois");
+    expect(execution.parts[0].mediaIds).toEqual(["gen1"]);
+    expect(execution.parts[0].mediaAttributes).toBeUndefined();
   });
 
   it("removes only converted blocks and collapses lines when it removes", () => {

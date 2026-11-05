@@ -69,8 +69,8 @@ export function planPublish(
   const isEdit = intent.mode === "edit";
   const poll = draft.poll && draft.poll.options.length ? draft.poll : undefined;
   const freeSlots = Math.max(0, limits.maxMedia - draft.media.length);
-  // Code only becomes an image without a poll and not editing; respects free slots.
-  const blocks = isEdit || poll ? [] : extractCodeBlocks(text).slice(0, freeSlots);
+  // Code only becomes an image without a poll; respects the free media slots.
+  const blocks = poll ? [] : extractCodeBlocks(text).slice(0, freeSlots);
   const quotePolicy =
     draft.visibility === "private" || draft.visibility === "direct" ? "nobody" : draft.quotePolicy;
   return {
@@ -137,14 +137,13 @@ export function buildPublishExecution(
       mediaIds,
       quoteApprovalPolicy: plan.quotePolicy,
     };
-    if (mediaIds.length) {
+    if (plan.media.length) {
       part.mediaAttributes = plan.media.map((m) => ({
         id: m.id,
         description: m.description ?? null,
       }));
-    } else {
-      part.poll = plan.poll;
     }
+    if (!mediaIds.length) part.poll = plan.poll;
     return {
       kind: "update",
       statusId: plan.editStatusId,
