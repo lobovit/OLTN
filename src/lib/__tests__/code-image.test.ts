@@ -36,4 +36,22 @@ describe("tokenizeLine", () => {
     expect(tokens.find((token) => token.text === "42")).toBeTruthy();
     expect(tokens.map((token) => token.text).join("")).toBe("x = 42");
   });
+
+  it("highlights Lisp and CLISP keywords", () => {
+    for (const lang of ["lisp", "clisp"]) {
+      const tokens = tokenizeLine("(defun f (x) (car x))", lang);
+      const keyword = tokens.find((token) => token.text === "defun");
+      const plain = tokens.find((token) => token.text === "f");
+      expect(keyword?.color).not.toBe(plain?.color);
+    }
+  });
+
+  it("uses `;` comments and keeps `#` reader syntax in Lisp", () => {
+    const tokens = tokenizeLine("(defun f (x) #'car ; nota", "clisp");
+    const plain = tokens.find((token) => token.text === "f")?.color;
+    const hash = tokens.find((token) => token.text.includes("#"));
+    const comment = tokens.find((token) => token.text === "; nota");
+    expect(hash?.color).toBe(plain);
+    expect(comment?.color).not.toBe(plain);
+  });
 });

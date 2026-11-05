@@ -410,6 +410,123 @@ const KEYWORDS: Record<string, string[]> = {
     "unset",
     "exit",
   ],
+  lisp: [
+    "defun",
+    "defmacro",
+    "defvar",
+    "defparameter",
+    "defconstant",
+    "defclass",
+    "defmethod",
+    "defgeneric",
+    "defstruct",
+    "let",
+    "let*",
+    "flet",
+    "labels",
+    "lambda",
+    "function",
+    "setf",
+    "setq",
+    "psetf",
+    "psetq",
+    "if",
+    "when",
+    "unless",
+    "cond",
+    "case",
+    "ecase",
+    "typecase",
+    "progn",
+    "prog1",
+    "prog2",
+    "do",
+    "dolist",
+    "dotimes",
+    "loop",
+    "return",
+    "return-from",
+    "block",
+    "tagbody",
+    "go",
+    "quote",
+    "eval",
+    "apply",
+    "funcall",
+    "mapcar",
+    "mapc",
+    "mapcan",
+    "reduce",
+    "and",
+    "or",
+    "not",
+    "nil",
+    "t",
+    "eq",
+    "eql",
+    "equal",
+    "equalp",
+    "null",
+    "car",
+    "cdr",
+    "cons",
+    "list",
+    "append",
+    "reverse",
+    "length",
+    "format",
+    "print",
+    "princ",
+    "terpri",
+    "read",
+    "with-open-file",
+    "handler-case",
+    "ignore-errors",
+    "unwind-protect",
+    "multiple-value-bind",
+    "values",
+    "declare",
+    "declaim",
+    "proclaim",
+    "the",
+    "exp",
+    "expt",
+    "log",
+    "sqrt",
+    "sin",
+    "cos",
+    "tan",
+    "abs",
+    "floor",
+    "ceiling",
+    "round",
+    "truncate",
+    "mod",
+    "rem",
+    "max",
+    "min",
+    "pi",
+    "describe",
+    "inspect",
+    "decode-float",
+    "integer-decode-float",
+    "scale-float",
+    "float",
+    "long-float",
+    "short-float",
+    "single-float",
+    "double-float",
+    "complex",
+    "realpart",
+    "imagpart",
+    "conjugate",
+    "phase",
+    "numerator",
+    "denominator",
+    "rational",
+    "rationalize",
+    "long-float-digits",
+  ],
   c: [
     "int",
     "char",
@@ -467,6 +584,13 @@ const LANG_ALIASES: Record<string, string> = {
   postgres: "sql",
   mysql: "sql",
   sqlite: "sql",
+  clisp: "lisp",
+  commonlisp: "lisp",
+  "common-lisp": "lisp",
+  cl: "lisp",
+  elisp: "lisp",
+  "emacs-lisp": "lisp",
+  lsp: "lisp",
 };
 
 function normalizeLang(lang: string): string {
@@ -495,19 +619,25 @@ export function extractCodeBlocks(text: string): CodeBlock[] {
 
 /** Simplified highlight: comment, string, number and keyword. */
 export function tokenizeLine(line: string, lang: string): Token[] {
-  const keywords = KEYWORDS[normalizeLang(lang)] ?? [];
+  const normalized = normalizeLang(lang);
+  const keywords = KEYWORDS[normalized] ?? [];
+  const isLisp = normalized === "lisp";
   const tokens: Token[] = [];
-  const re =
-    /(\/\/.*$|#.*$|--.*$|\/\*.*?\*\/)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|([A-Za-z_$][\w$]*)/g;
+  // Lisp uses `;` for comments and `#` as a reader macro, so it needs its own
+  // patterns; single quotes and backticks are not strings there.
+  const re = isLisp
+    ? /(;.*$)|("(?:[^"\\]|\\.)*"?)|(\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|([A-Za-z_$][\w$*+\-/<>=!?&%.:]*)/g
+    : /(\/\/.*$|#.*$|--.*$|\/\*.*?\*\/)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|([A-Za-z_$][\w$]*)/g;
   let last = 0;
   let match: RegExpExecArray | null;
   while ((match = re.exec(line))) {
     if (match.index > last)
       tokens.push({ text: line.slice(last, match.index), color: COLORS.text });
+    const word = isLisp ? match[4]?.toLowerCase() : match[4];
     if (match[1]) tokens.push({ text: match[0], color: COLORS.comment });
     else if (match[2]) tokens.push({ text: match[0], color: COLORS.string });
     else if (match[3]) tokens.push({ text: match[0], color: COLORS.number });
-    else if (match[4] && keywords.includes(match[4]))
+    else if (word && keywords.includes(word))
       tokens.push({ text: match[0], color: COLORS.keyword });
     else tokens.push({ text: match[0], color: COLORS.text });
     last = match.index + match[0].length;
